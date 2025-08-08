@@ -9,32 +9,23 @@
 import time
 import spaceToolsLib as stl
 import warnings
+from src.Alfvenic_Auroral_Acceleration_AAA.executable_toggles import dict_executable
 warnings.filterwarnings("ignore")
 start_time = time.time()
-
-#################
-# --- TOGGLES ---
-#################
-regenSpatial = True
-regenPlasmaEnvironment = False
 
 ################################
 # --- --- --- --- --- --- --- --
 # --- ENVIRONMENT GENERATORS ---
 # --- --- --- --- --- --- --- --
 ################################
-
-dict_executable = {
-    'regen_EVERYTHING': 0,
-    'regen_spatial_environment': 0,
-    'regenBgeo': 0,
-    'regen_background_plasma_environment': 1,
-}
-
 # re-run everything
 if dict_executable['regen_EVERYTHING']==1:
     for key in dict_executable.keys():
         dict_executable[key] = 1
+
+
+
+
 
 if dict_executable['regen_spatial_environment']==1:
     # spatial environment
@@ -43,12 +34,20 @@ if dict_executable['regen_spatial_environment']==1:
     generate_spatial_environment()
     stl.Done(start_time)
 
+
+
+
+
 if dict_executable['regenBgeo']==1:
     # Geomagnetic environment
     stl.prgMsg('Regenerating Geomagnetic Field\n')
     from src.Alfvenic_Auroral_Acceleration_AAA.geomagnetic_field.geomagnetic_field_generator import generate_GeomagneticField
     generate_GeomagneticField()
     stl.Done(start_time)
+
+
+
+
 
 if dict_executable['regen_background_plasma_environment']==1:
     # plasma environment

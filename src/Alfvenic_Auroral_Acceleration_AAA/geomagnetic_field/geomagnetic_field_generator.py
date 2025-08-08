@@ -16,7 +16,7 @@ def generate_GeomagneticField():
     #######################
     # --- LOAD THE DATA ---
     #######################
-    data_dict_spatial = stl.loadDictFromFile(f'{SpatialToggles.outputFolder}\*.cdf*')
+    data_dict_spatial = stl.loadDictFromFile(glob(f'{SpatialToggles.outputFolder}\*.cdf*')[0])
 
     ########################################
     # --- GENERATE THE B-FIELD & TOGGLES ---
@@ -36,7 +36,7 @@ def generate_GeomagneticField():
     for idx in tqdm(range(len(chi))):
 
         lats = lat[:,idx]
-        alts = (alt[:,idx] - stl.Re*stl.m_to_km)/stl.m_to_km # Convert to kilometers from earth's surface
+        alts = alt[:,idx]/stl.m_to_km # Convert to kilometers from earth's surface
         longs = long[:,idx]
 
         # Get the Chaos model

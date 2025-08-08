@@ -1,9 +1,8 @@
-import datetime as dt
-import numpy as np
-import spaceToolsLib as stl
-from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
-
 class SpatialToggles:
+    import datetime as dt
+    import numpy as np
+    import spaceToolsLib as stl
+    from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
 
     # --- Spatial Grid Description ---
     # the "modified" dipole coordinates described by [kageyama 2006] are used to define a spatial grid.
@@ -11,8 +10,8 @@ class SpatialToggles:
     # DEFINE SIMULATION EXTENT in terms of geophysical parameters
     L_Shell = 8.5
     delta_colat = 0.25
-    r_min = 1*stl.Re # in [km]
-    r_max = 2*stl.Re # in [km]
+    r_min = (1.08)*stl.Re # in [km] from Earth's Center
+    r_max = 3*stl.Re # in [km] from Earth's Center
 
     #######################
     # --- CHI-Dimension ---

@@ -14,19 +14,22 @@ class Ti:
         :rtype:
             1D array
         '''
+        # convert altitude to km
+        z = simAlt / stl.m_to_km
+
         # --- Ionosphere Temperature Profile ---
         # ASSUMES Ions and electrons have same temperature profile
-        T0 = 1  # Temperature at the Ionospher (in eV)
+        T0 = 1  # Temperature at the Ionosphere (in eV)
         T1 = 0.0135  # (in eV)
-        h0 = 2000 * stl.m_to_km  # scale height (in meters)
-        T_iono = T1 * np.exp(simAlt / h0) + T0
-        deltaZ = 0.3 * stl.Re
+        h0 = 2000  # scale height (in km)
+        T_iono = T1 * np.exp(z / h0) + T0
+        deltaZ = 0.3 * stl.Re  # (in km)
         T_ps = 2000  # temperature of plasma sheet (in eV)
         z_ps = 3.75 * stl.Re  # height of plasma sheet (in meters)
-        w = 0.5 * (1 - np.tanh((simAlt - z_ps) / deltaZ))  # models the transition to the plasma sheet
+        w = 0.5 * (1 - np.tanh((z - z_ps) / deltaZ))  # models the transition to the plasma sheet
 
         # determine the overall temperature profile
-        return np.array([T_iono[i] * w[i] + T_ps * (1 - w[i]) for i in range(len(simAlt))])
+        return np.array([T_iono[i] * w[i] + T_ps * (1 - w[i]) for i in range(len(z))])
 
 
 class Te:
@@ -39,19 +42,23 @@ class Te:
         :rtype:
             1D array
         '''
+
+        # convert altitude to km
+        z = simAlt / stl.m_to_km
+
         # --- Ionosphere Temperature Profile ---
         # ASSUMES Ions and electrons have same temperature profile
-        T0 = 1  # Temperature at the Ionospher (in eV)
+        T0 = 1  # Temperature at the Ionosphere (in eV)
         T1 = 0.0135  # (in eV)
-        h0 = 2000 * stl.m_to_km  # scale height (in meters)
-        T_iono = T1 * np.exp(simAlt / h0) + T0
-        deltaZ = 0.3 * stl.Re
+        h0 = 2000   # scale height (in km)
+        T_iono = T1 * np.exp(z / h0) + T0
+        deltaZ = 0.3 * stl.Re # (in km)
         T_ps = 2000  # temperature of plasma sheet (in eV)
         z_ps = 3.75 * stl.Re  # height of plasma sheet (in meters)
-        w = 0.5 * (1 - np.tanh((simAlt - z_ps) / deltaZ))  # models the transition to the plasma sheet
+        w = 0.5 * (1 - np.tanh((z - z_ps) / deltaZ))  # models the transition to the plasma sheet
 
         # determine the overall temperature profile
-        return np.array([T_iono[i] * w[i] + T_ps * (1 - w[i]) for i in range(len(simAlt))])
+        return np.array([T_iono[i] * w[i] + T_ps * (1 - w[i]) for i in range(len(z))])
 
 
 
@@ -105,13 +112,16 @@ class ni:
             1D arrays
         '''
 
+        # convert altitude to km
+        z = simAlt/stl.m_to_km
+
         # oxygen
-        n_0 = 400 *simAlt*np.exp(-simAlt/(175*stl.m_to_km))
+        n_0 = 400 *z*np.exp(-z/(175)) * np.power(stl.cm_to_m,3)
 
         # hydrogen
-        n_M_H = 0.1 + 10/np.sqrt(400*simAlt/(stl.Re))
-        n_I_H = 100 * simAlt*np.exp(-(simAlt/stl.m_to_km)/280)
-        n_H = n_I_H + n_M_H
+        n_M_H = (0.1 + 10/np.sqrt(400*z/(stl.Re)))
+        n_I_H = 100 * z*np.exp(-z/280)
+        n_H = (n_I_H + n_M_H)* np.power(stl.cm_to_m,3)
 
         return n_0, n_H
 
@@ -127,7 +137,10 @@ class ion_composition:
                 :rtype:
                     1D array
                 '''
-        z_i = 2370 * stl.m_to_km  #
-        h_i = 1800 * stl.m_to_km  # height of plasma sheet (in meters)
-        return 0.5 * (1 - np.tanh((simAlt - z_i) / h_i))
+        # convert altitude to km
+        z = simAlt / stl.m_to_km
+
+        z_i = 2370  #
+        h_i = 1800# height of plasma sheet (in meters)
+        return 0.5 * (1 - np.tanh((z - z_i) / h_i))
 

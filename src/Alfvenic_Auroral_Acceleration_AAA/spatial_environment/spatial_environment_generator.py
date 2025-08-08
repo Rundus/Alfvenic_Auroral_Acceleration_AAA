@@ -12,11 +12,12 @@ def generate_spatial_environment():
     # prepare the output
     spatial_grid_dim = np.zeros(shape=(len(SpatialToggles.mu_range),len(SpatialToggles.chi_range)))
     data_dict_output = {
-                        'mu': [SpatialToggles.mu_range, {'UNITS': 'm!A-1', 'LABLAXIS': '&mu;','VAR_TYPE':'data'}],
-                        'chi': [SpatialToggles.chi_range, {'UNITS': 'm!A-1', 'LABLAXIS': '&chi;','VAR_TYPE':'data'}],
+                        'mu': [SpatialToggles.mu_range, {'UNITS': None, 'LABLAXIS': '&mu;','VAR_TYPE':'data'}],
+                        'chi': [SpatialToggles.chi_range, {'UNITS': None, 'LABLAXIS': '&chi;','VAR_TYPE':'data'}],
                         'phi': [SpatialToggles.phi_range, {'UNITS': 'deg', 'LABLAXIS': '&phi;','VAR_TYPE':'data'}],
                         'colat': [np.zeros(shape=np.shape(spatial_grid_dim)), {'DEPEND_0': 'mu','DEPEND_1':'chi', 'UNITS': 'deg', 'LABLAXIS': 'colatitude','VAR_TYPE':'data'}],
                         'alt': [np.zeros(shape=np.shape(spatial_grid_dim)), {'DEPEND_0': 'mu','DEPEND_1':'chi','UNITS': 'm', 'LABLAXIS': 'altitude','VAR_TYPE':'data'}],
+                        'radius': [np.zeros(shape=np.shape(spatial_grid_dim)), {'DEPEND_0': 'mu', 'DEPEND_1': 'chi', 'UNITS': 'm', 'LABLAXIS': 'Radius from Earth Center', 'VAR_TYPE': 'data'}],
                         'lat': [np.zeros(shape=np.shape(spatial_grid_dim)), {'DEPEND_0': 'mu','DEPEND_1':'chi', 'UNITS': 'deg', 'LABLAXIS': 'latitude','VAR_TYPE':'data'}],
                         'long': [np.full(np.shape(spatial_grid_dim),SpatialToggles.phi_range[0]), {'DEPEND_0': 'mu','DEPEND_1':'chi', 'UNITS': 'deg', 'LABLAXIS': 'longitude','VAR_TYPE':'data'}],
                         }
@@ -44,7 +45,8 @@ def generate_spatial_environment():
 
     # calculate distance from Earth's center
     r_alt = u/chi_grid
-    data_dict_output['alt'][0] = deepcopy(stl.m_to_km*r_alt*stl.Re)
+    data_dict_output['radius'][0] = deepcopy(stl.m_to_km*r_alt*stl.Re)
+    data_dict_output['alt'][0] = deepcopy(data_dict_output['radius'][0]) - stl.Re*stl.m_to_km
 
     # calculate the latitude
     data_dict_output['lat'][0] = 90-deepcopy(data_dict_output['colat'][0])
