@@ -1,13 +1,11 @@
 def generate_spatial_environment():
     # --- imports ---
-    from spacepy import coordinates as coord
-    from spacepy.time import Ticktock
     import spaceToolsLib as stl
     import numpy as np
     from copy import deepcopy
 
     # import the toggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.spatial_environment.spatial_environment_toggles import SpatialToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.archive.spatial_environment_grid.spatial_environment_toggles import SpatialToggles
 
     # prepare the output
     spatial_grid_dim = np.zeros(shape=(len(SpatialToggles.mu_range),len(SpatialToggles.chi_range)))
@@ -20,7 +18,12 @@ def generate_spatial_environment():
                         'radius': [np.zeros(shape=np.shape(spatial_grid_dim)), {'DEPEND_0': 'mu', 'DEPEND_1': 'chi', 'UNITS': 'm', 'LABLAXIS': 'Radius from Earth Center', 'VAR_TYPE': 'data'}],
                         'lat': [np.zeros(shape=np.shape(spatial_grid_dim)), {'DEPEND_0': 'mu','DEPEND_1':'chi', 'UNITS': 'deg', 'LABLAXIS': 'latitude','VAR_TYPE':'data'}],
                         'long': [np.full(np.shape(spatial_grid_dim),SpatialToggles.phi_range[0]), {'DEPEND_0': 'mu','DEPEND_1':'chi', 'UNITS': 'deg', 'LABLAXIS': 'longitude','VAR_TYPE':'data'}],
+                        'h1': [np.zeros(shape=np.shape(spatial_grid_dim)),{'DEPEND_1': 'chi', 'DEPEND_0': 'mu', 'UNITS': 'm', 'LABLAXIS': 'h1 scale factor', 'VAR_TYPE': 'data'}],
+                        'h2': [np.zeros(shape=np.shape(spatial_grid_dim)), {'DEPEND_1': 'chi', 'DEPEND_0': 'mu', 'UNITS': 'm', 'LABLAXIS': 'h2 scale factor', 'VAR_TYPE': 'data'}],
+                        'h3': [np.zeros(shape=np.shape(spatial_grid_dim)), {'DEPEND_1': 'chi', 'DEPEND_0': 'mu', 'UNITS': 'm', 'LABLAXIS': 'h3 scale factor', 'VAR_TYPE': 'data'}],
                         }
+
+
 
     ########################################################
     # --- Calculate lat/long/alt from dipole coordinates ---
@@ -50,6 +53,15 @@ def generate_spatial_environment():
 
     # calculate the latitude
     data_dict_output['lat'][0] = 90-deepcopy(data_dict_output['colat'][0])
+
+    #######################
+    # --- SCALE FACTORS ---
+    #######################
+    THETA = np.sqrt(1 + 3 * np.cos(np.radians(deepcopy(data_dict_output['colat'][0]))))
+    r = deepcopy(data_dict_output['radius'][0] / (stl.Re * stl.m_to_km))
+    data_dict_output['h1'][0] = 2 * (stl.Re * stl.m_to_km) * np.power(r, 2) * np.sqrt(np.cos(np.radians(deepcopy(data_dict_output['colat'][0])))) / THETA
+    data_dict_output['h2'][0] = (stl.Re * stl.m_to_km * np.power(r, 2)) / (THETA * np.sin(np.radians(deepcopy(data_dict_output['colat'][0]))))
+    data_dict_output['h3'][0] = (stl.Re * stl.m_to_km) * r * np.sin(np.radians(deepcopy(data_dict_output['colat'][0])))
 
     ################
     # --- OUTPUT ---

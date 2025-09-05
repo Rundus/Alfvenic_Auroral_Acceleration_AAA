@@ -1,6 +1,5 @@
 # --- imports ---
 import matplotlib.pyplot as plt
-import spaceToolsLib as stl
 
 ##################
 # --- PLOTTING ---
@@ -24,8 +23,8 @@ dpi = 100
 #########################
 # --- GET THE TOGGLES ---
 #########################
-from src.Alfvenic_Auroral_Acceleration_AAA.spatial_environment.spatial_environment_toggles import *
-from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_classes import *
+from src.Alfvenic_Auroral_Acceleration_AAA.archive.spatial_environment_grid.spatial_environment_toggles import *
+from src.Alfvenic_Auroral_Acceleration_AAA.archive.plasma_environment_grid.plasma_environment_classes import *
 data_dict_spatial = stl.loadDictFromFile(f'{SpatialToggles.outputFolder}\\spatial_environment.cdf')
 
 #########################

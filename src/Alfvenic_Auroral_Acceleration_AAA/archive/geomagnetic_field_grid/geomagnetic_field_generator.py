@@ -4,11 +4,11 @@ def generate_GeomagneticField():
     import numpy as np
     from tqdm import tqdm
     from glob import glob
-    from src.Alfvenic_Auroral_Acceleration_AAA.spatial_environment.spatial_environment_toggles import SpatialToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.archive.spatial_environment_grid.spatial_environment_toggles import SpatialToggles
     from copy import deepcopy
 
     # --- file-specific imports ---
-    from src.Alfvenic_Auroral_Acceleration_AAA.geomagnetic_field.geomagnetic_field_toggles import GeomagneticToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.archive.geomagnetic_field_grid.geomagnetic_field_toggles import GeomagneticToggles
 
     # prepare the output
     data_dict_output = {}

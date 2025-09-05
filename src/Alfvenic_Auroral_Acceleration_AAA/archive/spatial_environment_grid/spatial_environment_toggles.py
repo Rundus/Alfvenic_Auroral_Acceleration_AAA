@@ -25,7 +25,7 @@ class SpatialToggles:
     # construct evenly spaced Chi grid, starting at Earth's surface
     colat_min, colat_max = theta_L_choice-delta_colat,theta_L_choice+delta_colat
     chi_low, chi_high = np.power(np.sin(np.radians(colat_min)),2)/1, np.power(np.sin(np.radians(colat_max)),2)/1
-    chi_range = np.linspace(chi_low, chi_high,N_chi)
+    chi_range = np.linspace(chi_low, chi_high, N_chi)
 
     ######################
     # --- MU-Dimension ---
@@ -34,7 +34,7 @@ class SpatialToggles:
 
     # determine minimum/maximum mu value for the TOP colattitude
     mu_min, mu_max = -1*np.sqrt(np.cos(np.radians(colat_min)))/(r_min/stl.Re),-1*np.sqrt(np.cos(np.radians(colat_min)))/(r_max/stl.Re)
-    mu_range = np.linspace(mu_min,mu_max,N_mu)
+    mu_range = np.linspace(mu_min, mu_max, N_mu)
 
     #######################
     # --- PHI-DIMENSION ---

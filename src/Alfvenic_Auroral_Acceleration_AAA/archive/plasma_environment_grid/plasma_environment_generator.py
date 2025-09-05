@@ -5,16 +5,15 @@ def generate_plasma_environment():
     import spaceToolsLib as stl
     import numpy as np
     from copy import deepcopy
-    from tqdm import tqdm
     from glob import glob
 
     # import the toggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_toggles import PlasmaToggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.spatial_environment.spatial_environment_toggles import SpatialToggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.geomagnetic_field.geomagnetic_field_toggles import GeomagneticToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.archive.plasma_environment_grid.plasma_environment_toggles import PlasmaToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.archive.spatial_environment_grid.spatial_environment_toggles import SpatialToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.archive.geomagnetic_field_grid.geomagnetic_field_toggles import GeomagneticToggles
 
     # import the physics models
-    from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_classes import ni,ion_composition,Ti
+    from src.Alfvenic_Auroral_Acceleration_AAA.archive.plasma_environment_grid.plasma_environment_classes import ni,ion_composition,Ti
 
     #######################
     # --- LOAD THE DATA ---
@@ -64,6 +63,12 @@ def generate_plasma_environment():
         'vth_i': [np.zeros(shape=(len(mu), len(chi))), {'DEPEND_1': 'chi', 'DEPEND_0': 'mu', 'UNITS': 'm/s', 'LABLAXIS': 'ion_thermal_velocity', 'VAR_TYPE': 'data'}],
 
         'V_A': [np.zeros(shape=(len(mu), len(chi))), {'DEPEND_1': 'chi', 'DEPEND_0': 'mu', 'UNITS': 'm/s', 'LABLAXIS':'MHD Alfven Velocity', 'VAR_TYPE': 'data'}],
+
+        'dLbda_du':[np.zeros(shape=(len(mu), len(chi))), {'DEPEND_1': 'chi', 'DEPEND_0': 'mu', 'UNITS': 'm', 'LABLAXIS': 'd&lambda;!Be!N/d&mu;', 'VAR_TYPE': 'data'}],
+        'dLbda_dX': [np.zeros(shape=(len(mu), len(chi))), {'DEPEND_1': 'chi', 'DEPEND_0': 'mu', 'UNITS': 'm', 'LABLAXIS': 'd&lambda;!Be!N/&Chi;', 'VAR_TYPE': 'data'}],
+
+        'dVA_du': [np.zeros(shape=(len(mu), len(chi))), {'DEPEND_1': 'chi', 'DEPEND_0': 'mu', 'UNITS': 'm/s', 'LABLAXIS': 'dV!BA!N/d&mu;', 'VAR_TYPE': 'data'}],
+        'dVA_dX': [np.zeros(shape=(len(mu), len(chi))), {'DEPEND_1': 'chi', 'DEPEND_0': 'mu', 'UNITS': 'm/s', 'LABLAXIS': 'dV!BA!N/d&Chi;', 'VAR_TYPE': 'data'}],
     }
 
     #######################
@@ -146,6 +151,16 @@ def generate_plasma_environment():
     ###################
     # --- GRADIENTS ---
     ###################
+
+    # mu gradients
+    for i in range(len(chi)):
+        data_dict_output['dLbda_du'][0][: ,i] = np.gradient(deepcopy(data_dict_output['lambda_e'][0][:,i]), mu)
+        data_dict_output['dVA_du'][0][:, i] = np.gradient(deepcopy(data_dict_output['V_A'][0][:,i]), mu)
+
+    # Chi Gradients
+    for i in range(len(mu)):
+        data_dict_output['dLbda_dX'][0][i] = np.gradient(deepcopy(data_dict_output['lambda_e'][0][i]),chi)
+        data_dict_output['dVA_dX'][0][i] = np.gradient(deepcopy(data_dict_output['V_A'][0][i]), chi)
 
     #####################
     # --- OUTPUT DATA ---
