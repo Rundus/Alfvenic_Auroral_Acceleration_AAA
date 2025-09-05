@@ -3,9 +3,6 @@ from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 
 
-
-
-
 def my_lorenz(t, S, sigma, rho, beta):
     # put your code here
     x,y,z = S[0], S[1], S[2]
