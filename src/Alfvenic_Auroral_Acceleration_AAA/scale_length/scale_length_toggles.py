@@ -8,15 +8,17 @@ class ScaleLengthToggles:
     # RK45_method = 'LSODA'
     RK45_rtol = 1E-12
     RK45_atol = 1E-12
-    RK45_tspan = [0, 20] # time range (in seconds)
+    RK45_tspan = [0,20] # time range (in seconds)
     RK45_eval = np.linspace(0,20,1000+1)
 
     # Initial Wave conditions
-    Lambda_para0 = 10*1000 # in meters
+    Lambda_para0 = 100*1000 # in meters
     Lambda_perp0 = 4*1000 # in meters
 
-    z0 = 500 # in kilometers
-    Theta0 = 70 # in latitude
+    # z0 = 500 # in kilometers
+    # Theta0 = 70 # in latitude
+    z0 = 20000  # in kilometers
+    Theta0 = 70  # in latitude [deg]
     r = 1 + z0/stl.Re
     u0 = -1*np.sqrt(np.cos(np.radians(90-Theta0))) / r
     chi0 = np.power(np.sin(np.radians(90-Theta0)),2)/ r
@@ -24,4 +26,4 @@ class ScaleLengthToggles:
 
     # --- File I/O ---
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
-    outputFolder = f'{SimToggles.sim_root_path}\scale_length'
+    outputFolder = f'{SimToggles.sim_data_output_path}\scale_length'

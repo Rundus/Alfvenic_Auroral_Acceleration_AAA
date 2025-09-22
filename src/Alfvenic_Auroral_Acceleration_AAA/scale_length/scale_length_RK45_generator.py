@@ -8,7 +8,9 @@ def scale_length_RK45_generator():
 
     # --- File-specific imports ---
     from scipy.integrate import solve_ivp
+    from glob import glob
     from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_toggles import ScaleLengthToggles as toggles
+    import dill
 
     start_time = time.time()
 
@@ -32,7 +34,30 @@ def scale_length_RK45_generator():
     # --- IMPORT THE PLASMA ENVIRONMENT FUNCTIONS ---
     #################################################
     stl.prgMsg('Importing Plasma Environment Functions')
-    from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_classes import envFunc
+    pickle_files = glob(r'C:\Users\cfelt\PycharmProjects\Alfvenic_Auroral_Acceleration_AAA\src\Alfvenic_Auroral_Acceleration_AAA\scale_length\pickled_expressions\*.pkl*')
+    for idx, file_nam in enumerate(pickle_files):
+        func = dill.load(open(file_nam,'rb'))
+        if idx == 0:
+            lmb_e = func
+        elif idx == 1:
+            pDD_mu_lmb_e = func
+        elif idx == 2:
+            pDD_chi_lmb_e = func
+        elif idx == 3:
+            V_A = func
+        elif idx==4:
+            pDD_mu_V_A = func
+        elif idx ==5:
+            pDD_chi_V_A = func
+        elif idx ==6:
+            scale_dkpara = func
+        elif idx ==7:
+            scale_dkperp = func
+        elif idx ==8:
+            scale_dmu = func
+        elif idx == 9:
+            scale_dchi = func
+
     stl.Done(start_time)
 
     ###################################
@@ -46,13 +71,13 @@ def scale_length_RK45_generator():
         kpara, kperp, mu, chi = S[0], S[1], S[2], S[3]
 
         # Ray equation 1 - k_parallel
-        dkpara = (envFunc.func_scale_dkpara(mu, chi) * (kpara*envFunc.func_V_A(mu, chi))/np.sqrt(1 + np.power(kperp*envFunc.func_lbda(mu, chi),2))) * ((kperp**2*envFunc.func_lbda(mu, chi)/( (1 + np.power(kperp*envFunc.func_lbda(mu, chi),2))**(3/2)))*envFunc.func_pDD_mu_lbda(mu, chi) - (1/envFunc.func_V_A(mu, chi)) *(envFunc.func_pDD_mu_V_A(mu, chi)) )
+        dkpara = (scale_dkpara(mu, chi) * (kpara*V_A(mu, chi))/np.sqrt(1 + np.power(kperp*lmb_e(mu, chi),2))) * ((kperp**2*lmb_e(mu, chi)/( (1 + np.power(kperp*lmb_e(mu, chi),2))**(3/2)))*pDD_mu_lmb_e(mu, chi) - (1/V_A(mu, chi)) *(pDD_mu_V_A(mu, chi)) )
 
-        dkperp = (envFunc.func_scale_dkperp(mu, chi) * (kpara*envFunc.func_V_A(mu, chi))/np.sqrt(1 + np.power(kperp*envFunc.func_lbda(mu, chi),2))) * ((kperp**2*envFunc.func_lbda(mu, chi)/( (1 + np.power(kperp*envFunc.func_lbda(mu, chi),2))**(3/2)))*envFunc.func_pDD_chi_lbda(mu, chi) - (1/envFunc.func_V_A(mu, chi)) *(envFunc.func_pDD_chi_V_A(mu, chi)) )
+        dkperp = (scale_dkperp(mu, chi) * (kpara*V_A(mu, chi))/np.sqrt(1 + np.power(kperp*lmb_e(mu, chi),2))) * ((kperp**2*lmb_e(mu, chi)/( (1 + np.power(kperp*lmb_e(mu, chi),2))**(3/2)))*pDD_chi_lmb_e(mu, chi) - (1/V_A(mu, chi)) *(pDD_chi_V_A(mu, chi)) )
 
-        dmu = envFunc.func_scale_dmu(mu,chi) * (envFunc.func_V_A(mu, chi))/np.sqrt(1 + np.power(kperp*envFunc.func_lbda(mu, chi),2))
+        dmu = scale_dmu(mu,chi) * (V_A(mu, chi))/np.sqrt(1 + np.power(kperp*lmb_e(mu, chi),2))
 
-        dchi = envFunc.func_scale_dchi(mu, chi) * (kpara*kperp*envFunc.func_V_A(mu, chi)*np.power(envFunc.func_lbda(mu,chi),2))/((1 + np.power(kperp*envFunc.func_lbda(mu, chi),2)**(3/2)))
+        dchi = scale_dchi(mu, chi) * (kpara*kperp*V_A(mu, chi)*np.power(lmb_e(mu,chi),2))/((1 + np.power(kperp*lmb_e(mu, chi),2)**(3/2)))
 
         dS = [dkpara, dkperp, dmu, dchi]
 

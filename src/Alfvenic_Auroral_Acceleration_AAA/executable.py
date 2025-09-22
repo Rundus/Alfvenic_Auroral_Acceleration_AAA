@@ -22,6 +22,11 @@ if dict_executable['regen_EVERYTHING']==1:
     for key in dict_executable.keys():
         dict_executable[key] = 1
 
+if dict_executable['regen_ray_equation_expressions']==1:
+    # spatial environment
+    print('Regenerating Ray Equation Exprssions',end='\n')
+    from src.Alfvenic_Auroral_Acceleration_AAA.scale_length import scale_length_Sympy_expression_generator
+    stl.Done(start_time)
 
 if dict_executable['regen_scale_length']==1:
     # spatial environment

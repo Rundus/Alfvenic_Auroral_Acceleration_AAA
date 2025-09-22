@@ -1,6 +1,5 @@
-# AAA_numerical_differentiation
-# Description: Perform the numerical differentiation of the
-# electron skin depth and check it with your own .cdf file containing the same
+# scale_length_Sympy_expression_Generator
+# Description: Use sympy to generate analytic expressions for the AAA simulation
 
 # --- IMPORTS ---
 import numpy as np
@@ -42,7 +41,7 @@ m_Hp = stl.ion_dict['H+']
 rho_density = (stl.cm_to_m**3)*(m_Op*400*stl.Re*z*sp.exp(-z/175) + m_Hp*(0.1 + 10*sp.sqrt(stl.Re/(400*z)) + 100*z*sp.exp(-z/280)))
 
 # ELECTRON SKIN DEPTH
-lmb_e = sp.sqrt((stl.lightSpeed ** 2) * stl.m_e * stl.ep0 / (n * stl.q0*stl.q0))
+lmb_e = sp.sqrt((stl.lightSpeed ** 2) * stl.m_e * stl.ep0 / (n * (stl.q0**2)))
 
 # DIPOLE MAGNETIC FIELD
 B_dipole = (3.12E-5) * (1/(1 + z/stl.Re)) * THETA
@@ -144,7 +143,6 @@ func_scale_dkpara = lambdify([mu, chi], scale_dkpara, modules="numpy")
 func_scale_dkperp = lambdify([mu, chi], scale_dkperp, modules="numpy")
 func_scale_dmu = lambdify([mu, chi], scale_dmu, modules="numpy")
 func_scale_dchi = lambdify([mu, chi], scale_dchi, modules="numpy")
-
 funcs = {'lmb_e':func_lmb_e,
          'pDD_mu_lmb_e':func_pDD_mu_lmb_e,
          'pDD_chi_lmb_e':func_pDD_chi_lmb_e,
@@ -154,7 +152,7 @@ funcs = {'lmb_e':func_lmb_e,
          'scale_dkpara':func_scale_dkpara,
          'scale_dkperp':func_scale_dkperp,
          'scale_dmu':func_scale_dmu,
-         'scale_dmu':func_scale_dmu}
+         'scale_dchi':func_scale_dchi}
 
 ###################
 # PICKLE EVERYTHING
