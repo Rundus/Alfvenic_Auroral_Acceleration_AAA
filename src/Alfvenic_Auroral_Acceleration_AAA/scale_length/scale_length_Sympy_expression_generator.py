@@ -18,7 +18,10 @@ chi0 = 0.12047
 
 # --- DATA ---
 # get the spatial environment data
-data_dict_spatial = stl.loadDictFromFile(r'C:\Data\physicsModels\alfvenic_auroral_acceleration_AAA\spatial_environment\spatial_environment.cdf')
+# data_dict_spatial = stl.loadDictFromFile(r'C:\Data\physicsModels\alfvenic_auroral_acceleration_AAA\spatial_environment\spatial_environment.cdf')
+
+
+# --- DEFINE ALL THE PHYSICS FUNCTIONS ---
 
 #####################
 # ELECTRON SKIN DEPTH
@@ -81,19 +84,17 @@ scale_dkpara = scale_dkpara.subs({w: - 2**(7/3) * (3**(-1/3))/gamma + gamma/(2 *
 scale_dkpara = scale_dkpara.subs({gamma: (9*zeta + sp.sqrt(3) * sp.sqrt(27*(zeta**2) + 256*(zeta**3)))**(1/3)})
 scale_dkpara = scale_dkpara.subs({zeta: ((mu/chi)**4)})
 
-
 ##############################################
 # RAY EQUATION scale factor on dk_perp/dt term
 ##############################################
 mu, chi, u, w, zeta, gamma, theta, R = sp.symbols('mu chi u w zeta gamma theta R')
-scale_dkperp = (sp.sin(theta*(sp.pi)/180)*sp.sqrt(1 + 3 * sp.cos(theta*(sp.pi/180))))/((stl.Re*stl.m_to_km)*(R**2))
+scale_dkperp = (sp.sin(theta*(sp.pi/180))*sp.sqrt(1 + 3 * sp.cos(theta*(sp.pi/180))))/((stl.Re*stl.m_to_km)*(R**2))
 scale_dkperp = scale_dkperp.subs({R:(u/chi)})
 scale_dkperp = scale_dkperp.subs({theta: sp.asin(sp.sqrt(u))})
 scale_dkperp = scale_dkperp.subs({u:-0.5*sp.sqrt(w) + 0.5*sp.sqrt(2/(zeta*sp.sqrt(w))- w)})
 scale_dkperp = scale_dkperp.subs({w: - 2**(7/3) * (3**(-1/3))/gamma + gamma/(2 ** (1 / 3) * (3 ** (2 / 3))*zeta)})
 scale_dkperp = scale_dkperp.subs({gamma: (9*zeta + sp.sqrt(3) * sp.sqrt(27*(zeta**2) + 256*(zeta**3)))**(1/3)})
 scale_dkperp = scale_dkperp.subs({zeta: ((mu/chi)**4)})
-
 
 ##########################################
 # RAY EQUATION scale factor on dmu/dt term

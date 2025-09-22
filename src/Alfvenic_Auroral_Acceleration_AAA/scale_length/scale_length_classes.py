@@ -1,7 +1,7 @@
 
 
 
-class PlasmaEnvironment:
+class envFunc:
 
 
     # --- LAMBDIFY ALL THE FUNCTIONS ---
@@ -3475,7 +3475,7 @@ class PlasmaEnvironment:
 
 
 
-    func_scale_dkpara = lambdify([mu, chi],9.00357277452675e-8 * chi ** 2 * sp.sqrt(3 * sp.cos(pi * asp.sin(0.966775705727066 * sp.sqrt(
+    func_scale_dkpara = lambdify([mu, chi],9.00357277452675e-8 * chi ** 2 * sp.sqrt(3 * sp.cos(sp.pi * sp.sin(0.966775705727066 * sp.sqrt(
         -sp.sqrt(0.109197558092037 * chi ** 4 * (sp.sqrt(3) * sp.sqrt(
             27 * mu ** 8 / chi ** 8 + 256 * mu ** 12 / chi ** 12) + 9 * mu ** 4 / chi ** 4) ** 0.333333333333333 / mu ** 4 - 1 / (
                              sp.sqrt(3) * sp.sqrt(
@@ -3500,7 +3500,7 @@ class PlasmaEnvironment:
                                               27 * mu ** 8 / chi ** 8 + 256 * mu ** 12 / chi ** 12) + 9 * mu ** 4 / chi ** 4) ** 0.333333333333333)) + (
                     sp.sqrt(3) * sp.sqrt(
                 27 * mu ** 8 / chi ** 8 + 256 * mu ** 12 / chi ** 12) + 9 * mu ** 4 / chi ** 4) ** (
-            -0.333333333333333))) ** 2 * sp.sqrt(sp.cos(pi * asp.sin(0.966775705727066 * sp.sqrt(-sp.sqrt(
+            -0.333333333333333))) ** 2 * sp.sqrt(sp.cos(sp.pi * sp.sin(0.966775705727066 * sp.sqrt(-sp.sqrt(
         0.109197558092037 * chi ** 4 * (sp.sqrt(3) * sp.sqrt(
             27 * mu ** 8 / chi ** 8 + 256 * mu ** 12 / chi ** 12) + 9 * mu ** 4 / chi ** 4) ** 0.333333333333333 / mu ** 4 - 1 / (
                     sp.sqrt(3) * sp.sqrt(
@@ -3520,7 +3520,7 @@ class PlasmaEnvironment:
 
 
 
-    func_scale_dkperp = lambdify([mu, chi],1.80071455490535e-7 * chi ** 2 * sp.sqrt(3 * sp.cos(pi * asp.sin(0.966775705727066 * sp.sqrt(
+    func_scale_dkperp = lambdify([mu, chi],1.80071455490535e-7 * chi ** 2 * sp.sqrt(3 * sp.cos(sp.pi * sp.sin(0.966775705727066 * sp.sqrt(
         -sp.sqrt(0.109197558092037 * chi ** 4 * (sp.sqrt(3) * sp.sqrt(
             27 * mu ** 8 / chi ** 8 + 256 * mu ** 12 / chi ** 12) + 9 * mu ** 4 / chi ** 4) ** 0.333333333333333 / mu ** 4 - 1 / (
                              sp.sqrt(3) * sp.sqrt(
@@ -3533,7 +3533,7 @@ class PlasmaEnvironment:
                                                   27 * mu ** 8 / chi ** 8 + 256 * mu ** 12 / chi ** 12) + 9 * mu ** 4 / chi ** 4) ** 0.333333333333333)) + (
                         sp.sqrt(3) * sp.sqrt(
                     27 * mu ** 8 / chi ** 8 + 256 * mu ** 12 / chi ** 12) + 9 * mu ** 4 / chi ** 4) ** (
-                -0.333333333333333)))) / 180) + 1) * sp.sin(pi * asp.sin(0.966775705727066 * sp.sqrt(-sp.sqrt(
+                -0.333333333333333)))) / 180) + 1) * sp.sin(sp.pi * sp.sin(0.966775705727066 * sp.sqrt(-sp.sqrt(
         0.109197558092037 * chi ** 4 * (sp.sqrt(3) * sp.sqrt(
             27 * mu ** 8 / chi ** 8 + 256 * mu ** 12 / chi ** 12) + 9 * mu ** 4 / chi ** 4) ** 0.333333333333333 / mu ** 4 - 1 / (
                     sp.sqrt(3) * sp.sqrt(
@@ -3566,7 +3566,7 @@ class PlasmaEnvironment:
 
 
 
-    func_scale_dmu = lambdify([mu, chi], 9.00357277452675e-8 * chi ** 2 * sp.sqrt(3 * sp.cos(pi * asp.sin(0.966775705727066 * sp.sqrt(
+    func_scale_dmu = lambdify([mu, chi], 9.00357277452675e-8 * chi ** 2 * sp.sqrt(3 * sp.cos(sp.pi * sp.sin(0.966775705727066 * sp.sqrt(
         -sp.sqrt(0.109197558092037 * chi ** 4 * (sp.sqrt(3) * sp.sqrt(
             27 * mu ** 8 / chi ** 8 + 256 * mu ** 12 / chi ** 12) + 9 * mu ** 4 / chi ** 4) ** 0.333333333333333 / mu ** 4 - 1 / (
                              sp.sqrt(3) * sp.sqrt(
@@ -3591,7 +3591,7 @@ class PlasmaEnvironment:
                                               27 * mu ** 8 / chi ** 8 + 256 * mu ** 12 / chi ** 12) + 9 * mu ** 4 / chi ** 4) ** 0.333333333333333)) + (
                     sp.sqrt(3) * sp.sqrt(
                 27 * mu ** 8 / chi ** 8 + 256 * mu ** 12 / chi ** 12) + 9 * mu ** 4 / chi ** 4) ** (
-            -0.333333333333333))) ** 2 * sp.sqrt(sp.cos(pi * asp.sin(0.966775705727066 * sp.sqrt(-sp.sqrt(
+            -0.333333333333333))) ** 2 * sp.sqrt(sp.cos(sp.pi * sp.sin(0.966775705727066 * sp.sqrt(-sp.sqrt(
         0.109197558092037 * chi ** 4 * (sp.sqrt(3) * sp.sqrt(
             27 * mu ** 8 / chi ** 8 + 256 * mu ** 12 / chi ** 12) + 9 * mu ** 4 / chi ** 4) ** 0.333333333333333 / mu ** 4 - 1 / (
                     sp.sqrt(3) * sp.sqrt(
@@ -3612,7 +3612,7 @@ class PlasmaEnvironment:
 
 
 
-    func_scale_dchi = lambdify([mu, chi],-1.80071455490535e-7 * chi ** 2 * sp.sqrt(3 * sp.cos(pi * asp.sin(0.966775705727066 * sp.sqrt(
+    func_scale_dchi = lambdify([mu, chi],-1.80071455490535e-7 * chi ** 2 * sp.sqrt(3 * sp.cos(sp.pi * sp.sin(0.966775705727066 * sp.sqrt(
         -sp.sqrt(0.109197558092037 * chi ** 4 * (sp.sqrt(3) * sp.sqrt(
             27 * mu ** 8 / chi ** 8 + 256 * mu ** 12 / chi ** 12) + 9 * mu ** 4 / chi ** 4) ** 0.333333333333333 / mu ** 4 - 1 / (
                              sp.sqrt(3) * sp.sqrt(
@@ -3625,7 +3625,7 @@ class PlasmaEnvironment:
                                                   27 * mu ** 8 / chi ** 8 + 256 * mu ** 12 / chi ** 12) + 9 * mu ** 4 / chi ** 4) ** 0.333333333333333)) + (
                         sp.sqrt(3) * sp.sqrt(
                     27 * mu ** 8 / chi ** 8 + 256 * mu ** 12 / chi ** 12) + 9 * mu ** 4 / chi ** 4) ** (
-                -0.333333333333333)))) / 180) + 1) * sp.sin(pi * asp.sin(0.966775705727066 * sp.sqrt(-sp.sqrt(
+                -0.333333333333333)))) / 180) + 1) * sp.sin(sp.pi * sp.sin(0.966775705727066 * sp.sqrt(-sp.sqrt(
         0.109197558092037 * chi ** 4 * (sp.sqrt(3) * sp.sqrt(
             27 * mu ** 8 / chi ** 8 + 256 * mu ** 12 / chi ** 12) + 9 * mu ** 4 / chi ** 4) ** 0.333333333333333 / mu ** 4 - 1 / (
                     sp.sqrt(3) * sp.sqrt(
