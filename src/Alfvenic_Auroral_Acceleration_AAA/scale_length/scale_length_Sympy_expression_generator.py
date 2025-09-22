@@ -7,38 +7,80 @@ import numpy as np
 import spaceToolsLib as stl
 import sympy as sp
 import time
+import pickle
+import dill
+dill.settings['recurse'] = True
 from sympy import lambdify
+from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
 start_time = time.time()
 
-# --- TOGGLES ---
+####################################
+# --- Define the Sympy Variables ---
+####################################
+B, mu, chi, n, z, u, w, zeta, gamma, rho, theta, R, THETA = sp.symbols('B mu chi n z u w zeta gamma rho theta R, THETA')
 
-# Longest distance, furthest from equator
-mu0 = -0.3233202914138799
-chi0 = 0.12047
+########################################
+# --- Define the physics expressions ---
+########################################
 
-# --- DATA ---
-# get the spatial environment data
-# data_dict_spatial = stl.loadDictFromFile(r'C:\Data\physicsModels\alfvenic_auroral_acceleration_AAA\spatial_environment\spatial_environment.cdf')
+# Modified Dipole coordinates
+R_coord = u/chi
+Theta_coord = sp.asin(sp.sqrt(u))
+THETA_coord = sp.sqrt(1 + 3*(sp.cos(theta*(sp.pi/180)))**2)
+z_coord = (u/chi-1)*stl.Re
+u_coord = -0.5*sp.sqrt(w) + 0.5*sp.sqrt(2/(zeta*sp.sqrt(w))- w)
+w_coord = - 2**(7/3) * (3**(-1/3))/gamma + gamma/(2 ** (1 / 3) * (3 ** (2 / 3))*zeta)
+gamma_coord = (9*zeta + sp.sqrt(3) * sp.sqrt(27*(zeta**2) + 256*(zeta**3)))**(1/3)
+zeta_coord = ((mu/chi)**4)
 
+# PLASMA NUMBER DENSITY
+n_density = (stl.cm_to_m**3)*(400*stl.Re*z*sp.exp(-z/175) + 0.1 + 10*sp.sqrt(stl.Re/(400*z)) + 100*z*sp.exp(-z/280))
 
-# --- DEFINE ALL THE PHYSICS FUNCTIONS ---
+# PLASMA MASS DENSITY
+m_Op = stl.ion_dict['O+']
+m_Hp = stl.ion_dict['H+']
+rho_density = (stl.cm_to_m**3)*(m_Op*400*stl.Re*z*sp.exp(-z/175) + m_Hp*(0.1 + 10*sp.sqrt(stl.Re/(400*z)) + 100*z*sp.exp(-z/280)))
 
-#####################
 # ELECTRON SKIN DEPTH
-#####################
-stl.prgMsg('Forming SkinDepth Formula')
-mu, chi, n, z, u, w, zeta, gamma = sp.symbols('mu chi n z u w zeta gamma')
 lmb_e = sp.sqrt((stl.lightSpeed ** 2) * stl.m_e * stl.ep0 / (n * stl.q0*stl.q0))
-lmb_e = lmb_e.subs({n:(stl.cm_to_m*stl.cm_to_m*stl.cm_to_m)*(400*stl.Re*z*sp.exp(-z/175) + 0.1 + 10*sp.sqrt(stl.Re/(400*z)) + 100*z*sp.exp(-z/280))})
-lmb_e = lmb_e.subs({z:(u/chi-1)*stl.Re})
-lmb_e = lmb_e.subs({u:-0.5*sp.sqrt(w) + 0.5*sp.sqrt(2/(zeta*sp.sqrt(w))- w)})
-lmb_e = lmb_e.subs({w: - 2**(7/3) * (3**(-1/3))/gamma + gamma/(2 ** (1 / 3) * (3 ** (2 / 3))*zeta)})
-lmb_e = lmb_e.subs({gamma: (9*zeta + sp.sqrt(3) * sp.sqrt(27*(zeta**2) + 256*(zeta**3)))**(1/3)})
-lmb_e = lmb_e.subs({zeta: ((mu/chi)**4)})
+
+# DIPOLE MAGNETIC FIELD
+B_dipole = (3.12E-5) * (1/(1 + z/stl.Re)) * THETA
+
+# ALFVEN VELOCITY (MHD)
+V_A = B/sp.sqrt(stl.u0*(rho))
+
+# Scale Factor on dk_parallel/dt
+scale_dkpara = THETA/(2*(stl.Re*stl.m_to_km)*(R**2)*sp.sqrt(sp.cos(theta*(sp.pi/180))))
+
+# Scale Factor on dk_perp/dt
+scale_dkperp = THETA*(sp.sin(theta*(sp.pi/180)))/((stl.Re*stl.m_to_km)*(R**2))
+
+# Form the expression dictionary - loop through this to replace everything down to the two variables: (mu,chi)
+expression_dict = {
+                   'B':[B, B_dipole],
+                   'rho':[rho, rho_density],
+                   'n':[n, n_density],
+                   'R':[R, R_coord],
+                   'THETA':[THETA, THETA_coord],
+                   'Theta':[theta, Theta_coord],
+                   'z':[z, z_coord],
+                   'u':[u, u_coord],
+                   'w':[w, w_coord],
+                   'gamma':[gamma, gamma_coord],
+                   'zeta':[zeta, zeta_coord]
+}
+
+############
+# Skin Depth
+############
+stl.prgMsg('Forming SkinDepth Formula')
+for key, item in expression_dict.items():
+    lmb_e = lmb_e.subs({item[0]:item[1]})
 stl.Done(start_time)
 
 stl.prgMsg('Differentiating Lmb_e w.r.t. mu')
-diff_lmb_e_mu =sp.diff(lmb_e,mu)
+diff_lmb_e_mu = sp.diff(lmb_e,mu)
 stl.Done(start_time)
 
 stl.prgMsg('Differentiating Lmb_e w.r.t. chi')
@@ -49,19 +91,8 @@ stl.Done(start_time)
 # Alfven Velocity
 #################
 stl.prgMsg('Forming Alfven Velocity Formula')
-B0 = (3.12E-5) # magnetic moment of earth
-m_Op =stl.ion_dict['O+']
-m_Hp =stl.ion_dict['H+']
-B, mu, chi, n, z, u, w, zeta, gamma, rho, theta = sp.symbols('B mu chi n z u w zeta gamma rho theta')
-V_A = B/sp.sqrt(stl.u0*(rho)) # define the function
-V_A = V_A.subs({B:(B0/((1 + z/stl.Re)**3))*sp.sqrt(1 + 3*sp.cos(theta * (sp.pi)/180))})
-V_A = V_A.subs({rho:(stl.cm_to_m*stl.cm_to_m*stl.cm_to_m)*(m_Op*400*stl.Re*z*sp.exp(-z/175) + m_Hp*(0.1 + 10*sp.sqrt(stl.Re/(400*z)) + 100*z*sp.exp(-z/280)))}) # add the density
-V_A = V_A.subs({z:(u/chi-1)*stl.Re})
-V_A = V_A.subs({theta: sp.asin(sp.sqrt(u))})
-V_A = V_A.subs({u:-0.5*sp.sqrt(w) + 0.5*sp.sqrt(2/(zeta*sp.sqrt(w))- w)})
-V_A = V_A.subs({w: - 2**(7/3) * (3**(-1/3))/gamma + gamma/(2 ** (1 / 3) * (3 ** (2 / 3))*zeta)})
-V_A = V_A.subs({gamma: (9*zeta + sp.sqrt(3) * sp.sqrt(27*(zeta**2) + 256*(zeta**3)))**(1/3)})
-V_A = V_A.subs({zeta: ((mu/chi)**4)})
+for key, item in expression_dict.items():
+    V_A = V_A.subs({item[0]:item[1]})
 stl.Done(start_time)
 
 stl.prgMsg('Differentiating V_A w.r.t. mu')
@@ -75,82 +106,109 @@ stl.Done(start_time)
 ##############################################
 # RAY EQUATION scale factor on dk_para/dt term
 ##############################################
-mu, chi, u, w, zeta, gamma, theta, R = sp.symbols('mu chi u w zeta gamma theta R')
-scale_dkpara = sp.sqrt(1 + 3 * sp.cos(theta*(sp.pi/180)))/(2*(stl.Re*stl.m_to_km)*(R**2)*sp.sqrt(sp.cos(theta*(sp.pi/180))))
-scale_dkpara = scale_dkpara.subs({R:(u/chi)})
-scale_dkpara = scale_dkpara.subs({theta: sp.asin(sp.sqrt(u))})
-scale_dkpara = scale_dkpara.subs({u:-0.5*sp.sqrt(w) + 0.5*sp.sqrt(2/(zeta*sp.sqrt(w))- w)})
-scale_dkpara = scale_dkpara.subs({w: - 2**(7/3) * (3**(-1/3))/gamma + gamma/(2 ** (1 / 3) * (3 ** (2 / 3))*zeta)})
-scale_dkpara = scale_dkpara.subs({gamma: (9*zeta + sp.sqrt(3) * sp.sqrt(27*(zeta**2) + 256*(zeta**3)))**(1/3)})
-scale_dkpara = scale_dkpara.subs({zeta: ((mu/chi)**4)})
+stl.prgMsg('Forming K_para Scale Formula')
+for key, item in expression_dict.items():
+    scale_dkpara = scale_dkpara.subs({item[0]:item[1]})
+stl.Done(start_time)
 
 ##############################################
 # RAY EQUATION scale factor on dk_perp/dt term
 ##############################################
-mu, chi, u, w, zeta, gamma, theta, R = sp.symbols('mu chi u w zeta gamma theta R')
-scale_dkperp = (sp.sin(theta*(sp.pi/180))*sp.sqrt(1 + 3 * sp.cos(theta*(sp.pi/180))))/((stl.Re*stl.m_to_km)*(R**2))
-scale_dkperp = scale_dkperp.subs({R:(u/chi)})
-scale_dkperp = scale_dkperp.subs({theta: sp.asin(sp.sqrt(u))})
-scale_dkperp = scale_dkperp.subs({u:-0.5*sp.sqrt(w) + 0.5*sp.sqrt(2/(zeta*sp.sqrt(w))- w)})
-scale_dkperp = scale_dkperp.subs({w: - 2**(7/3) * (3**(-1/3))/gamma + gamma/(2 ** (1 / 3) * (3 ** (2 / 3))*zeta)})
-scale_dkperp = scale_dkperp.subs({gamma: (9*zeta + sp.sqrt(3) * sp.sqrt(27*(zeta**2) + 256*(zeta**3)))**(1/3)})
-scale_dkperp = scale_dkperp.subs({zeta: ((mu/chi)**4)})
+stl.prgMsg('Forming K_para Scale Formula')
+for key, item in expression_dict.items():
+    scale_dkperp = scale_dkpara.subs({item[0]:item[1]})
+stl.Done(start_time)
 
 ##########################################
 # RAY EQUATION scale factor on dmu/dt term
 ##########################################
-mu, chi, u, w, zeta, gamma, theta, R = sp.symbols('mu chi u w zeta gamma theta R')
 scale_dmu = scale_dkpara
-
 
 ###########################################
 # RAY EQUATION scale factor on dchi/dt term
 ###########################################
 scale_dchi = -1*scale_dkperp
 
-##################
-# PRINT EVERYTHING
-##################
 
-# lambda_e
-print('Lambda_e:',end='\n')
-print(lmb_e)
-print('\n\n')
 
-print('pDD_mu Lambda_e:',end='\n')
-print(diff_lmb_e_mu)
-print('\n\n')
+###############################################
+# --- CONVERT EVERYTHING TO LAMBDA FUNCTION ---
+###############################################
+func_lmb_e = lambdify([mu, chi], lmb_e, modules="numpy")
+func_pDD_mu_lmb_e = lambdify([mu, chi], diff_lmb_e_mu, modules="numpy")
+func_pDD_chi_lmb_e = lambdify([mu, chi], diff_lmb_e_chi, modules="numpy")
+func_V_A = lambdify([mu, chi], V_A, modules="numpy")
+func_pDD_mu_V_A = lambdify([mu, chi], diff_V_A_mu, modules="numpy")
+func_pDD_chi_V_A = lambdify([mu, chi], diff_V_A_chi, modules="numpy")
+func_scale_dkpara = lambdify([mu, chi], scale_dkpara, modules="numpy")
+func_scale_dkperp = lambdify([mu, chi], scale_dkperp, modules="numpy")
+func_scale_dmu = lambdify([mu, chi], scale_dmu, modules="numpy")
+func_scale_dchi = lambdify([mu, chi], scale_dchi, modules="numpy")
 
-print('pDD_chi Lambda_e:',end='\n')
-print(diff_lmb_e_chi)
-print('\n\n')
+funcs = {'lmb_e':func_lmb_e,
+         'pDD_mu_lmb_e':func_pDD_mu_lmb_e,
+         'pDD_chi_lmb_e':func_pDD_chi_lmb_e,
+         'V_A':func_V_A,
+         'pDD_mu_V_A':func_pDD_mu_V_A,
+         'pDD_chi_V_A':func_pDD_chi_V_A,
+         'scale_dkpara':func_scale_dkpara,
+         'scale_dkperp':func_scale_dkperp,
+         'scale_dmu':func_scale_dmu,
+         'scale_dmu':func_scale_dmu}
 
-# V_A
-print('V_A:',end='\n')
-print(V_A)
-print('\n\n')
+###################
+# PICKLE EVERYTHING
+###################
+folder = rf'{SimToggles.sim_root_path}\scale_length\pickled_expressions\\'
+for key, funct in funcs.items():
+    file = open(folder+f'{key}.pkl','wb')
+    dill.dump(funct, file)
+    file.close()
 
-print('pDD_mu V_A:',end='\n')
-print(diff_V_A_mu)
-print('\n\n')
 
-print('pDD_chi V_A:',end='\n')
-print(diff_V_A_chi)
-print('\n\n')
-
-print('scale dk_para/dt Term:',end='\n')
-print(scale_dkpara)
-print('\n\n')
-
-print('scale dk_perp/dt Term:',end='\n')
-print(scale_dkperp)
-print('\n\n')
-
-print('scale dmu/dt Term:',end='\n')
-print(scale_dmu)
-print('\n\n')
-
-print('scale dchi/dt Term:',end='\n')
-print(scale_dchi)
-print('\n\n')
+# ##################
+# # PRINT EVERYTHING
+# ##################
+#
+# # lambda_e
+# print('Lambda_e:',end='\n')
+# print(lmb_e)
+# print('\n\n')
+#
+# print('pDD_mu Lambda_e:',end='\n')
+# print(diff_lmb_e_mu)
+# print('\n\n')
+#
+# print('pDD_chi Lambda_e:',end='\n')
+# print(diff_lmb_e_chi)
+# print('\n\n')
+#
+# # V_A
+# print('V_A:',end='\n')
+# print(V_A)
+# print('\n\n')
+#
+# print('pDD_mu V_A:',end='\n')
+# print(diff_V_A_mu)
+# print('\n\n')
+#
+# print('pDD_chi V_A:',end='\n')
+# print(diff_V_A_chi)
+# print('\n\n')
+#
+# print('scale dk_para/dt Term:',end='\n')
+# print(scale_dkpara)
+# print('\n\n')
+#
+# print('scale dk_perp/dt Term:',end='\n')
+# print(scale_dkperp)
+# print('\n\n')
+#
+# print('scale dmu/dt Term:',end='\n')
+# print(scale_dmu)
+# print('\n\n')
+#
+# print('scale dchi/dt Term:',end='\n')
+# print(scale_dchi)
+# print('\n\n')
 
