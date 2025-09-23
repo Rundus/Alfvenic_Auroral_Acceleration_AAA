@@ -25,7 +25,7 @@ if dict_executable['regen_EVERYTHING']==1:
 if dict_executable['regen_ray_equation_expressions']==1:
     # spatial environment
     print('Regenerating Ray Equation Exprssions',end='\n')
-    from src.Alfvenic_Auroral_Acceleration_AAA.scale_length import scale_length_Sympy_expression_generator
+    from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations import ray_equation_expression_generator
     stl.Done(start_time)
 
 if dict_executable['regen_scale_length']==1:
@@ -33,6 +33,13 @@ if dict_executable['regen_scale_length']==1:
     print('Solving IVP for Scale Lengths',end='\n')
     from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_RK45_generator import scale_length_RK45_generator
     scale_length_RK45_generator()
+    stl.Done(start_time)
+
+if dict_executable['regen_plasma_environment']==1:
+    # spatial environment
+    print('Evaluating Plasma Environment',end='\n')
+    from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_generator import plasma_environment_generator
+    plasma_environment_generator()
     stl.Done(start_time)
 
 

@@ -33,18 +33,20 @@ gamma_coord = (9*zeta + sp.sqrt(3) * sp.sqrt(27*(zeta**2) + 256*(zeta**3)))**(1/
 zeta_coord = ((mu/chi)**4)
 
 # PLASMA NUMBER DENSITY
-n_density = (stl.cm_to_m**3)*(400*stl.Re*z*sp.exp(-z/175) + 0.1 + 10*sp.sqrt(stl.Re/(400*z)) + 100*z*sp.exp(-z/280))
+n_Hp_density = (stl.cm_to_m**3)*(0.1 + 10*sp.sqrt(stl.Re/(400*z)) + 100*(z)*sp.exp(-z/280)) # for z in km
+n_Op_density = (stl.cm_to_m**3)*(400*stl.Re*z*sp.exp(-z/175)) # for z in km
+n_density = (n_Op_density + n_Hp_density)
 
 # PLASMA MASS DENSITY
 m_Op = stl.ion_dict['O+']
 m_Hp = stl.ion_dict['H+']
-rho_density = (stl.cm_to_m**3)*(m_Op*400*stl.Re*z*sp.exp(-z/175) + m_Hp*(0.1 + 10*sp.sqrt(stl.Re/(400*z)) + 100*z*sp.exp(-z/280)))
+rho_density = (m_Op*n_Op_density + m_Hp*n_Hp_density)
 
 # ELECTRON SKIN DEPTH
 lmb_e = sp.sqrt((stl.lightSpeed ** 2) * stl.m_e * stl.ep0 / (n * (stl.q0**2)))
 
 # DIPOLE MAGNETIC FIELD
-B_dipole = (3.12E-5) * (1/(1 + z/stl.Re)) * THETA
+B_dipole = (3.12E-5) * ((1/(1 + z/stl.Re))**3) * THETA
 
 # ALFVEN VELOCITY (MHD)
 V_A = B/sp.sqrt(stl.u0*(rho))
@@ -129,10 +131,44 @@ scale_dmu = scale_dkpara
 scale_dchi = -1*scale_dkperp
 
 
+#############################
+# EXTRA ENVIRONMENT FUNCTIONS
+#############################
+
+# B-Dipole
+B_dipole_function = B_dipole
+for key, item in expression_dict.items():
+    B_dipole_function = B_dipole_function.subs({item[0]:item[1]})
+
+# n_Op
+n_Op_function = n_Op_density
+for key, item in expression_dict.items():
+    n_Op_function = n_Op_function.subs({item[0]:item[1]})
+
+# n_Hp
+n_Hp_function = n_Hp_density
+for key, item in expression_dict.items():
+    n_Hp_function = n_Hp_function.subs({item[0]:item[1]})
+
+# total density
+n_total_function = n_Op_density + n_Hp_density
+for key, item in expression_dict.items():
+    n_total_function = n_total_function.subs({item[0]:item[1]})
+
+# weighted ion mass
+rho_function = m_Op*n_Op_function + m_Hp*n_Hp_function
+m_eff_function = rho_function/(m_Op + m_Hp)
+
 
 ###############################################
 # --- CONVERT EVERYTHING TO LAMBDA FUNCTION ---
 ###############################################
+func_B_dipole = lambdify([mu, chi], B_dipole_function, modules="numpy")
+func_nOp = lambdify([mu, chi], n_Op_function, modules="numpy")
+func_nHp = lambdify([mu, chi], n_Hp_function, modules="numpy")
+func_n_density = lambdify([mu, chi], n_total_function, modules="numpy")
+func_meff = lambdify([mu, chi], m_eff_function, modules="numpy")
+func_rho = lambdify([mu, chi], rho_function, modules="numpy")
 func_lmb_e = lambdify([mu, chi], lmb_e, modules="numpy")
 func_pDD_mu_lmb_e = lambdify([mu, chi], diff_lmb_e_mu, modules="numpy")
 func_pDD_chi_lmb_e = lambdify([mu, chi], diff_lmb_e_chi, modules="numpy")
@@ -143,21 +179,27 @@ func_scale_dkpara = lambdify([mu, chi], scale_dkpara, modules="numpy")
 func_scale_dkperp = lambdify([mu, chi], scale_dkperp, modules="numpy")
 func_scale_dmu = lambdify([mu, chi], scale_dmu, modules="numpy")
 func_scale_dchi = lambdify([mu, chi], scale_dchi, modules="numpy")
-funcs = {'lmb_e':func_lmb_e,
-         'pDD_mu_lmb_e':func_pDD_mu_lmb_e,
-         'pDD_chi_lmb_e':func_pDD_chi_lmb_e,
-         'V_A':func_V_A,
-         'pDD_mu_V_A':func_pDD_mu_V_A,
-         'pDD_chi_V_A':func_pDD_chi_V_A,
-         'scale_dkpara':func_scale_dkpara,
-         'scale_dkperp':func_scale_dkperp,
-         'scale_dmu':func_scale_dmu,
-         'scale_dchi':func_scale_dchi}
+funcs = {'lmb_e': func_lmb_e,
+         'pDD_lmb_e_mu': func_pDD_mu_lmb_e,
+         'pDD_lmb_e_chi': func_pDD_chi_lmb_e,
+         'V_A': func_V_A,
+         'pDD_V_A_mu': func_pDD_mu_V_A,
+         'pDD_V_A_chi': func_pDD_chi_V_A,
+         'scale_dkpara': func_scale_dkpara,
+         'scale_dkperp': func_scale_dkperp,
+         'scale_dmu': func_scale_dmu,
+         'scale_dchi': func_scale_dchi,
+         'B_dipole':func_B_dipole,
+         'n_Op':func_nOp,
+         'n_Hp':func_nHp,
+         'n_density':func_n_density,
+         'meff':func_meff,
+         'rho':func_rho}
 
 ###################
 # PICKLE EVERYTHING
 ###################
-folder = rf'{SimToggles.sim_root_path}\scale_length\pickled_expressions\\'
+folder = rf'{SimToggles.sim_root_path}\ray_equations\pickled_expressions\\'
 for key, funct in funcs.items():
     file = open(folder+f'{key}.pkl','wb')
     dill.dump(funct, file)

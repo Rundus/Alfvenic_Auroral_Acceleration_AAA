@@ -10,6 +10,8 @@ def scale_length_RK45_generator():
     from scipy.integrate import solve_ivp
     from glob import glob
     from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_toggles import ScaleLengthToggles as toggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_classes import ScaleLengthClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
     import dill
 
     start_time = time.time()
@@ -26,39 +28,24 @@ def scale_length_RK45_generator():
                         'colat': [[], {'DEPEND_0': 'time', 'UNITS': 'deg', 'LABLAXIS': 'Colatitude &theta;', 'VAR_TYPE': 'data'}],
                         'lat': [[], {'DEPEND_0': 'time', 'UNITS': 'deg', 'LABLAXIS': 'Geomagnetic Latitude 90-&theta;', 'VAR_TYPE': 'data'}],
                         'z': [[], {'DEPEND_0': 'time', 'UNITS': 'km', 'LABLAXIS': 'altitude', 'VAR_TYPE': 'data'}],
-                        'lambda_para0': [np.array([toggles.Lambda_para0/stl.m_to_km]), {'DEPEND_0': 'time', 'UNITS': 'km', 'LABLAXIS': 'Initial &lambda;!B&perp;', 'VAR_TYPE': 'data'}],
-                        'lambda_perp0': [np.array([toggles.Lambda_perp0/stl.m_to_km]), {'DEPEND_0': 'time', 'UNITS': 'km', 'LABLAXIS': 'Initial &lambda;!B&perp;', 'VAR_TYPE': 'data'}],
+                        'lambda_para0': [np.array([SimToggles.Lambda_para0/stl.m_to_km]), {'DEPEND_0': 'time', 'UNITS': 'km', 'LABLAXIS': 'Initial &lambda;!B&perp;', 'VAR_TYPE': 'data'}],
+                        'lambda_perp0': [np.array([SimToggles.Lambda_perp0/stl.m_to_km]), {'DEPEND_0': 'time', 'UNITS': 'km', 'LABLAXIS': 'Initial &lambda;!B&perp;', 'VAR_TYPE': 'data'}],
                         }
 
     #################################################
     # --- IMPORT THE PLASMA ENVIRONMENT FUNCTIONS ---
     #################################################
-    stl.prgMsg('Importing Plasma Environment Functions')
-    pickle_files = glob(r'C:\Users\cfelt\PycharmProjects\Alfvenic_Auroral_Acceleration_AAA\src\Alfvenic_Auroral_Acceleration_AAA\scale_length\pickled_expressions\*.pkl*')
-    for idx, file_nam in enumerate(pickle_files):
-        func = dill.load(open(file_nam,'rb'))
-        if idx == 0:
-            lmb_e = func
-        elif idx == 1:
-            pDD_mu_lmb_e = func
-        elif idx == 2:
-            pDD_chi_lmb_e = func
-        elif idx == 3:
-            V_A = func
-        elif idx==4:
-            pDD_mu_V_A = func
-        elif idx ==5:
-            pDD_chi_V_A = func
-        elif idx ==6:
-            scale_dkpara = func
-        elif idx ==7:
-            scale_dkperp = func
-        elif idx ==8:
-            scale_dmu = func
-        elif idx == 9:
-            scale_dchi = func
-
-    stl.Done(start_time)
+    envDict = ScaleLengthClasses().loadPickleFunctions()
+    V_A = envDict['V_A']
+    scale_dkpara = envDict['scale_dkpara']
+    scale_dkperp = envDict['scale_dkperp']
+    scale_dmu = envDict['scale_dmu']
+    scale_dchi = envDict['scale_dchi']
+    lmb_e = envDict['lambda_e']
+    pDD_mu_lmb_e = envDict['pDD_lambda_e_mu']
+    pDD_chi_lmb_e = envDict['pDD_lambda_e_chi']
+    pDD_mu_V_A =envDict['pDD_V_A_mu']
+    pDD_chi_V_A = envDict['pDD_V_A_chi']
 
     ###################################
     # --- IMPLEMENT THE RK45 Solver ---
@@ -91,9 +78,9 @@ def scale_length_RK45_generator():
                          t_span=t_span,
                          y0=s0,
                          # t_eval=toggles.RK45_eval,
-                         method=toggles.RK45_method,
-                         rtol=toggles.RK45_rtol,
-                         atol=toggles.RK45_atol)
+                         method=SimToggles.RK45_method,
+                         rtol=SimToggles.RK45_rtol,
+                         atol=SimToggles.RK45_atol)
         T = soln.t
         Kpara = soln.y[0, :]
         Kperp = soln.y[1, :]
@@ -101,7 +88,7 @@ def scale_length_RK45_generator():
         Chi = soln.y[3, :]
         return [T, Kpara, Kperp,Mu,Chi]
 
-    [T, Kpara, Kperp,Mu,Chi] = my_RK45_solver(toggles.RK45_tspan, toggles.s0)
+    [T, Kpara, Kperp,Mu,Chi] = my_RK45_solver(SimToggles.RK45_tspan, SimToggles.s0)
     stl.Done(start_time)
 
     # --- store the output ---
