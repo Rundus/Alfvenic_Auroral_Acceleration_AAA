@@ -11,6 +11,7 @@ import dill
 dill.settings['recurse'] = True
 from sympy import lambdify
 from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationsToggles
 start_time = time.time()
 
 ####################################
@@ -26,15 +27,22 @@ B, mu, chi, n, z, u, w, zeta, gamma, rho, theta, R, THETA = sp.symbols('B mu chi
 R_coord = u/chi
 Theta_coord = sp.asin(sp.sqrt(u))
 THETA_coord = sp.sqrt(1 + 3*(sp.cos(theta*(sp.pi/180)))**2)
-z_coord = (u/chi-1)*stl.Re
+z_coord = (u/chi-1)*stl.Re # returns altitude in kilometers
 u_coord = -0.5*sp.sqrt(w) + 0.5*sp.sqrt(2/(zeta*sp.sqrt(w))- w)
-w_coord = - 2**(7/3) * (3**(-1/3))/gamma + gamma/(2 ** (1 / 3) * (3 ** (2 / 3))*zeta)
+w_coord = - 2**(7/3) * (3**(-1/3))/gamma + gamma/(((2 ** (1 / 3)) * (3 ** (2 / 3)))*zeta)
 gamma_coord = (9*zeta + sp.sqrt(3) * sp.sqrt(27*(zeta**2) + 256*(zeta**3)))**(1/3)
 zeta_coord = ((mu/chi)**4)
 
 # PLASMA NUMBER DENSITY
-n_Hp_density = (stl.cm_to_m**3)*(0.1 + 10*sp.sqrt(stl.Re/(400*z)) + 100*(z)*sp.exp(-z/280)) # for z in km
-n_Op_density = (stl.cm_to_m**3)*(400*stl.Re*z*sp.exp(-z/175)) # for z in km
+if RayEquationsToggles.useChaston2006:
+    n_Hp_density = (stl.cm_to_m**3)*(0.1 + 10*sp.sqrt(stl.Re/(400*z)) + 100*(z)*sp.exp(-z/280)) # for z in km
+    n_Op_density = (stl.cm_to_m**3)*(400*stl.Re*z*sp.exp(-z/175)) # for z in km
+elif RayEquationsToggles.useShroeder2021:
+    n_e = (stl.cm_to_m**3)*((6E4)*sp.exp(-(z-318)/383) + (1.34E7)*(z**(-1.55)))
+    n_Op_density = n_e*0.5*(1 - sp.tanh((z-2370)/1800))
+    n_Hp_density = n_e - n_Op_density
+
+
 n_density = (n_Op_density + n_Hp_density)
 
 # PLASMA MASS DENSITY

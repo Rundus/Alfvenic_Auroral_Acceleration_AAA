@@ -6,7 +6,8 @@ class ScaleLengthClasses:
     def loadPickleFunctions(self):
         from glob import glob
         import dill
-        pickle_files = glob(r'C:\Users\cfelt\PycharmProjects\Alfvenic_Auroral_Acceleration_AAA\src\Alfvenic_Auroral_Acceleration_AAA\scale_length\pickled_expressions\*.pkl*')
+
+        pickle_files = glob(r'C:\Users\cfelt\PycharmProjects\Alfvenic_Auroral_Acceleration_AAA\src\Alfvenic_Auroral_Acceleration_AAA\ray_equations\pickled_expressions\*.pkl*')
         for file_nam in pickle_files:
             func = dill.load(open(file_nam, 'rb'))
             if 'lmb_e.pkl' in file_nam:

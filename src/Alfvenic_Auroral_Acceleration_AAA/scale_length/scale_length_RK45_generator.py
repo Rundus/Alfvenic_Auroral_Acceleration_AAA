@@ -57,14 +57,27 @@ def scale_length_RK45_generator():
         # Initial Conditions
         kpara, kperp, mu, chi = S[0], S[1], S[2], S[3]
 
+
+        omega = kpara*V_A(mu, chi)/np.sqrt(1 + np.power(kperp*lmb_e(mu, chi),2))
+
         # Ray equation 1 - k_parallel
-        dkpara = (scale_dkpara(mu, chi) * (kpara*V_A(mu, chi))/np.sqrt(1 + np.power(kperp*lmb_e(mu, chi),2))) * ((kperp**2*lmb_e(mu, chi)/( (1 + np.power(kperp*lmb_e(mu, chi),2))**(3/2)))*pDD_mu_lmb_e(mu, chi) - (1/V_A(mu, chi)) *(pDD_mu_V_A(mu, chi)) )
 
-        dkperp = (scale_dkperp(mu, chi) * (kpara*V_A(mu, chi))/np.sqrt(1 + np.power(kperp*lmb_e(mu, chi),2))) * ((kperp**2*lmb_e(mu, chi)/( (1 + np.power(kperp*lmb_e(mu, chi),2))**(3/2)))*pDD_chi_lmb_e(mu, chi) - (1/V_A(mu, chi)) *(pDD_chi_V_A(mu, chi)) )
+        # k_parallel
+        kpara_term1 = (np.power(kperp,2) * lmb_e(mu,chi)/(1 + np.power(kperp*lmb_e(mu, chi),2))) * pDD_mu_lmb_e(mu,chi)
+        kpara_term2 = (1/V_A(mu,chi)) * pDD_mu_V_A(mu,chi)
+        dkpara = scale_dkpara(mu, chi) * omega * (kpara_term1 - kpara_term2)
 
-        dmu = scale_dmu(mu,chi) * (V_A(mu, chi))/np.sqrt(1 + np.power(kperp*lmb_e(mu, chi),2))
+        # k_perp
+        kperp_term1 = (np.power(kperp,2) * lmb_e(mu,chi)/(1 + np.power(kperp*lmb_e(mu, chi),2))) * pDD_chi_lmb_e(mu,chi)
+        kperp_term2 = (1/V_A(mu,chi)) * pDD_chi_V_A(mu,chi)
+        dkperp = scale_dkperp(mu, chi) * omega * (kperp_term1 - kperp_term2)
+        # dkperp = -1*scale_dkperp(mu, chi) * omega * (kperp_term1 - kperp_term2) #TESTING WITH A -1
 
-        dchi = scale_dchi(mu, chi) * (kpara*kperp*V_A(mu, chi)*np.power(lmb_e(mu,chi),2))/((1 + np.power(kperp*lmb_e(mu, chi),2)**(3/2)))
+        # dmu/dt
+        dmu = scale_dmu(mu,chi) * V_A(mu, chi)/np.sqrt(1 + np.power(kperp*lmb_e(mu, chi),2) )
+
+        # dchi/dt
+        dchi = scale_dchi(mu, chi) * (kpara*kperp*V_A(mu, chi)*np.power(lmb_e(mu,chi),2))/( (1 + np.power(kperp*lmb_e(mu, chi), 2))**(3/2)  )
 
         dS = [dkpara, dkperp, dmu, dchi]
 
@@ -77,7 +90,6 @@ def scale_length_RK45_generator():
         soln = solve_ivp(fun=ray_equations,
                          t_span=t_span,
                          y0=s0,
-                         # t_eval=toggles.RK45_eval,
                          method=SimToggles.RK45_method,
                          rtol=SimToggles.RK45_rtol,
                          atol=SimToggles.RK45_atol)
@@ -86,7 +98,7 @@ def scale_length_RK45_generator():
         Kperp = soln.y[1, :]
         Mu = soln.y[2, :]
         Chi = soln.y[3, :]
-        return [T, Kpara, Kperp,Mu,Chi]
+        return [T, Kpara, Kperp, Mu, Chi]
 
     [T, Kpara, Kperp,Mu,Chi] = my_RK45_solver(SimToggles.RK45_tspan, SimToggles.s0)
     stl.Done(start_time)
