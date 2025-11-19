@@ -4,6 +4,12 @@ import spaceToolsLib as stl
 class PlasmaEnvironmentToggles:
 
 
+    ####################################
+    #-----------------------------------
+    # --- GRID TOGGLES (DIAGNOSTICS) ---
+    # -----------------------------------
+    ####################################
+
     ##################################
     # --- SPATIAL ENVIRONMENT GRID ---
     ##################################
@@ -42,6 +48,6 @@ class PlasmaEnvironmentToggles:
 
     # --- File I/O ---
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
-    outputFolder = f'{SimToggles.sim_data_output_path}\plasma_environment'
+    outputFolder = f'{SimToggles.sim_data_output_path}/plasma_environment'
 
 

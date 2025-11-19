@@ -1,13 +1,52 @@
-
+import numpy as np
 
 
 class ScaleLengthClasses:
+
+    # Convert output to geophysical coordinates
+    def r_muChi(mu, chi):
+        '''
+        :param mu:
+            mu coordinate value
+        :param chi:
+            chi coordinate value
+        :return:
+            distance along geomagnetic field line, measure from earth's surface in [km]
+        '''
+
+        zeta = np.power(mu / chi, 4)
+        c1 = 2 ** (7 / 3) * (3 ** (-1 / 3))
+        c2 = 2 ** (1 / 3) * (3 ** (2 / 3))
+        gamma = (9 * zeta + np.sqrt(3) * np.sqrt(27 * np.square(zeta) + 256 * np.power(zeta, 3))) ** (1 / 3)
+        w = - c1 / gamma + gamma / (c2 * zeta)
+        u = -0.5 * np.sqrt(w) + 0.5 * np.sqrt(2 / (zeta * np.sqrt(w)) - w)
+
+        r = u / chi  # in R_E from earth's center
+
+        return r
+
+    def theta_muChi(mu, chi):
+        '''
+        :param mu:
+            mu coordinate value
+        :param chi:
+            chi coordinate value
+        :return:
+            distance along geomagnetic field line in [m]
+        '''
+        zeta = np.power(mu / chi, 4)
+        c1 = 2 ** (7 / 3) * (3 ** (-1 / 3))
+        c2 = 2 ** (1 / 3) * (3 ** (2 / 3))
+        gamma = (9 * zeta + np.sqrt(3) * np.sqrt(27 * np.square(zeta) + 256 * np.power(zeta, 3))) ** (1 / 3)
+        w = - c1 / gamma + gamma / (c2 * zeta)
+        u = -0.5 * np.sqrt(w) + 0.5 * np.sqrt(2 / (zeta * np.sqrt(w)) - w)
+        return np.degrees(np.arcsin(np.sqrt(u)))
 
     def loadPickleFunctions(self):
         from glob import glob
         import dill
 
-        pickle_files = glob(r'C:\Users\cfelt\PycharmProjects\Alfvenic_Auroral_Acceleration_AAA\src\Alfvenic_Auroral_Acceleration_AAA\ray_equations\pickled_expressions\*.pkl*')
+        pickle_files = glob(r'/home/connor/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA/ray_equations/pickled_expressions/*.pkl*')
         for file_nam in pickle_files:
             func = dill.load(open(file_nam, 'rb'))
             if 'lmb_e.pkl' in file_nam:
@@ -22,14 +61,12 @@ class ScaleLengthClasses:
                 pDD_mu_V_A = func
             elif 'pDD_V_A_chi.pkl' in file_nam:
                 pDD_chi_V_A = func
-            elif 'scale_dkpara' in file_nam:
-                scale_dkpara = func
-            elif 'scale_dkperp' in file_nam:
-                scale_dkperp = func
-            elif 'scale_dmu.pkl' in file_nam:
-                scale_dmu = func
-            elif 'scale_dchi.pkl' in file_nam:
-                scale_dchi = func
+            elif 'h_mu' in file_nam:
+                h_mu = func
+            elif 'h_chi' in file_nam:
+                h_chi = func
+            elif 'h_phi.pkl' in file_nam:
+                h_phi = func
             elif 'B_dipole.pkl' in file_nam:
                 B_dipole = func
             elif 'n_Op.pkl' in file_nam:
@@ -49,10 +86,9 @@ class ScaleLengthClasses:
                  'V_A': V_A,
                  'pDD_V_A_mu': pDD_mu_V_A,
                  'pDD_V_A_chi': pDD_chi_V_A,
-                 'scale_dkpara': scale_dkpara,
-                 'scale_dkperp': scale_dkperp,
-                 'scale_dmu': scale_dmu,
-                 'scale_dchi': scale_dchi,
+                 'h_mu': h_mu,
+                 'h_chi': h_chi,
+                 'h_phi': h_phi,
                  'B_dipole': B_dipole,
                  'n_Op': n_Op,
                  'n_Hp': n_Hp,
