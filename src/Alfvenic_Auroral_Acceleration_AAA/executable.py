@@ -26,6 +26,7 @@ if dict_executable['regen_ray_equation_expressions']==1:
     # spatial environment
     print('Regenerating Ray Equation Expressions',end='\n')
     from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations import ray_equation_expression_generator
+    ray_equation_expression_generator()
     stl.Done(start_time)
 
 if dict_executable['regen_scale_length']==1:
@@ -42,6 +43,12 @@ if dict_executable['regen_plasma_environment']==1:
     plasma_environment_generator()
     stl.Done(start_time)
 
+if dict_executable['regen_wave_fields']==1:
+    # spatial environment
+    print('Calculating Wave Fields',end='\n')
+    from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_generator import wave_fields_generator
+    wave_fields_generator()
+    stl.Done(start_time)
 
 
 

@@ -8,7 +8,7 @@ class SimToggles:
     # RK45_method = 'LSODA'
     RK45_rtol = 1E-25 # controls the relative accuracy. If rtol
     RK45_atol = 1E-15 # controls the absolute accuracy
-    RK45_tspan = [0, 3]  # time range (in seconds)
+    RK45_tspan = [0,1]  # time range (in seconds)
 
 
     # --- INITIAL CONDITIONS ---
@@ -29,8 +29,8 @@ class SimToggles:
     phi0 = np.radians(phi0)
 
     # Initial Wavelength
-    Lambda_perp0 = 2*1000 # perpendicular wavelength (in meters) AT THE IONOSPHERE
-    perp_ratio = 1.01 # % of perpendicular wave VECTOR that's in the phi direction
+    Lambda_perp0 = 4*1000 # perpendicular wavelength (in meters) AT THE IONOSPHERE
+    perp_ratio = 1.1 # what % of the initial lambda_perp is lambda_phi
 
     # --- File I/O ---
     sim_root_path = r'/home/connor/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'

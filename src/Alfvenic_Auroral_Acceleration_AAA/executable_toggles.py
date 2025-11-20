@@ -4,4 +4,5 @@ dict_executable = {
     'regen_ray_equation_expressions':0,
     'regen_scale_length': 1,
     'regen_plasma_environment':1,
+    'regen_wave_fields': 0
 }

@@ -1,7 +1,8 @@
 import numpy as np
 
-
 class ScaleLengthClasses:
+
+
 
     # Convert output to geophysical coordinates
     def r_muChi(mu, chi):

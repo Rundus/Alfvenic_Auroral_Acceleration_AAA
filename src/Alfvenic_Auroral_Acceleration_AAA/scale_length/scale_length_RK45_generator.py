@@ -93,13 +93,21 @@ def scale_length_RK45_generator():
     ###################################
     stl.prgMsg('Solving Scale Length IVP')
 
+    def calc_k_phi(mu,chi, k_mu,k_chi):
+
+        # Calculate the current k_phi
+        # k_phi_current = np.sqrt((np.square(V_A(mu, chi) * k_mu / SimToggles.omega0) - 1) / (lmb_e(mu, chi) ** 2) - k_chi ** 2)
+
+        k_phi_current = np.sqrt((B_dipole(mu,chi)/B0) *(np.square(k_chi_0) + np.square(k_phi_0)) - np.square(k_chi))
+
+        return k_phi_current
+
     def ray_equations(t, S):
 
         # Initial Conditions
         k_mu, k_chi, k_phi, mu, chi, phi = S[0], S[1], S[2], S[3], S[4], S[5]
 
-        # Calculate the current k_phi
-        k_phi_current = np.sqrt((B_dipole(mu,chi)/B0) *(np.square(k_chi_0) + np.square(k_phi_0)) - np.square(k_chi))
+        k_phi_current = calc_k_phi(mu, chi, k_mu, k_chi)
 
         # Calculate the current k_perp
         k_perp = np.sqrt(np.square(k_phi_current) + np.square(k_chi))
@@ -163,14 +171,11 @@ def scale_length_RK45_generator():
     data_dict_output['time'][0] = np.array(T)
     data_dict_output['k_mu'][0] = np.array(K_mu)
     data_dict_output['k_chi'][0] = np.array(K_chi)
-    data_dict_output['k_phi'][0] = np.sqrt((B_dipole(Mu,Chi)/B0) *(k_chi_0**2 + k_phi_0**2) - K_chi**2)
-    data_dict_output['k_perp'][0] = np.sqrt(K_chi**2 + np.square(deepcopy(data_dict_output['k_phi'][0])))
-
     data_dict_output['mu_w'][0] = np.array(Mu)
     data_dict_output['chi_w'][0] = np.array(Chi)
     data_dict_output['phi_w'][0] = np.array(Phi)
-
-
+    data_dict_output['k_phi'][0] = np.array([calc_k_phi(data_dict_output['mu_w'][0][i], data_dict_output['chi_w'][0][i], data_dict_output['k_mu'][0][i], data_dict_output['k_chi'][0][i]) for i in range(len(data_dict_output['time'][0]))])
+    data_dict_output['k_perp'][0] = np.sqrt(K_chi ** 2 + np.square(deepcopy(data_dict_output['k_phi'][0])))
 
     data_dict_output['colat'][0] = ScaleLengthClasses.theta_muChi(Mu,Chi)
     data_dict_output['lat'][0] = 90 - deepcopy(data_dict_output['colat'][0])
