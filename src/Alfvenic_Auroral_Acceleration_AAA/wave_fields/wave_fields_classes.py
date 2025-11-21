@@ -31,12 +31,9 @@ class WaveFieldsClasses:
         delta_phi = (lambda_phi / 2) / envDict['h_phi'](mu_w, chi_w)
 
         # check if you're within wave size
-
         mu_checker = np.all([mu < mu_w + delta_mu, mu > mu_w - delta_mu])
-        # print(mu - delta_mu, mu_w, mu + delta_mu,mu_checker)
         chi_checker = np.all([chi_w - delta_chi < chi, chi < chi_w + delta_chi])
         phi_checker = np.all([phi_w - delta_phi<phi, phi < phi_w + delta_phi])
-        print(phi - delta_phi, phi_w, phi + delta_phi, phi_checker)
 
         if np.all([mu_checker,chi_checker,phi_checker]):
             return True

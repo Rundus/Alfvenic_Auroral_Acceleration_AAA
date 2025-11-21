@@ -18,12 +18,12 @@ chi_range = np.linspace(chi_low, chi_high, N_chi)
 
 # --- MU-Dimension ---
 # determine minimum/maximum mu value for the TOP colattitude
-N_mu = 20  # number of points in mu direction
+N_mu = 30  # number of points in mu direction
 mu_min, mu_max = [-0.9,-0.4]
 mu_range = np.linspace(mu_min, mu_max, N_mu)
 
 # --- Phi-Dimension ---
-N_phi = 20
+N_phi = 40
 phi_min,phi_max = np.radians(-10),np.radians(10)
 phi_range = np.linspace(phi_min,phi_max,N_phi)
 
