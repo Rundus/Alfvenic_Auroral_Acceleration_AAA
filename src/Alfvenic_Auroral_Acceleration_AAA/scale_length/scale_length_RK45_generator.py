@@ -173,7 +173,7 @@ def scale_length_RK45_generator():
     data_dict_output['k_chi'][0] = np.array(K_chi)
     data_dict_output['mu_w'][0] = np.array(Mu)
     data_dict_output['chi_w'][0] = np.array(Chi)
-    data_dict_output['phi_w'][0] = np.array(Phi)
+    data_dict_output['phi_w'][0] = np.array(np.degrees(Phi))
     data_dict_output['k_phi'][0] = np.array([calc_k_phi(data_dict_output['mu_w'][0][i], data_dict_output['chi_w'][0][i], data_dict_output['k_mu'][0][i], data_dict_output['k_chi'][0][i]) for i in range(len(data_dict_output['time'][0]))])
     data_dict_output['k_perp'][0] = np.sqrt(K_chi ** 2 + np.square(deepcopy(data_dict_output['k_phi'][0])))
 
