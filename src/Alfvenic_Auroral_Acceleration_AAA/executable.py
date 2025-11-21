@@ -26,7 +26,6 @@ if dict_executable['regen_ray_equation_expressions']==1:
     # spatial environment
     print('Regenerating Ray Equation Expressions',end='\n')
     from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations import ray_equation_expression_generator
-    ray_equation_expression_generator()
     stl.Done(start_time)
 
 if dict_executable['regen_scale_length']==1:

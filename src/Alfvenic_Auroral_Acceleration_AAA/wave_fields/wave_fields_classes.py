@@ -16,6 +16,7 @@ class WaveFieldsClasses:
     def Potential_Shape_phi(self,x,Phi0,wave_pos,k):
         h_phi=envDict['h_phi'](wave_pos[0], wave_pos[1])
         return (Phi0/2)*(1+np.sin((k*h_phi)*(x-wave_pos[3])))
+        # return 1
 
     def InWaveChecker(self,tme_idx, mu,chi,phi,wave_pos):
         mu_w, chi_w, phi_w = wave_pos
@@ -25,14 +26,18 @@ class WaveFieldsClasses:
         lambda_chi = data_dict_wavescale['lambda_chi'][0][tme_idx]
         lambda_phi = data_dict_wavescale['lambda_phi'][0][tme_idx]
 
-        delta_mu = (lambda_mu / 2) / envDict['h_mu'](mu_w, chi_w)
+        delta_mu = np.abs((lambda_mu / 2) / envDict['h_mu'](mu_w, chi_w))
         delta_chi = (lambda_chi / 2) / envDict['h_chi'](mu_w, chi_w)
         delta_phi = (lambda_phi / 2) / envDict['h_phi'](mu_w, chi_w)
 
         # check if you're within wave size
-        mu_checker = np.all([mu > mu_w + delta_mu, mu < mu_w - delta_mu])
-        chi_checker = np.all([chi > chi_w + delta_chi, chi < chi_w - delta_chi])
-        phi_checker = np.all([phi > phi_w + delta_phi,phi > phi_w + delta_phi])
+
+        mu_checker = np.all([mu < mu_w + delta_mu, mu > mu_w - delta_mu])
+        # print(mu - delta_mu, mu_w, mu + delta_mu,mu_checker)
+        chi_checker = np.all([chi_w - delta_chi < chi, chi < chi_w + delta_chi])
+        phi_checker = np.all([phi_w - delta_phi<phi, phi < phi_w + delta_phi])
+        print(phi - delta_phi, phi_w, phi + delta_phi, phi_checker)
+
         if np.all([mu_checker,chi_checker,phi_checker]):
             return True
         else:  # return the field value
