@@ -15,7 +15,7 @@ class WaveFieldsClasses:
 
     def Potential_Shape_phi(self,x,Phi0,wave_pos,k):
         h_phi=envDict['h_phi'](wave_pos[0], wave_pos[1])
-        return (Phi0/2)*(1+np.sin((k*h_phi)*(x-wave_pos[3])))
+        return (Phi0/2)*(1+np.sin((k*h_phi)*(x-wave_pos[2])))
         # return 1
 
     def InWaveChecker(self,tme_idx, mu,chi,phi,wave_pos):
