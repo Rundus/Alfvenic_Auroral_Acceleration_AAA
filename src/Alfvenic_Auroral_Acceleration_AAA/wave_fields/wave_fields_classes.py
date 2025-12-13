@@ -1,50 +1,72 @@
+import numpy as np
+from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_classes import ScaleLengthClasses
 import spaceToolsLib as stl
 from glob import glob
-import numpy as np
-from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
-from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles
-from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_classes import ScaleLengthClasses
+
 envDict = ScaleLengthClasses().loadPickleFunctions()
 data_dict_wavescale = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/scale_length/*.cdf*')[0])
 data_dict_plasma = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/plasma_environment/*.cdf*')[0])
+k_vectors = np.array([data_dict_wavescale['k_mu'][0], data_dict_wavescale['k_chi'][0], data_dict_wavescale['k_phi'][0]]).T
+wave_pos_vector = np.array([data_dict_wavescale['mu_w'][0],data_dict_wavescale['chi_w'][0],data_dict_wavescale['phi_w'][0]]).T
+h_factors = [envDict['h_mu'], envDict['h_chi'], envDict['h_phi']]
 
 class WaveFieldsClasses:
 
-    def PhiShape(self,x,Phi0,z0,k):
-        return (Phi0/2)*(1+np.cos(k*(x-z0)))
+    def Potential_phi(self, inputs):
+        tme_idx, eval_pos, wave_pos, k, h, lmb_e = inputs
+        return (WaveFieldsToggles.Phi_0/2)*(h[2]*(eval_pos[2]-wave_pos[2])*np.sin(k[0]*h[0]*(eval_pos[0]-wave_pos[0])))
 
-    def Potential_Shape_phi(self,x,Phi0,wave_pos,k):
-        h_phi=envDict['h_phi'](wave_pos[0], wave_pos[1])
-        return (Phi0/2)*(1+np.sin((k*h_phi)*(x-wave_pos[3])))
+    def EField_phi(self, inputs):
+        tme_idx, eval_pos, wave_pos, k, h, lmb_e = inputs
+        return -1*(k[2]*WaveFieldsToggles.Phi_0 / (4*np.pi)) * (np.sin(k[0] * h[0] * (eval_pos[0]-wave_pos[0])))
 
-    def InWaveChecker(self,tme_idx, mu,chi,phi,wave_pos):
-        mu_w, chi_w, phi_w = wave_pos
+    def EField_mu(self, inputs):
+        tme_idx, eval_pos, wave_pos, k, h, lmb_e = inputs
+        E_perp = self.EField_phi(inputs)
+        k_perp = np.sqrt(k[1]**2 + k[2]**2)
+        return (k[0]*k_perp*np.square(lmb_e))*E_perp/(1 + np.square(lmb_e*k_perp))
+
+    def InWaveChecker(self,inputs):
+        tme_idx, eval_pos, wave_pos, k, h, lmb_e = inputs
 
         # determine the range where you're within the wave, else zero
-        lambda_mu = data_dict_wavescale['lambda_mu'][0][tme_idx] # delta = (lambda/2)/ scale_factor
-        lambda_chi = data_dict_wavescale['lambda_chi'][0][tme_idx]
-        lambda_phi = data_dict_wavescale['lambda_phi'][0][tme_idx]
-
-        delta_mu = (lambda_mu / 2) / envDict['h_mu'](mu_w, chi_w)
-        delta_chi = (lambda_chi / 2) / envDict['h_chi'](mu_w, chi_w)
-        delta_phi = (lambda_phi / 2) / envDict['h_phi'](mu_w, chi_w)
+        lambda_w = 2*np.pi/np.array(k)
+        delta_w = (lambda_w/2)/np.array(h) # delta = (lambda/2)/ scale_factor
 
         # check if you're within wave size
-        mu_checker = np.all([mu > mu_w + delta_mu, mu < mu_w - delta_mu])
-        chi_checker = np.all([chi > chi_w + delta_chi, chi < chi_w - delta_chi])
-        phi_checker = np.all([phi > phi_w + delta_phi,phi > phi_w + delta_phi])
-        if np.all([mu_checker,chi_checker,phi_checker]):
+        mu_checker = np.all([eval_pos[0] > wave_pos[0] - delta_w[0], eval_pos[0] < wave_pos[0] + delta_w[0]])
+        chi_checker = np.all([eval_pos[1] > wave_pos[1] - delta_w[1], eval_pos[1] < wave_pos[1] + delta_w[1]])
+        phi_checker = np.all([eval_pos[2] > wave_pos[2] - delta_w[2], eval_pos[2] < wave_pos[2] + delta_w[2]])
+        # print([wave_pos[2] - delta_w[2],wave_pos[2],wave_pos[2] + delta_w[2],eval_pos[2]])
+
+        if np.all([mu_checker, chi_checker, phi_checker]):
             return True
         else:  # return the field value
             return False
 
-    def Potential_phi(self,t,mu,chi,phi):
-        tme_idx = np.abs(data_dict_wavescale['time'][0] - t).argmin()
-        wave_pos = [data_dict_wavescale['mu_w'][0][tme_idx],data_dict_wavescale['chi_w'][0][tme_idx],data_dict_wavescale['phi_w'][0][tme_idx]]
-        k_phi = data_dict_wavescale['k_phi'][0][tme_idx]
+    def field_generator(self, time, eval_pos,**kwargs):
 
-        if self.InWaveChecker(tme_idx,mu,chi,phi,wave_pos):
-            return self.Potential_Shape_phi(phi, WaveFieldsToggles.Phi_0, wave_pos, k_phi)
+        which = kwargs.get('type')
+
+        # get the specifics of the wave at the chosen
+        tme_idx = np.abs(data_dict_wavescale['time'][0] - time).argmin()
+        wave_pos = wave_pos_vector[tme_idx]
+        h = np.array([h_factors[0](wave_pos[0], wave_pos[1]), h_factors[1](wave_pos[0], wave_pos[1]), h_factors[2](wave_pos[0], wave_pos[1])])
+        k = k_vectors[tme_idx]
+        lmb_e = data_dict_plasma['lambda_e'][0][tme_idx]
+
+        # create the inputs
+        inputs = [tme_idx, eval_pos, wave_pos, k, h, lmb_e]
+
+        if self.InWaveChecker(inputs):
+            if which.lower() == 'potential':
+                return self.Potential_phi(inputs)
+            elif which.lower() == 'eperp':
+                return self.EField_phi(inputs)
+            elif which.lower() == 'epara':
+                return self.EField_mu(inputs)
         else:
             return 0
 

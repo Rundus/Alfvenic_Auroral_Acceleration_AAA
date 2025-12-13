@@ -24,7 +24,8 @@ def scale_length_RK45_generator():
                         'time': [[], {'DEPEND_0':'time','UNITS': 's', 'LABLAXIS': 'Time','VAR_TYPE':'data'}],
                         'mu_w': [[], {'DEPEND_0':'time','UNITS': None, 'LABLAXIS': '&mu; wave','VAR_TYPE':'data'}],
                         'chi_w': [[], {'DEPEND_0':'time','UNITS': None, 'LABLAXIS': '&chi; wave','VAR_TYPE':'data'}],
-                        'phi_w': [[], {'DEPEND_0':'time','UNITS': 'deg', 'LABLAXIS': '&phi; wave','VAR_TYPE':'data'}],
+                        'phi_w': [[], {'DEPEND_0':'time','UNITS': 'rad', 'LABLAXIS': '&phi; wave','VAR_TYPE':'data'}],
+                        'phi_w_deg': [[], {'DEPEND_0': 'time', 'UNITS': 'deg', 'LABLAXIS': '&phi; wave', 'VAR_TYPE': 'data'}],
                         'k_chi': [[], {'DEPEND_0':'time','UNITS': '1/m', 'LABLAXIS': ' k!B&Chi;!N', 'VAR_TYPE': 'data'}],
                         'k_phi': [[], {'DEPEND_0': 'time', 'UNITS': '1/m', 'LABLAXIS': ' k!B&phi;!N', 'VAR_TYPE': 'data'}],
                         'k_perp': [[], {'DEPEND_0': 'time', 'UNITS': '1/m', 'LABLAXIS': ' k!B&perp;!N', 'VAR_TYPE': 'data'}],
@@ -119,12 +120,12 @@ def scale_length_RK45_generator():
         # k_mu
         term1 = (np.square(k_perp) * lmb_e(mu,chi)/(1 + np.square(k_perp*lmb_e(mu, chi)))) * pDD_mu_lmb_e(mu,chi)
         term2 = (1/V_A(mu,chi)) * pDD_mu_V_A(mu,chi)
-        dk_mu = h_mu(mu, chi) * SimToggles.omega0 * (term1 - term2)
+        dk_mu = (1/h_mu(mu, chi)) * SimToggles.omega0 * (term1 - term2)
 
         # k_chi
         term1 = (np.square(k_perp) * lmb_e(mu,chi)/(1 + np.square(k_perp*lmb_e(mu, chi)))) * pDD_chi_lmb_e(mu,chi)
         term2 = (1/V_A(mu,chi)) * pDD_chi_V_A(mu,chi)
-        dk_chi = h_chi(mu, chi) * SimToggles.omega0 * (term1 - term2)
+        dk_chi = (1/h_chi(mu, chi)) * SimToggles.omega0 * (term1 - term2)
 
         # k_phi
         dk_phi = 0
@@ -133,13 +134,13 @@ def scale_length_RK45_generator():
         # --- Ray equation 2 ---
         ########################
         # dmu/dt
-        dmu = h_mu(mu,chi)*(SimToggles.omega0/k_mu)
+        dmu = (1/h_mu(mu,chi))*(SimToggles.omega0/k_mu)
 
         # dchi/dt
-        dchi = -1* h_chi(mu, chi)*(SimToggles.omega0) * ((k_chi*np.square(lmb_e(mu,chi)))/(1+np.square(k_perp*lmb_e(mu,chi))))
+        dchi = -1* (1/h_chi(mu, chi))*(SimToggles.omega0) * ((k_chi*np.square(lmb_e(mu,chi)))/(1+np.square(k_perp*lmb_e(mu,chi))))
 
         # dphi/dt
-        dphi = -1 * h_phi(mu, chi) * (SimToggles.omega0) * ((k_phi * np.square(lmb_e(mu, chi))) / (1 + np.square(k_perp * lmb_e(mu, chi))))
+        dphi = -1 * (1/h_phi(mu, chi)) * (SimToggles.omega0) * ((k_phi * np.square(lmb_e(mu, chi))) / (1 + np.square(k_perp * lmb_e(mu, chi))))
 
         dS = [dk_mu, dk_chi, dk_phi, dmu, dchi, dphi]
 
@@ -173,7 +174,8 @@ def scale_length_RK45_generator():
     data_dict_output['k_chi'][0] = np.array(K_chi)
     data_dict_output['mu_w'][0] = np.array(Mu)
     data_dict_output['chi_w'][0] = np.array(Chi)
-    data_dict_output['phi_w'][0] = np.array(np.degrees(Phi))
+    data_dict_output['phi_w'][0] = np.array(Phi)
+    data_dict_output['phi_w_deg'][0] = np.array(np.degrees(deepcopy(Phi)))
     data_dict_output['k_phi'][0] = np.array([calc_k_phi(data_dict_output['mu_w'][0][i], data_dict_output['chi_w'][0][i], data_dict_output['k_mu'][0][i], data_dict_output['k_chi'][0][i]) for i in range(len(data_dict_output['time'][0]))])
     data_dict_output['k_perp'][0] = np.sqrt(K_chi ** 2 + np.square(deepcopy(data_dict_output['k_phi'][0])))
 

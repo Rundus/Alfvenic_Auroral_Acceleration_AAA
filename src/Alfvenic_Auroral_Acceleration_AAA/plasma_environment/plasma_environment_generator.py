@@ -37,9 +37,9 @@ def plasma_environment_generator():
                         'pDD_V_A_mu': [[], {'DEPEND_0': 'time', 'UNITS': 'm/s', 'LABLAXIS': 'dV_A/d&mu;', 'VAR_TYPE': 'data'}],
                         'pDD_V_A_chi': [[], {'DEPEND_0': 'time', 'UNITS': 'm/s', 'LABLAXIS': 'dV_A/d&chi;', 'VAR_TYPE': 'data'}],
 
-                        'h_mu': [[], {'DEPEND_0': 'time', 'UNITS': 'm!A-1!N', 'LABLAXIS': 'h!B&mu;!N', 'VAR_TYPE': 'data'}],
-                        'h_chi': [[], {'DEPEND_0': 'time', 'UNITS': 'm!A-1!N', 'LABLAXIS': 'h!B&chi;!N', 'VAR_TYPE': 'data'}],
-                        'h_phi': [[], {'DEPEND_0': 'time', 'UNITS': 'm!A-1!N', 'LABLAXIS': 'h!B&phi;!N', 'VAR_TYPE': 'data'}],
+                        'h_mu': [[], {'DEPEND_0': 'time', 'UNITS': 'm', 'LABLAXIS': 'h!B&mu;!N', 'VAR_TYPE': 'data'}],
+                        'h_chi': [[], {'DEPEND_0': 'time', 'UNITS': 'm', 'LABLAXIS': 'h!B&chi;!N', 'VAR_TYPE': 'data'}],
+                        'h_phi': [[], {'DEPEND_0': 'time', 'UNITS': 'm', 'LABLAXIS': 'h!B&phi;!N', 'VAR_TYPE': 'data'}],
                         'inertial_term': [[], {'DEPEND_0': 'time', 'UNITS': None, 'LABLAXIS': '(1+(k!B&perp;!N &lambda;!Be!N)!A2!N)!A1/2!N', 'VAR_TYPE': 'data'}],
                         'B_dipole':[[],{}],
                         'meff': [[], {}],

@@ -107,13 +107,13 @@ B_dipole = (3.12E-5) * ((1/(1 + z/stl.Re))**3) * THETA
 V_A = B/sp.sqrt(stl.u0*(rho))
 
 # SCALE FACTOR - mu
-h_mu = THETA/(2*(stl.Re*stl.m_to_km)*(R**2)*sp.sqrt(sp.cos(theta*(sp.pi/180))))
+h_mu = 1/(THETA/(2*(stl.Re*stl.m_to_km)*(R**2)*sp.sqrt(sp.cos(theta*(sp.pi/180)))))
 
 # SCALE FACTOR - chi
-h_chi = THETA*(sp.sin(theta*(sp.pi/180)))/((stl.Re*stl.m_to_km)*(R**2))
+h_chi = 1/(THETA*(sp.sin(theta*(sp.pi/180)))/((stl.Re*stl.m_to_km)*(R**2)))
 
 # SCALE FACTOR - phi
-h_phi = 1/(stl.Re*stl.m_to_km * (R**2)*sp.sin(theta*(sp.pi/180)))
+h_phi = (stl.Re*stl.m_to_km * (R**2)*sp.sin(theta*(sp.pi/180)))
 
 # Form the expression dictionary - loop through this to replace everything down to the two variables: (mu,chi)
 expression_dict = {

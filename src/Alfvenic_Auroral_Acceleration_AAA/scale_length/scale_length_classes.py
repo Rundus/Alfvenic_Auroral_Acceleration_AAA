@@ -1,4 +1,5 @@
 import numpy as np
+from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
 
 class ScaleLengthClasses:
 
@@ -47,7 +48,7 @@ class ScaleLengthClasses:
         from glob import glob
         import dill
 
-        pickle_files = glob(r'/home/connor/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA/ray_equations/pickled_expressions/*.pkl*')
+        pickle_files = glob(rf'{SimToggles.sim_root_path}/ray_equations/pickled_expressions/*.pkl*')
         for file_nam in pickle_files:
             func = dill.load(open(file_nam, 'rb'))
             if 'lmb_e.pkl' in file_nam:
