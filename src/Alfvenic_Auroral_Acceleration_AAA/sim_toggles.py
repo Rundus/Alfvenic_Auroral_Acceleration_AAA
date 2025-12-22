@@ -8,7 +8,7 @@ class SimToggles:
     # RK45_method = 'LSODA'
     RK45_rtol = 1E-25 # controls the relative accuracy. If rtol
     RK45_atol = 1E-15 # controls the absolute accuracy
-    RK45_tspan = [0,1.5]  # time range (in seconds)
+    RK45_tspan = [0, 1.5]  # time range (in seconds)
 
 
     # --- INITIAL CONDITIONS ---
@@ -22,7 +22,7 @@ class SimToggles:
     Theta0 = 70  # in geomagnetic latitude
     phi0 = 0 # in geomagnetic longitude
 
-    # spherical coordinates
+    # modified dipole coordinates
     r = 1 + z0 / stl.Re
     u0 = -1 * np.sqrt(np.cos(np.radians(90 - Theta0))) / r
     chi0 = np.power(np.sin(np.radians(90 - Theta0)), 2) / r
@@ -34,6 +34,7 @@ class SimToggles:
 
     # --- File I/O ---
     # sim_root_path = r'/home/connor/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
+    # sim_data_output_path = r'/home/connor/Data/physicsModels/alfvenic_auroral_acceleration_AAA'
+
     sim_root_path = r'C:/Users/cfelt/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
     sim_data_output_path = r'C:/Data/physicsModels/alfvenic_auroral_acceleration_AAA'
-    # sim_data_output_path = r'/home/connor/Data/physicsModels/alfvenic_auroral_acceleration_AAA'
