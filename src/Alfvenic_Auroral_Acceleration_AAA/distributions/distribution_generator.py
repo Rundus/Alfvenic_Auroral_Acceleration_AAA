@@ -8,10 +8,11 @@ def distribution_generator():
 
     # --- File-specific imports ---
     from glob import glob
-    from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles as toggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import WaveFieldsClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_toggles import DistributionToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_classes import ScaleLengthClasses
+    from scipy.integrate import solve_ivp
 
     # --- Load the wave simulation data ---
     data_dict_wavescale = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/scale_length/*.cdf*')[0])
@@ -30,11 +31,29 @@ def distribution_generator():
     # --- IMPORT THE PLASMA ENVIRONMENT FUNCTIONS ---
     #################################################
     envDict = ScaleLengthClasses().loadPickleFunctions()
+    B_dipole = envDict['B_dipole']
+    dB_dipole_dmu = envDict['dB_dipole_dmu']
+    h_factors = [envDict['h_mu'], envDict['h_chi'], envDict['h_phi']]
 
     ########################################
     # --- LOOP OVER VELOCITY PHASE SPACE ---
     ########################################
 
+    # Initial State
+    i, j, k = 0, 0, 0
+    v_perp = np.sqrt((DistributionToggles.vel_chi[j])**2 + (DistributionToggles.vel_phi[k])**2)
+    uB = (0.5*stl.m_e*np.power(v_perp,2))/B_dipole(DistributionToggles.u0, DistributionToggles.chi0)
+    s0 = [DistributionToggles.u0,
+          DistributionToggles.chi0,
+          DistributionToggles.phi0,
+          DistributionToggles.vel_mu[i],
+          DistributionToggles.vel_chi[j],
+          DistributionToggles.vel_phi[k]]
+    print(DistributionToggles.u0, DistributionToggles.chi0)
+    print(B_dipole(DistributionToggles.u0, DistributionToggles.chi0))
+    print(v_perp)
+    print(uB)
+    print(s0)
     #####################
     # --- RK45 SOLVER ---
     #####################
@@ -45,18 +64,19 @@ def distribution_generator():
 
         # --- Coordinates ---
         # dmu/dt
-        DmuDt = S[3]
+        DmuDt = S[3]/h_factors[0](S[0],S[1])
 
         # dchi/dt
-        DchiDt = S[4]
+        DchiDt = S[4]/h_factors[1](S[0],S[1])
 
         # dphi/dt
-        DphiDt = S[5]
+        DphiDt = S[5]/h_factors[2](S[0],S[1])
 
         # --- Velocity ---
 
         # dv_phi/dt
-        DvmuDt = (-1*stl.q0/stl.m_e) * EField_mu(t,)
+        # DvmuDt = (-1*stl.q0/stl.m_e) * EField_mu(t,) - (uB/stl.m_e) * (dB_dipole_dmu(S[0],S[1])/h_factors[0](S[0],S[1]))
+        DvmuDt = - (uB / stl.m_e) * (dB_dipole_dmu(S[0], S[1]) / h_factors[0](S[0], S[1]))
 
         # dv_chi/dt
         DvchiDt = 0
@@ -64,7 +84,7 @@ def distribution_generator():
         # dv_phi/dt
         DvphiDt = 0
 
-        dS = [DmuDt, DchiDt, DphiDt, D]
+        dS = [DmuDt, DchiDt, DphiDt, DvmuDt, DvchiDt, DchiDt]
 
         return dS
 
@@ -72,31 +92,25 @@ def distribution_generator():
     def my_RK45_solver(t_span, s0):
 
         # Note: my_lorenz(t, S, sigma, rho, beta)
-        soln = solve_ivp(fun=ray_equations,
+        soln = solve_ivp(fun=equations_of_motion,
                          t_span=t_span,
                          y0=s0,
                          method=SimToggles.RK45_method,
                          rtol=SimToggles.RK45_rtol,
                          atol=SimToggles.RK45_atol)
         T = soln.t
-        K_mu = soln.y[0, :]
-        K_chi = soln.y[1, :]
-        K_phi = soln.y[2, :]
-        Mu = soln.y[3, :]
-        Chi = soln.y[4, :]
-        Phi = soln.y[5,:]
-        return [T, K_mu, K_chi, K_phi, Mu, Chi, Phi]
+        particle_mu = soln.y[0, :]
+        particle_chi = soln.y[1, :]
+        particle_phi = soln.y[2, :]
+        v_Mu = soln.y[3, :]
+        v_Chi = soln.y[4, :]
+        v_Phi = soln.y[5,:]
+        return [T, particle_mu, particle_chi, particle_phi, v_Mu, v_Chi, v_Phi]
 
-    [T, K_mu, K_chi, K_phi, Mu, Chi, Phi] = my_RK45_solver(SimToggles.RK45_tspan, s0)
-
-    ################################################
-    # --- EVALUATE FUNCTIONS ON SIMULATION SPACE ---
-    ################################################
-    for key, func in envDict.items():
-        data_dict_output[key][0] = func(data_dict_output['mu_w'][0], data_dict_output['chi_w'][0])
+    # [T, particle_mu, particle_chi, particle_phi, v_Mu, v_Chi, v_Phi] = my_RK45_solver(SimToggles.RK45_tspan, s0)
 
     ################
     # --- OUTPUT ---
     ################
-    outputPath = rf'{toggles.outputFolder}/wave_fields.cdf'
+    outputPath = rf'{DistributionToggles.outputFolder}/distributions.cdf'
     stl.outputDataDict(outputPath, data_dict_output)

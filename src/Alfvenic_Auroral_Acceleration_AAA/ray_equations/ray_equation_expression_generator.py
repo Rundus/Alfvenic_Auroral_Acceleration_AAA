@@ -65,7 +65,6 @@ elif RayEquationsToggles.useChaston2003_nightside:
     n_E = nE[i] * sp.exp(-1 * (z - Ealt[i]) ** 2 / (wE[i] ** 2))
     n_F = nF[i] * (z - F0[i]) * sp.exp(-1 * ((z - F0[i]) / alpha_[i]) ** (eta[i]))
     n_Hp_density = (stl.cm_to_m ** 3) * (n_mag + n_E + n_F)
-
 elif RayEquationsToggles.useChaston2003_cusp:
     # parameters for [Oxygen+, H+]
     nM = [0, 1]
@@ -195,6 +194,9 @@ B_dipole_function = B_dipole
 for key, item in expression_dict.items():
     B_dipole_function = B_dipole_function.subs({item[0]:item[1]})
 
+# dB-Dipole/dMu
+dB_dipole_dmu_function = sp.diff(B_dipole_function, mu)
+
 # n_Op
 n_Op_function = n_Op_density
 for key, item in expression_dict.items():
@@ -229,6 +231,7 @@ func_pDD_chi_lmb_e = lambdify([mu, chi], diff_lmb_e_chi, modules="numpy")
 func_V_A = lambdify([mu, chi], V_A, modules="numpy")
 func_pDD_mu_V_A = lambdify([mu, chi], diff_V_A_mu, modules="numpy")
 func_pDD_chi_V_A = lambdify([mu, chi], diff_V_A_chi, modules="numpy")
+func_pDD_mu_Bgeo = lambdify([mu, chi], dB_dipole_dmu_function, modules="numpy")
 func_h_mu = lambdify([mu, chi], h_mu, modules="numpy")
 func_h_chi = lambdify([mu, chi], h_chi, modules="numpy")
 func_h_phi = lambdify([mu, chi], h_phi, modules="numpy")
@@ -246,7 +249,8 @@ funcs = {'lmb_e': func_lmb_e,
          'n_Hp':func_nHp,
          'n_density':func_n_density,
          'meff':func_meff,
-         'rho':func_rho}
+         'rho':func_rho,
+         'dB_dipole_dmu':func_pDD_mu_Bgeo}
 
 ###################
 # PICKLE EVERYTHING

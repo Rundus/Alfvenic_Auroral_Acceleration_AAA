@@ -43,10 +43,17 @@ if dict_executable['regen_plasma_environment']==1:
     stl.Done(start_time)
 
 if dict_executable['regen_wave_fields']==1:
-    # spatial environment
+    # Wave Fields
     print('Calculating Wave Fields',end='\n')
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_generator import wave_fields_generator
     wave_fields_generator()
+    stl.Done(start_time)
+
+if dict_executable['regen_particle_distributions'] == 1:
+    # particle distributions
+    print('Calculating Liouville Mapping',end='\n')
+    from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_generator import distribution_generator
+    distribution_generator()
     stl.Done(start_time)
 
 
