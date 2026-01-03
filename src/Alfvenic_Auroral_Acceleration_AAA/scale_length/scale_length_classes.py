@@ -81,6 +81,8 @@ class ScaleLengthClasses:
                 meff = func
             elif 'rho.pkl' in file_nam:
                 rho = func
+            elif 'dB_dipole_dmu' in file_nam:
+                dB_dipole_dmu = func
 
         funcs = {'lambda_e': lmb_e,
                  'pDD_lambda_e_mu': pDD_mu_lmb_e,
@@ -96,6 +98,7 @@ class ScaleLengthClasses:
                  'n_Hp': n_Hp,
                  'n_density': n_density,
                  'meff': meff,
-                 'rho': rho}
+                 'rho': rho,
+                 'dB_dipole_dmu':dB_dipole_dmu}
 
         return funcs

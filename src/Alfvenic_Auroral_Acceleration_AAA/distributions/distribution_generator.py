@@ -49,11 +49,6 @@ def distribution_generator():
           DistributionToggles.vel_mu[i],
           DistributionToggles.vel_chi[j],
           DistributionToggles.vel_phi[k]]
-    print(DistributionToggles.u0, DistributionToggles.chi0)
-    print(B_dipole(DistributionToggles.u0, DistributionToggles.chi0))
-    print(v_perp)
-    print(uB)
-    print(s0)
     #####################
     # --- RK45 SOLVER ---
     #####################
@@ -102,15 +97,25 @@ def distribution_generator():
         particle_mu = soln.y[0, :]
         particle_chi = soln.y[1, :]
         particle_phi = soln.y[2, :]
-        v_Mu = soln.y[3, :]
-        v_Chi = soln.y[4, :]
-        v_Phi = soln.y[5,:]
-        return [T, particle_mu, particle_chi, particle_phi, v_Mu, v_Chi, v_Phi]
+        vel_Mu = soln.y[3, :]
+        vel_Chi = soln.y[4, :]
+        vel_Phi = soln.y[5, :]
+        return [T, particle_mu, particle_chi, particle_phi, vel_Mu, vel_Chi, vel_Phi]
 
-    # [T, particle_mu, particle_chi, particle_phi, v_Mu, v_Chi, v_Phi] = my_RK45_solver(SimToggles.RK45_tspan, s0)
+    [T, particle_mu, particle_chi, particle_phi, vel_Mu, vel_Chi, vel_Phi] = my_RK45_solver(SimToggles.RK45_tspan, s0)
 
     ################
     # --- OUTPUT ---
     ################
+    data_dict_output = {
+        'time': [np.array(T), {'DEPEND_0':'time','UNITS': 's', 'LABLAXIS': 'Time','VAR_TYPE':'data'}],
+        'particle_mu': [np.array(particle_mu), {'DEPEND_0':'time','UNITS': None, 'LABLAXIS': '&mu;', 'VAR_TYPE':'data'}],
+        'particle_chi': [np.array(particle_chi), {'DEPEND_0':'time','UNITS': None, 'LABLAXIS': '&chi;', 'VAR_TYPE':'data'}],
+        'particle_phi': [np.array(particle_phi), {'DEPEND_0':'time','UNITS': 'rad', 'LABLAXIS': '&phi;', 'VAR_TYPE':'data'}],
+        'vel_mu' : [np.array(vel_Mu), {'DEPEND_0':'time','UNITS': 'm/s', 'LABLAXIS': 'V!B&mu;!N', 'VAR_TYPE':'data'}],
+        'vel_chi': [np.array(vel_Chi), {'DEPEND_0':'time','UNITS': 'm/s', 'LABLAXIS': 'V!B&chi;!N', 'VAR_TYPE':'data'}],
+        'vel_phi': [np.array(vel_Phi), {'DEPEND_0':'time','UNITS': 'm/s', 'LABLAXIS': 'V!B&phi;!N', 'VAR_TYPE':'data'}],
+    }
+
     outputPath = rf'{DistributionToggles.outputFolder}/distributions.cdf'
     stl.outputDataDict(outputPath, data_dict_output)

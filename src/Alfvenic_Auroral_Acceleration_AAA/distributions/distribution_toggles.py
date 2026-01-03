@@ -30,7 +30,7 @@ class DistributionToggles:
     vel_chi = np.linspace(vmin, vmax, N_points)
 
     # phi
-    v_phi = np.linspace(vmin, vmax, N_points)
+    vel_phi = np.linspace(vmin, vmax, N_points)
 
     # --- File I/O ---
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
