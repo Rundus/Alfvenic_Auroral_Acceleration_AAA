@@ -52,7 +52,6 @@ def wave_fields_generator():
         lmd_e = data_dict_plasma['lmb_e'][0]
         return Eperp/VA*np.sqrt(1 + np.square(k_perp*lmd_e))
 
-
     ################################################
     # --- EVALUATE FUNCTIONS ON SIMULATION SPACE ---
     ################################################

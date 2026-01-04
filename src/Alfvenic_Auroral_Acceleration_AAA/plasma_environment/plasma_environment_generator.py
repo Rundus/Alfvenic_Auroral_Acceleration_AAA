@@ -37,6 +37,8 @@ def plasma_environment_generator():
                         'pDD_V_A_mu': [[], {'DEPEND_0': 'time', 'UNITS': 'm/s', 'LABLAXIS': 'dV_A/d&mu;', 'VAR_TYPE': 'data'}],
                         'pDD_V_A_chi': [[], {'DEPEND_0': 'time', 'UNITS': 'm/s', 'LABLAXIS': 'dV_A/d&chi;', 'VAR_TYPE': 'data'}],
 
+                        'dB_dipole_dmu' : [[], {'DEPEND_0': 'time','UNITS': 'T','LABLAXIS':'dB_dipole_dmu', 'VAR_TYPE':'data'}],
+
                         'h_mu': [[], {'DEPEND_0': 'time', 'UNITS': 'm', 'LABLAXIS': 'h!B&mu;!N', 'VAR_TYPE': 'data'}],
                         'h_chi': [[], {'DEPEND_0': 'time', 'UNITS': 'm', 'LABLAXIS': 'h!B&chi;!N', 'VAR_TYPE': 'data'}],
                         'h_phi': [[], {'DEPEND_0': 'time', 'UNITS': 'm', 'LABLAXIS': 'h!B&phi;!N', 'VAR_TYPE': 'data'}],
@@ -65,7 +67,6 @@ def plasma_environment_generator():
     ###################################
     data_dict_output['inertial_term'][0] = np.sqrt(1 + np.square(data_dict_wavescale['k_perp'][0]*data_dict_output['lambda_e'][0]))
 
-
     ########################################
     # CONSTRUCT THE GRIDDED SIMULATION SPACE
     ########################################
@@ -75,7 +76,7 @@ def plasma_environment_generator():
                         }
 
     for key, func in envDict.items():
-        data_dict_output = {**data_dict_output, **{f'grid_{key}': [func(toggles.mu_grid, toggles.chi_grid), {'DEPEND_0':'mu','DEPEND_1':'chi'}]}}
+        data_dict_output = {**data_dict_output, **{f'grid_{key}': [func(toggles.mu_grid, toggles.chi_grid), {'DEPEND_0':'mu', 'DEPEND_1':'chi'}]}}
 
 
 

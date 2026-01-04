@@ -155,7 +155,9 @@ def scale_length_RK45_generator():
                          y0=s0,
                          method=SimToggles.RK45_method,
                          rtol=SimToggles.RK45_rtol,
-                         atol=SimToggles.RK45_atol)
+                         atol=SimToggles.RK45_atol,
+                         # t_eval=SimToggles.RK45_Teval,
+                         )
         T = soln.t
         K_mu = soln.y[0, :]
         K_chi = soln.y[1, :]

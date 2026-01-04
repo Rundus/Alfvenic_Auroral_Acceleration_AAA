@@ -3,6 +3,12 @@ import spaceToolsLib as stl
 from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
 class DistributionToggles:
 
+    #################################
+    # --- PLASMA SHEET PARAMETERS ---
+    #################################
+    n_PS = 100E6 # in [m^-3]
+    Te_PS = 100 # in [eV]
+
     ##########################
     # --- INITIAL POSITION ---
     ##########################
@@ -20,17 +26,15 @@ class DistributionToggles:
     # --- PLASMA DISTRIBUTION TOGGLES ---
     #####################################
     N_points = 10
-    vmin = -1E6
-    vmax = 1E6
+    E_lim = 10 # in eV
+    vmin = -np.sqrt(2*(stl.q0*E_lim)/stl.m_e) # define the maximum velocity in terms of energy
+    vmax = np.sqrt(2*(stl.q0*E_lim)/stl.m_e)
 
     # mu
-    vel_mu = np.linspace(vmin, vmax, N_points)
+    vel_space_mu_range = np.linspace(vmin, vmax, N_points)
 
-    # chi
-    vel_chi = np.linspace(vmin, vmax, N_points)
-
-    # phi
-    vel_phi = np.linspace(vmin, vmax, N_points)
+    # perp
+    vel_space_perp_range = np.linspace(vmin, vmax, N_points)
 
     # --- File I/O ---
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
