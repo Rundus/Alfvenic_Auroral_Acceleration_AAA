@@ -6,10 +6,10 @@ class SimToggles:
     # --- RK45 solver toggles ---
     RK45_method = 'RK45'
     # RK45_method = 'LSODA'
-    RK45_rtol = 1E-10 # controls the relative accuracy. If rtol
-    RK45_atol = 1E-5 # controls the absolute accuracy
-    RK45_tspan = [0, 5]  # time range (in seconds)
-    RK45_N_eval_points = 2
+    RK45_rtol = 1E-15 # controls the relative accuracy. If rtol
+    RK45_atol = 1E-10 # controls the absolute accuracy
+    RK45_tspan = [1.5, 0]  # time range (in seconds)
+    RK45_N_eval_points = 10
     RK45_Teval = np.linspace(RK45_tspan[0], RK45_tspan[-1], RK45_N_eval_points)
 
     # --- INITIAL CONDITIONS ---
@@ -34,8 +34,8 @@ class SimToggles:
     perp_ratio = 1.1 # what % of the initial lambda_perp is lambda_phi
 
     # --- File I/O ---
-    # sim_root_path = r'/home/connor/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
-    # sim_data_output_path = r'/home/connor/Data/physicsModels/alfvenic_auroral_acceleration_AAA'
+    sim_root_path = r'/home/connor/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
+    sim_data_output_path = r'/home/connor/Data/physicsModels/alfvenic_auroral_acceleration_AAA'
 
-    sim_root_path = r'C:/Users/cfelt/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
-    sim_data_output_path = r'C:/Data/physicsModels/alfvenic_auroral_acceleration_AAA'
+    # sim_root_path = r'C:/Users/cfelt/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
+    # sim_data_output_path = r'C:/Data/physicsModels/alfvenic_auroral_acceleration_AAA'

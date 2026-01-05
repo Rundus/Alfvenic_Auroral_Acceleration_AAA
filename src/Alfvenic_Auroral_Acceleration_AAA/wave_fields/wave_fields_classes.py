@@ -15,8 +15,9 @@ h_factors = [envDict['h_mu'], envDict['h_chi'], envDict['h_phi']]
 
 class ElectrostaticPotentialClasses:
     def invertedVEField(self, eval_pos):
-        if (eval_pos[0]*h_factors[0](eval_pos[0],eval_pos[1]) <= (4000+stl.Re)*stl.m_to_km) and (eval_pos[0]*h_factors[0](eval_pos[0],eval_pos[1]) <= (10000+stl.Re)*stl.m_to_km):
-            return -1E-3
+        mu_alt = stl.Re*(ScaleLengthClasses.r_muChi(eval_pos[0],eval_pos[1])-1)
+        if (mu_alt >= WaveFieldsToggles.inV_Zmin) and (mu_alt <=WaveFieldsToggles.inV_Zmax):
+            return (WaveFieldsToggles.inV_Volts) /((WaveFieldsToggles.inV_Zmax - WaveFieldsToggles.inV_Zmin)*stl.m_to_km) # Note, this E-Field is postive --> along mu
         else:
             return 0
 

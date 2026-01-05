@@ -25,16 +25,20 @@ class DistributionToggles:
     #####################################
     # --- PLASMA DISTRIBUTION TOGGLES ---
     #####################################
-    N_points = 10
+    N_points = 5
     E_lim = 10000 # in eV
     vmin = -np.sqrt(2*(stl.q0*E_lim)/stl.m_e) # define the maximum velocity in terms of energy
     vmax = np.sqrt(2*(stl.q0*E_lim)/stl.m_e)
 
     # mu
-    vel_space_mu_range = np.linspace(vmin, vmax, N_points)
+    # vel_space_mu_range = np.linspace(vmin, vmax, N_points)
+    vel_space_mu_range = np.linspace(vmin, vmax, N_points) # only upward particles
 
     # perp
-    vel_space_perp_range = np.linspace(vmin, vmax, N_points)
+    vel_space_perp_range = np.linspace(np.sqrt(2*(stl.q0*10)/stl.m_e), vmax, N_points)
+
+    # altitude to terminate simulation
+    termination_altitude = 10000 * stl.m_to_km # in meters
 
     # --- File I/O ---
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
