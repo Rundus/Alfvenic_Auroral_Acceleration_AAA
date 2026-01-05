@@ -12,6 +12,14 @@ k_vectors = np.array([data_dict_wavescale['k_mu'][0], data_dict_wavescale['k_chi
 wave_pos_vector = np.array([data_dict_wavescale['mu_w'][0],data_dict_wavescale['chi_w'][0],data_dict_wavescale['phi_w'][0]]).T
 h_factors = [envDict['h_mu'], envDict['h_chi'], envDict['h_phi']]
 
+
+class ElectrostaticPotentialClasses:
+    def invertedVEField(self, eval_pos):
+        if (eval_pos[0]*h_factors[0](eval_pos[0],eval_pos[1]) <= (4000+stl.Re)*stl.m_to_km) and (eval_pos[0]*h_factors[0](eval_pos[0],eval_pos[1]) <= (10000+stl.Re)*stl.m_to_km):
+            return -1E-3
+        else:
+            return 0
+
 class WaveFieldsClasses:
 
     def Potential_phi(self, inputs):

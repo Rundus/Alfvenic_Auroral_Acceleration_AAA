@@ -26,7 +26,7 @@ class DistributionToggles:
     # --- PLASMA DISTRIBUTION TOGGLES ---
     #####################################
     N_points = 10
-    E_lim = 10 # in eV
+    E_lim = 10000 # in eV
     vmin = -np.sqrt(2*(stl.q0*E_lim)/stl.m_e) # define the maximum velocity in terms of energy
     vmax = np.sqrt(2*(stl.q0*E_lim)/stl.m_e)
 

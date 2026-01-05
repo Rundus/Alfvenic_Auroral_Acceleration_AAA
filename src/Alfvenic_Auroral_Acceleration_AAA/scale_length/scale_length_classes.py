@@ -13,7 +13,7 @@ class ScaleLengthClasses:
         :param chi:
             chi coordinate value
         :return:
-            distance along geomagnetic field line, measure from earth's surface in [km]
+            distance along geomagnetic field line, measure from earth's center in [km]
         '''
 
         zeta = np.power(mu / chi, 4)

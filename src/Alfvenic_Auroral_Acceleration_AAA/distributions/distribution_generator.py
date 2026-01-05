@@ -8,9 +8,10 @@ def distribution_generator():
 
     # --- File-specific imports ---
     from glob import glob
-    from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import ElectrostaticPotentialClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_toggles import DistributionToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_classes import DistributionClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_classes import ScaleLengthClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_classes import ScaleLengthClasses
     from scipy.integrate import solve_ivp
@@ -39,7 +40,7 @@ def distribution_generator():
 
     # The
     def equations_of_motion(t, S):
-        # State Vector - [mu, v_mu]
+        # State Vector - [mu, chi, phi, vel_mu, vel_chi, vel_phi]
 
         # --- Coordinates ---
         # dmu/dt
@@ -54,7 +55,7 @@ def distribution_generator():
         # --- Velocity ---
         # dv_mu/dt
         # DvmuDt = (-1*stl.q0/stl.m_e) * EField_mu(t,) - (uB/stl.m_e) * (dB_dipole_dmu(S[0],S[1])/h_factors[0](S[0],S[1]))
-        DvmuDt = - (uB / stl.m_e) * (dB_dipole_dmu(S[0], S[1]) / h_factors[0](S[0], S[1]))
+        DvmuDt = - (uB / stl.m_e) * (dB_dipole_dmu(S[0], S[1]) / h_factors[0](S[0], S[1])) - stl.q0*ElectrostaticPotentialClasses().invertedVEField([S[0],S[1],S[2]])
 
         # dv_chi/dt
         DvchiDt = 0
@@ -98,40 +99,41 @@ def distribution_generator():
     Distribution = np.zeros(shape=(len(SimToggles.RK45_Teval),len(DistributionToggles.vel_space_mu_range), len(DistributionToggles.vel_space_perp_range)))
     Energy = np.zeros(shape=(len(SimToggles.RK45_Teval), len(DistributionToggles.vel_space_mu_range), len(DistributionToggles.vel_space_perp_range)))
 
-    for paraIdx in tqdm(range(len(DistributionToggles.vel_space_mu_range))):
-        for perpIdx in range(len(DistributionToggles.vel_space_perp_range)):
-            v_perp0 = np.sqrt((DistributionToggles.vel_space_mu_range[paraIdx])**2 + (DistributionToggles.vel_space_perp_range[perpIdx])**2)
-            B0 = B_dipole(DistributionToggles.u0, DistributionToggles.chi0)
-            uB = (0.5*stl.m_e*np.power(v_perp0,2))/B0
-            s0 = [DistributionToggles.u0,
-                  DistributionToggles.chi0,
-                  DistributionToggles.phi0,
-                  DistributionToggles.vel_space_mu_range[paraIdx],
-                  DistributionToggles.vel_space_perp_range[perpIdx],
-                  DistributionToggles.vel_space_perp_range[perpIdx]]
+    for tmeIdx in tqdm(range(len(SimToggles.RK45_Teval))):
+        for paraIdx in range(len(DistributionToggles.vel_space_mu_range)):
+            for perpIdx in range(len(DistributionToggles.vel_space_perp_range)):
+                v_perp0 = np.sqrt((DistributionToggles.vel_space_mu_range[paraIdx])**2 + (DistributionToggles.vel_space_perp_range[perpIdx])**2)
+                B0 = B_dipole(DistributionToggles.u0, DistributionToggles.chi0)
+                uB = (0.5*stl.m_e*np.power(v_perp0,2))/B0
+                s0 = [DistributionToggles.u0,
+                      DistributionToggles.chi0,
+                      DistributionToggles.phi0,
+                      DistributionToggles.vel_space_mu_range[paraIdx],
+                      DistributionToggles.vel_space_perp_range[perpIdx],
+                      DistributionToggles.vel_space_perp_range[perpIdx]]
 
-            [T, particle_mu, particle_chi, particle_phi, particle_vel_Mu, particle_vel_chi, particle_vel_phi] = my_RK45_solver(SimToggles.RK45_tspan, s0)
+                [T, particle_mu, particle_chi, particle_phi, particle_vel_Mu, particle_vel_chi, particle_vel_phi] = my_RK45_solver(SimToggles.RK45_tspan, s0)
 
-            ################################
-            # --- PERPENDICULAR DYNAMICS ---
-            ################################
-            # geomagnetic field experienced by particle
-            B_mag_particle = B_dipole(particle_mu,np.array([DistributionToggles.chi0 for i in range(len(particle_mu))]))
-            particle_vel_perp = v_perp0*np.sqrt(B_mag_particle/np.array([B0 for i in range(len(B_mag_particle))]))
+                ################################
+                # --- PERPENDICULAR DYNAMICS ---
+                ################################
+                # geomagnetic field experienced by particle
+                B_mag_particle = B_dipole(particle_mu,np.array([DistributionToggles.chi0 for i in range(len(particle_mu))]))
+                particle_vel_perp = v_perp0*np.sqrt(B_mag_particle/np.array([B0 for i in range(len(B_mag_particle))]))
 
-            ################
-            # --- ENERGY ---
-            ################
-            Energy[0][paraIdx][perpIdx] = (0.5*stl.m_e*(np.square(particle_vel_perp[0]) + np.square(particle_vel_Mu[0])))/stl.q0 - (0.5*stl.m_e*(np.square(particle_vel_perp[-1]) + np.square(particle_vel_Mu[-1])))/stl.q0
+                ################
+                # --- ENERGY ---
+                ################
+                Energy[tmeIdx][paraIdx][perpIdx] = (0.5*stl.m_e*(np.square(particle_vel_perp[0]) + np.square(particle_vel_Mu[0])))/stl.q0 - (0.5*stl.m_e*(np.square(particle_vel_perp[-1]) + np.square(particle_vel_Mu[-1])))/stl.q0
 
+                ####################################################
+                # --- UPDATE DISTRIBUTION GRID AT simulation END ---
+                ####################################################
+                Distribution[tmeIdx][paraIdx][perpIdx] = DistributionClasses().Maxwellian(n=DistributionToggles.n_PS,
+                                                                       Te=DistributionToggles.Te_PS,
+                                                                       vel_perp=particle_vel_perp[-1],
+                                                                       vel_para=particle_vel_Mu[-1])
 
-            ####################################################
-            # --- UPDATE DISTRIBUTION GRID AT simulation END ---
-            ####################################################
-            Distribution[0][paraIdx][perpIdx] = DistributionClasses().Maxwellian(n=DistributionToggles.n_PS,
-                                                                   Te=DistributionToggles.Te_PS,
-                                                                   vel_perp=particle_vel_perp[-1],
-                                                                   vel_para=particle_vel_Mu[-1])
 
 
     ################
@@ -139,13 +141,15 @@ def distribution_generator():
     ################
     data_dict_output = {
         'time': [np.array(T), {'DEPEND_0':'time','UNITS': 's', 'LABLAXIS': 'Time','VAR_TYPE':'data'}],
+        'time_eval' : [np.array(SimToggles.RK45_Teval),{'UNITS': 's', 'LABLAXIS': 'Time Eval','VAR_TYPE':'data'}],
         'particle_mu': [np.array(particle_mu), {'DEPEND_0':'time','UNITS': None, 'LABLAXIS': '&mu;', 'VAR_TYPE':'data'}],
         # 'particle_chi': [np.array(particle_chi), {'DEPEND_0':'time','UNITS': None, 'LABLAXIS': '&chi;', 'VAR_TYPE':'data'}],
         # 'particle_phi': [np.array(particle_phi), {'DEPEND_0':'time','UNITS': 'rad', 'LABLAXIS': '&phi;', 'VAR_TYPE':'data'}],
         'particle_vel_mu' : [np.array(particle_vel_Mu), {'DEPEND_0':'time','UNITS': 'm/s', 'LABLAXIS': 'V!B&mu;!N', 'VAR_TYPE':'data'}],
+        'particle_alt_along_mu': [stl.Re*(np.array(ScaleLengthClasses.r_muChi(particle_mu,np.array([DistributionToggles.chi0 for i in range(len(particle_mu))])))-1), {'DEPEND_0': 'time', 'UNITS': 'km', 'LABLAXIS': '&mu;!N', 'VAR_TYPE': 'data'}],
         'particle_vel_perp': [np.array(particle_vel_perp), {'DEPEND_0': 'time', 'UNITS': 'm/s', 'LABLAXIS': 'V!B&perp;!N', 'VAR_TYPE': 'data'}],
-        'Energy_diff' : [np.array(Energy), {'DEPEND_0':'time','DEPEND_1':'vperp_range','DEPEND_2':'vpara_range', 'UNITS': 'eV', 'LABLAXIS': 'Energy', 'VAR_TYPE': 'data'}],
-        'Distribution': [np.array(Distribution), {'DEPEND_0':'time','DEPEND_1':'vperp_range','DEPEND_2':'vpara_range','UNITS':'m!A-6!N!A-3!N','LABLAXIS':'Distribution Function','VAR_TYPE':'data'}],
+        'Energy_diff' : [np.array(Energy), {'DEPEND_0':'time_eval','DEPEND_1':'vperp_range','DEPEND_2':'vpara_range', 'UNITS': 'eV', 'LABLAXIS': 'Energy', 'VAR_TYPE': 'data'}],
+        'Distribution': [np.array(Distribution), {'DEPEND_0':'time_eval','DEPEND_1':'vperp_range','DEPEND_2':'vpara_range','UNITS':'m!A-6!N!A-3!N','LABLAXIS':'Distribution Function','VAR_TYPE':'data'}],
         'vperp_range': [np.array(DistributionToggles.vel_space_perp_range), {'UNITS':'m/s','LABLAXIS':'V!B&perp;!N'}],
         'vpara_range': [np.array(DistributionToggles.vel_space_mu_range), {'UNITS':'m/s','LABLAXIS':'V!B&parallel;!N'}],
         # 'vel_chi': [np.array(vel_Chi), {'DEPEND_0':'time','UNITS': 'm/s', 'LABLAXIS': 'V!B&chi;!N', 'VAR_TYPE':'data'}],
