@@ -1,6 +1,3 @@
-from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles
-
-
 def distribution_generator():
 
     # --- general imports ---
@@ -10,19 +7,15 @@ def distribution_generator():
 
     # --- File-specific imports ---
     from glob import glob
-    import math
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import ElectrostaticPotentialClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_toggles import DistributionToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_classes import DistributionClasses
-    from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_classes import ScaleLengthClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_classes import ScaleLengthClasses
     from scipy.integrate import solve_ivp
     import matplotlib.pyplot as plt
     from tqdm import tqdm
-
-    # --- Load the wave simulation data ---
-    data_dict_wavescale = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/scale_length/*.cdf*')[0])
 
     #################################################
     # --- IMPORT THE PLASMA ENVIRONMENT FUNCTIONS ---
