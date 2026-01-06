@@ -19,19 +19,21 @@ start_time = time.time()
 ####################################
 B, mu, chi, n, z, u, w, zeta, gamma, rho, theta, R, THETA = sp.symbols('B mu chi n z u w zeta gamma rho theta R, THETA')
 
-########################################
-# --- Define the physics expressions ---
-########################################
-
-# Modified Dipole coordinates
+#####################################
+# --- Modified Dipole coordinates ---
+#####################################
 R_coord = u/chi
 Theta_coord = sp.asin(sp.sqrt(u))
-THETA_coord = sp.sqrt(1 + 3*(sp.cos(theta*(sp.pi/180)))**2)
+THETA_coord = sp.sqrt(1 + 3*(sp.cos(theta))**2)
 z_coord = (u/chi-1)*stl.Re # returns altitude in kilometers
 u_coord = -0.5*sp.sqrt(w) + 0.5*sp.sqrt(2/(zeta*sp.sqrt(w))- w)
 w_coord = - 2**(7/3) * (3**(-1/3))/gamma + gamma/(((2 ** (1 / 3)) * (3 ** (2 / 3)))*zeta)
 gamma_coord = (9*zeta + sp.sqrt(3) * sp.sqrt(27*(zeta**2) + 256*(zeta**3)))**(1/3)
 zeta_coord = ((mu/chi)**4)
+
+########################################
+# --- Define the physics expressions ---
+########################################
 
 # PLASMA NUMBER DENSITY
 if RayEquationsToggles.useChaston2006:
@@ -106,13 +108,13 @@ B_dipole = (3.12E-5) * ((1/(1 + z/stl.Re))**3) * THETA
 V_A = B/sp.sqrt(stl.u0*(rho))
 
 # SCALE FACTOR - mu
-h_mu = 1/(THETA/(2*(stl.Re*stl.m_to_km)*(R**2)*sp.sqrt(sp.cos(theta*(sp.pi/180)))))
+h_mu = 1/(THETA/(2*(stl.Re*stl.m_to_km)*(R**2)*sp.sqrt(sp.cos(theta))))
 
 # SCALE FACTOR - chi
-h_chi = 1/(THETA*(sp.sin(theta*(sp.pi/180)))/((stl.Re*stl.m_to_km)*(R**2)))
+h_chi = 1/(THETA*(sp.sin(theta))/((stl.Re*stl.m_to_km)*(R**2)))
 
 # SCALE FACTOR - phi
-h_phi = (stl.Re*stl.m_to_km * (R**2)*sp.sin(theta*(sp.pi/180)))
+h_phi = (stl.Re*stl.m_to_km * (R**2)*sp.sin(theta))
 
 # Form the expression dictionary - loop through this to replace everything down to the two variables: (mu,chi)
 expression_dict = {

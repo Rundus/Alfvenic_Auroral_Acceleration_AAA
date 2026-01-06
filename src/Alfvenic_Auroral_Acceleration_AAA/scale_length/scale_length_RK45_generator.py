@@ -144,6 +144,7 @@ def scale_length_RK45_generator():
                          method=SimToggles.RK45_method,
                          rtol=SimToggles.RK45_rtol,
                          atol=SimToggles.RK45_atol,
+                         dense_output=True
                          # t_eval=SimToggles.RK45_Teval,
                          )
         T = soln.t
