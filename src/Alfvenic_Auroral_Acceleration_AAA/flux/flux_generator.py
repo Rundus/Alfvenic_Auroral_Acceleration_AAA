@@ -23,5 +23,9 @@ def flux_generator():
         'Distribution_Function': [[], {'DEPEND_0':'time','DEPEND_1':'Pitch_Angle','DEPEND_2':'Energy','UNITS':'m!A-6!Ns!A-3!N','LABLAXIS':'Distribution Function','VAR_TYPE':'data'}],
     }
 
+    #####################################
+    # --- CALCULATE DIFFERENTIAL FLUX ---
+    #####################################
+
     outputPath = rf'{FluxToggles.outputFolder}/flux.cdf'
     stl.outputDataDict(outputPath, data_dict_output)

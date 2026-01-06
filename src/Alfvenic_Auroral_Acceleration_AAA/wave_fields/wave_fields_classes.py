@@ -12,7 +12,6 @@ k_vectors = np.array([data_dict_wavescale['k_mu'][0], data_dict_wavescale['k_chi
 wave_pos_vector = np.array([data_dict_wavescale['mu_w'][0],data_dict_wavescale['chi_w'][0],data_dict_wavescale['phi_w'][0]]).T
 h_factors = [envDict['h_mu'], envDict['h_chi'], envDict['h_phi']]
 
-
 class ElectrostaticPotentialClasses:
     def invertedVEField(self, eval_pos):
         mu_alt = stl.Re*(ScaleLengthClasses.r_muChi(eval_pos[0],eval_pos[1])-1)
@@ -20,6 +19,7 @@ class ElectrostaticPotentialClasses:
             return (WaveFieldsToggles.inV_Volts) /((WaveFieldsToggles.inV_Zmax - WaveFieldsToggles.inV_Zmin)*stl.m_to_km) # Note, this E-Field is postive --> along mu
         else:
             return 0
+
 
 class WaveFieldsClasses:
 
@@ -37,7 +37,7 @@ class WaveFieldsClasses:
         k_perp = np.sqrt(k[1]**2 + k[2]**2)
         return (k[0]*k_perp*np.square(lmb_e))*E_perp/(1 + np.square(lmb_e*k_perp))
 
-    def InWaveChecker(self,inputs):
+    def InWaveChecker(self, inputs):
         tme_idx, eval_pos, wave_pos, k, h, lmb_e = inputs
 
         # determine the range where you're within the wave, else zero
@@ -46,8 +46,10 @@ class WaveFieldsClasses:
 
         # check if you're within wave size
         mu_checker = np.all([eval_pos[0] > wave_pos[0] - delta_w[0], eval_pos[0] < wave_pos[0] + delta_w[0]])
-        chi_checker = np.all([eval_pos[1] > wave_pos[1] - delta_w[1], eval_pos[1] < wave_pos[1] + delta_w[1]])
-        phi_checker = np.all([eval_pos[2] > wave_pos[2] - delta_w[2], eval_pos[2] < wave_pos[2] + delta_w[2]])
+        chi_checker = True
+        phi_checker = True
+        # chi_checker = np.all([eval_pos[1] > wave_pos[1] - delta_w[1], eval_pos[1] < wave_pos[1] + delta_w[1]])
+        # phi_checker = np.all([eval_pos[2] > wave_pos[2] - delta_w[2], eval_pos[2] < wave_pos[2] + delta_w[2]])
         # print([wave_pos[2] - delta_w[2],wave_pos[2],wave_pos[2] + delta_w[2],eval_pos[2]])
 
         if np.all([mu_checker, chi_checker, phi_checker]):
@@ -55,11 +57,12 @@ class WaveFieldsClasses:
         else:  # return the field value
             return False
 
-    def field_generator(self, time, eval_pos,**kwargs):
+
+    def field_generator(self, time, eval_pos, **kwargs):
 
         which = kwargs.get('type')
 
-        # get the specifics of the wave at the chosen
+        # get the specifics of the wave at the chosen time
         tme_idx = np.abs(data_dict_wavescale['time'][0] - time).argmin()
         wave_pos = wave_pos_vector[tme_idx]
         h = np.array([h_factors[0](wave_pos[0], wave_pos[1]), h_factors[1](wave_pos[0], wave_pos[1]), h_factors[2](wave_pos[0], wave_pos[1])])

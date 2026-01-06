@@ -49,12 +49,11 @@ wave_pos_vector = np.array([data_dict_wavescale['mu_w'][0],data_dict_wavescale['
 # times = [0.1*(i) for i in range(2)] # in simulation seconds
 times = data_dict_wavescale['time'][0] # in simulation seconds
 Epara_tracker = np.zeros(shape=(len(times),len(mu_grid)))
-
 Eperp_store = np.zeros(shape=(len(times),len(phi_range),len(mu_range)))
 potential_store = np.zeros(shape=(len(times),len(phi_range),len(mu_range)))
 Epara_store = np.zeros(shape=(len(times),len(phi_range),len(mu_range)))
 
-for loopidx,time in enumerate(times):
+for loopidx, time in enumerate(times):
     potential = np.zeros_like(phi_grid)
     Ephi = np.zeros_like(phi_grid)
     Epara = np.zeros_like(phi_grid)
@@ -106,6 +105,7 @@ data_dict_output['Epara_tracker'][0] = E_scale*np.array(Epara_tracker)
 data_dict_output['mu_range'][0] = np.array(mu_range)
 data_dict_output['phi_range'][0] = np.degrees(np.array(phi_range))
 
-path = r'C:/Data/physicsModels/alfvenic_auroral_acceleration_AAA/wave_fields/'
+# path = r'C:/Data/physicsModels/alfvenic_auroral_acceleration_AAA/wave_fields/'
+path = r'//home/connor/Data/physicsModels/alfvenic_auroral_acceleration_AAA/wave_fields/'
 stl.outputDataDict(data_dict=data_dict_output,
                    outputPath=path + '/wave_fields.cdf')

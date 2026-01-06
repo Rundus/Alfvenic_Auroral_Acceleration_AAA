@@ -24,7 +24,6 @@ def wave_fields_generator():
         'mu_w': deepcopy(data_dict_wavescale['mu_w']),
         'chi_w': deepcopy(data_dict_wavescale['chi_w']),
         'z': deepcopy(data_dict_wavescale['z']),
-
         'E_perp': [[], {'DEPEND_0': 'time', 'UNITS': 'nT', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],
         'B_perp': [[], {'DEPEND_0': 'time', 'UNITS': 'nT', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],
         'E_mu': [[], {'DEPEND_0': 'time', 'UNITS': 'nT', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],
@@ -35,28 +34,18 @@ def wave_fields_generator():
     #################################################
     envDict = ScaleLengthClasses().loadPickleFunctions()
 
-    #######################################
-    # --- GET THE WAVE FIELD MAGNITUDES ---
-    #######################################
-
-    def E_para(Eperp):
-        k_mu = data_dict_output['k_mu'][0]
-        k_perp = data_dict_output['k_perp'][0]
-        lmd_e = data_dict_plasma['lmb_e'][0]
-        E_para = (k_mu*k_perp*Eperp)/(1 + np.square(k_perp*lmd_e))
-        return E_para
-
-    def B_perp(Eperp):
-        VA = data_dict_plasma['VA'][0]
-        k_perp = data_dict_output['k_perp'][0]
-        lmd_e = data_dict_plasma['lmb_e'][0]
-        return Eperp/VA*np.sqrt(1 + np.square(k_perp*lmd_e))
-
     ################################################
     # --- EVALUATE FUNCTIONS ON SIMULATION SPACE ---
     ################################################
-    for key, func in envDict.items():
-        data_dict_output[key][0] = func(data_dict_output['mu_w'][0], data_dict_output['chi_w'][0])
+
+    # create the grid on which to plot everything
+    # --- MU-Dimension ---
+    # determine minimum/maximum mu value for the TOP colattitude
+    N_mu = 200  # number of points in mu direction
+    mu_min, mu_max = [-1, -0.3]
+    mu_range = np.linspace(mu_min, mu_max, N_mu)
+    alt_range = stl.m_to_km*stl.Re*(ScaleLengthClasses.r_muChi(mu_range,[SimToggles.chi0 for i in range(len(mu_range))])-1)
+
 
     ################
     # --- OUTPUT ---

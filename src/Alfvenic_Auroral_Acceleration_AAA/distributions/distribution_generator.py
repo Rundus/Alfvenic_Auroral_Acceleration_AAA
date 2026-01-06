@@ -1,3 +1,6 @@
+
+
+
 def distribution_generator():
 
     # --- general imports ---
@@ -6,13 +9,14 @@ def distribution_generator():
     from copy import deepcopy
 
     # --- File-specific imports ---
-    from glob import glob
+    import math
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import ElectrostaticPotentialClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_toggles import DistributionToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_classes import DistributionClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_classes import ScaleLengthClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import WaveFieldsClasses
     from scipy.integrate import solve_ivp
     import matplotlib.pyplot as plt
     from tqdm import tqdm
@@ -26,7 +30,7 @@ def distribution_generator():
     h_factors = [envDict['h_mu'], envDict['h_chi'], envDict['h_phi']]
 
     # The
-    def equations_of_motion(t, S):
+    def equations_of_motion(t, S, deltaT):
         # State Vector - [mu, chi, phi, vel_mu, vel_chi, vel_phi]
 
         # --- Coordinates ---
@@ -41,8 +45,15 @@ def distribution_generator():
 
         # --- Velocity ---
         # dv_mu/dt
+
+        # magnetic mirroring only
         # DvmuDt = - (uB/stl.m_e) * (dB_dipole_dmu(S[0],S[1])/h_factors[0](S[0],S[1]))
-        DvmuDt = - (uB / stl.m_e) * (dB_dipole_dmu(S[0], S[1]) / h_factors[0](S[0], S[1])) - (stl.q0/stl.m_e)*ElectrostaticPotentialClasses().invertedVEField([S[0],S[1],S[2]])
+
+        # inverted-V only
+        # DvmuDt = - (uB / stl.m_e) * (dB_dipole_dmu(S[0], S[1]) / h_factors[0](S[0], S[1])) - (stl.q0/stl.m_e)*ElectrostaticPotentialClasses().invertedVEField([S[0],S[1],S[2]])
+
+        # wave fields + mirroring only
+        DvmuDt = (- (uB / stl.m_e) * (dB_dipole_dmu(S[0], S[1]) / h_factors[0](S[0], S[1])) - (stl.q0 / stl.m_e) * WaveFieldsClasses().field_generator(time=t-deltaT, eval_pos=[S[0],S[1],S[2]],type='epara'))
 
         # dv_chi/dt
         DvchiDt = 0
@@ -59,21 +70,38 @@ def distribution_generator():
     #####################
 
     # An event is a function where the RK45 method determines event(t,y)=0
-    def escaped(t, S):
-        alt = stl.Re*stl.m_to_km*(ScaleLengthClasses.r_muChi(S[0],DistributionToggles.chi0) - 1)
-        return alt - DistributionToggles.termination_altitude
-    escaped.terminal = True
+    def escaped_upper(t, S, deltaT):
+
+        alt = deepcopy(stl.Re*stl.m_to_km*(ScaleLengthClasses.r_muChi(S[0],DistributionToggles.chi0) - 1))
+
+        # top boundary checker
+        top_boundary_checker = alt - DistributionToggles.upper_termination_altitude
+
+        return top_boundary_checker
+        # return lower_boundary_checkerz
+
+    escaped_upper.terminal = True
+
+    def escaped_lower(t,S, deltaT):
+        alt = deepcopy(stl.Re * stl.m_to_km * (ScaleLengthClasses.r_muChi(S[0], DistributionToggles.chi0) - 1))
+
+        # lower boundary
+        lower_boundary_checker = alt - DistributionToggles.lower_termination_altitude
+
+        return lower_boundary_checker
+    escaped_lower.terminal = True
 
     # --- Run the Solver and Plot it ---
-    def my_RK45_solver(t_span, s0):
+    def my_RK45_solver(t_span, s0, deltaT):
         soln = solve_ivp(fun=equations_of_motion,
                          t_span=t_span,
                          y0=s0,
                          method=SimToggles.RK45_method,
                          rtol=SimToggles.RK45_rtol,
                          atol=SimToggles.RK45_atol,
-                         # t_eval=SimToggles.RK45_Teval,
-                         events=escaped
+                         t_eval=SimToggles.RK45_Teval,
+                         events=(escaped_lower,escaped_upper),
+                         args=deltaT
                          )
         T = soln.t
         particle_mu = soln.y[0, :]
@@ -82,6 +110,7 @@ def distribution_generator():
         vel_Mu = soln.y[3, :]
         vel_chi = soln.y[4, :]
         vel_phi = soln.y[5, :]
+        print(soln.message)
         return [T, particle_mu, particle_chi, particle_phi, vel_Mu, vel_chi, vel_phi]
 
     #########################
@@ -109,11 +138,6 @@ def distribution_generator():
                                               len(DistributionToggles.vel_space_perp_range)
                                               ))
 
-    Energy = np.zeros(shape=(len(SimToggles.RK45_Teval),
-                             len(DistributionToggles.vel_space_mu_range),
-                             len(DistributionToggles.vel_space_perp_range)
-                             ))
-
     ########################################
     # --- LOOP OVER VELOCITY PHASE SPACE ---
     ########################################
@@ -130,8 +154,9 @@ def distribution_generator():
                       DistributionToggles.vel_space_mu_range[paraIdx],
                       DistributionToggles.vel_space_perp_range[perpIdx],
                       DistributionToggles.vel_space_perp_range[perpIdx]]
+                deltaT = tuple([SimToggles.RK45_Teval[tmeIdx]])
 
-                [T, particle_mu, particle_chi, particle_phi, particle_vel_Mu, particle_vel_chi, particle_vel_phi] = my_RK45_solver(SimToggles.RK45_tspan, s0)
+                [T, particle_mu, particle_chi, particle_phi, particle_vel_Mu, particle_vel_chi, particle_vel_phi] = my_RK45_solver(SimToggles.RK45_tspan, s0, deltaT)
 
                 ################################
                 # --- PERPENDICULAR DYNAMICS ---
@@ -153,7 +178,6 @@ def distribution_generator():
                                                                        Te=DistributionToggles.Te_PS,
                                                                        vel_perp=deepcopy(particle_vel_perp[-1]),
                                                                        vel_para=deepcopy(particle_vel_Mu[-1]))
-
                 ##########################
                 # --- Particle Tracker ---
                 ##########################
@@ -162,22 +186,22 @@ def distribution_generator():
                 fig.set_figheight(15)
                 fig.suptitle(f'T0 = {SimToggles.RK45_Teval[tmeIdx]} seconds\n'+
                              '$v_{\perp,0}$=' + f'{round(0.5*stl.m_e*np.power(particle_vel_perp[0],2)/stl.q0)} eV\n'+
-                             '$v_{\parallel,0}$=' + f'{round(0.5*stl.m_e*np.power(particle_vel_Mu[0],2)/stl.q0)} eV' +
+                             '$v_{\parallel,0}$=' + f'{math.copysign(round(0.5*stl.m_e*np.power(particle_vel_Mu[0],2)/stl.q0),particle_vel_Mu[0])} eV\n' +
                              f'V0 = {WaveFieldsToggles.inV_Volts}V')
                 ax[0].plot(T, particle_mu)
                 ax[0].set_ylabel('$\mu$')
                 ax[1].plot(T,stl.Re*(np.array(ScaleLengthClasses.r_muChi(particle_mu,np.array([DistributionToggles.chi0 for i in range(len(particle_mu))])))-1))
                 ax[1].set_ylabel('alt [km]')
-                ax[1].set_ylim(0,10000)
+                ax[1].set_ylim(-250, 10000)
                 ax[1].axhline(y=WaveFieldsToggles.inV_Zmin,color='red')
                 ax[1].axhline(y=WaveFieldsToggles.inV_Zmax,color='red')
+                ax[1].axhline(y=DistributionToggles.lower_termination_altitude/stl.m_to_km,color='blue',linestyle='--')
 
-                ax[2].plot(T, particle_vel_Mu)
-                ax[2].set_ylabel('$v_{\mu}$ [m/s]')
+                ax[2].plot(T, particle_vel_Mu/(stl.m_to_km*1E5))
+                ax[2].set_ylabel('$v_{\mu}$ [10,000 km/s]')
 
                 ax[3].plot(T,pitch_angle)
                 ax[3].set_ylabel('Pitch Angle [deg]')
-
 
                 ax[4].plot(T, Energy)
                 ax[4].set_xlabel('Time [s] (Backward Propogated)')
@@ -186,7 +210,6 @@ def distribution_generator():
                 for i in range(5):
                     ax[i].grid(True)
                     ax[i].ticklabel_format(style='plain') # remove scientific notation
-
 
                 plt.gca().invert_xaxis()
                 plt.tight_layout()

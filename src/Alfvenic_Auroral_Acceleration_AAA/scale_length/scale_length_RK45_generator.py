@@ -60,7 +60,6 @@ def scale_length_RK45_generator():
     #######################################
 
     # Calculate the initial lambda_mu0 from the dispersion relation and initial conditions
-
     k_perp_0 = 2*np.pi/SimToggles.Lambda_perp0
     k_mu_0 = (SimToggles.omega0*np.sqrt(1+np.square(k_perp_0*lmb_e(SimToggles.u0,SimToggles.chi0))))/V_A(SimToggles.u0,SimToggles.chi0)
     lambda_phi_0 = SimToggles.perp_ratio*SimToggles.Lambda_perp0
@@ -71,17 +70,6 @@ def scale_length_RK45_generator():
     data_dict_output['lambda_phi_0'][0] = np.array([lambda_phi_0])
     data_dict_output['lambda_chi_0'][0] = np.array([lambda_chi_0])
     data_dict_output['lambda_mu_0'][0] = np.array([2 * np.pi / k_mu_0])
-
-    # print('\nParameters')
-    # print('V_A ',V_A(SimToggles.u0,SimToggles.chi0))
-    # print('lmb_e ',lmb_e(SimToggles.u0,SimToggles.chi0))
-    # print('sqrt(1+k_perp^2lmb_e^2) ',np.sqrt(1+np.square(k_perp_0*lmb_e(SimToggles.u0,SimToggles.chi0))))
-    # print('omega_0 ',2*np.pi*V_A(SimToggles.u0,SimToggles.chi0)/SimToggles.omega0)
-    # print('\nWaveLengths')
-    # print('lambda_phi_0 [km]',0.001*2*np.pi/k_phi_0)
-    # print('lambda_chi_0 [km]',0.001*2*np.pi/k_chi_0)
-    # print('lambda_mu_0 [km]',0.001*2 * np.pi / k_mu_0)
-    # print('lambda_perp [km]', 0.001*2*np.pi*np.sqrt(1/(k_chi_0**2 + k_phi_0**2)))
 
     # Calculate the initial B0 magnitude
     B0 = B_dipole(SimToggles.u0,SimToggles.chi0)
@@ -165,6 +153,7 @@ def scale_length_RK45_generator():
         Mu = soln.y[3, :]
         Chi = soln.y[4, :]
         Phi = soln.y[5,:]
+        print(soln.message)
         return [T, K_mu, K_chi, K_phi, Mu, Chi, Phi]
 
     [T, K_mu, K_chi, K_phi, Mu, Chi, Phi] = my_RK45_solver(SimToggles.RK45_tspan, s0)
