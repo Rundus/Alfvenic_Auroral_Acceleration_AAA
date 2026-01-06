@@ -23,16 +23,6 @@ def distribution_generator():
 
     # --- Load the wave simulation data ---
     data_dict_wavescale = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/scale_length/*.cdf*')[0])
-    data_dict_plasma = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/plasma_environment/*.cdf*')[0])
-
-    # prepare the output
-    data_dict_output = {
-        'time': deepcopy(data_dict_wavescale['time']),
-        'edist': [[], {'DEPEND_0': 'time', 'UNITS': 'm!A-3!Ns!A-6!N', 'LABLAXIS': 'Distribution Function', 'VAR_TYPE': 'data'}],
-        'vel_mu': [[], {'DEPEND_0': 'time', 'UNITS': 'm/s', 'LABLAXIS': 'v!B&mu;!N', 'VAR_TYPE': 'support_data'}],
-        'vel_chi': [[], {'DEPEND_0': 'time', 'UNITS': 'm/s', 'LABLAXIS': 'v!B&chi;!N', 'VAR_TYPE': 'support_data'}],
-        'vel_phi': [[], {'DEPEND_0': 'time', 'UNITS': 'm/s', 'LABLAXIS': 'v!B&phi;!N', 'VAR_TYPE': 'support_data'}],
-    }
 
     #################################################
     # --- IMPORT THE PLASMA ENVIRONMENT FUNCTIONS ---
@@ -76,7 +66,7 @@ def distribution_generator():
     #####################
 
     # An event is a function where the RK45 method determines event(t,y)=0
-    def escaped(t,S):
+    def escaped(t, S):
         alt = stl.Re*stl.m_to_km*(ScaleLengthClasses.r_muChi(S[0],DistributionToggles.chi0) - 1)
         return alt - DistributionToggles.termination_altitude
     escaped.terminal = True
@@ -156,7 +146,7 @@ def distribution_generator():
                 # geomagnetic field experienced by particle
                 B_mag_particle = B_dipole(deepcopy(particle_mu),np.array([DistributionToggles.chi0 for i in range(len(particle_mu))]))
                 particle_vel_perp = v_perp0*np.sqrt(B_mag_particle/np.array([B0 for i in range(len(B_mag_particle))]))
-                pitch_angle = 180-np.degrees(np.atan2(deepcopy(particle_vel_perp),deepcopy(particle_vel_Mu)))
+                pitch_angle = 180-np.degrees(np.arctan2(deepcopy(particle_vel_perp),deepcopy(particle_vel_Mu)))
 
                 ################
                 # --- ENERGY ---
