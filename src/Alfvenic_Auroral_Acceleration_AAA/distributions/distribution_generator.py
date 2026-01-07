@@ -16,7 +16,7 @@ def distribution_generator():
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_classes import ScaleLengthClasses
-    from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import WaveFieldsClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import WaveFieldsClasses2D as WaveFieldsClasses
     from scipy.integrate import solve_ivp
     import matplotlib.pyplot as plt
     from tqdm import tqdm
@@ -110,7 +110,7 @@ def distribution_generator():
         vel_Mu = soln.y[3, :]
         vel_chi = soln.y[4, :]
         vel_phi = soln.y[5, :]
-        print(soln.message)
+        # print(soln.message)
         return [T, particle_mu, particle_chi, particle_phi, vel_Mu, vel_chi, vel_phi]
 
     #########################
@@ -142,8 +142,8 @@ def distribution_generator():
     # --- LOOP OVER VELOCITY PHASE SPACE ---
     ########################################
     # for tmeIdx in tqdm(range(len(SimToggles.RK45_Teval))):
-    for tmeIdx in tqdm(range(1)):
-        for paraIdx in range(len(DistributionToggles.vel_space_mu_range)):
+    for tmeIdx in [len(SimToggles.RK45_Teval)-1]:
+        for paraIdx in tqdm(range(len(DistributionToggles.vel_space_mu_range))):
             for perpIdx in range(len(DistributionToggles.vel_space_perp_range)):
                 v_perp0 = DistributionToggles.vel_space_perp_range[perpIdx]
                 B0 = B_dipole(DistributionToggles.u0, DistributionToggles.chi0)
@@ -164,12 +164,12 @@ def distribution_generator():
                 # geomagnetic field experienced by particle
                 B_mag_particle = B_dipole(deepcopy(particle_mu),np.array([DistributionToggles.chi0 for i in range(len(particle_mu))]))
                 particle_vel_perp = v_perp0*np.sqrt(B_mag_particle/np.array([B0 for i in range(len(B_mag_particle))]))
-                pitch_angle = 180-np.degrees(np.arctan2(deepcopy(particle_vel_perp),deepcopy(particle_vel_Mu)))
+                # pitch_angle = 180-np.degrees(np.arctan2(deepcopy(particle_vel_perp),deepcopy(particle_vel_Mu)))
 
                 ################
                 # --- ENERGY ---
                 ################
-                Energy = (0.5*stl.m_e*(np.square(deepcopy(particle_vel_perp)) + np.square(deepcopy(particle_vel_Mu))))/stl.q0
+                # Energy = (0.5*stl.m_e*(np.square(deepcopy(particle_vel_perp)) + np.square(deepcopy(particle_vel_Mu))))/stl.q0
 
                 ####################################################
                 # --- UPDATE DISTRIBUTION GRID AT simulation END ---
@@ -181,40 +181,40 @@ def distribution_generator():
                 ##########################
                 # --- Particle Tracker ---
                 ##########################
-                fig, ax = plt.subplots(5,sharex=True)
-                fig.set_figwidth(10)
-                fig.set_figheight(15)
-                fig.suptitle(f'T0 = {SimToggles.RK45_Teval[tmeIdx]} seconds\n'+
-                             '$v_{\perp,0}$=' + f'{round(0.5*stl.m_e*np.power(particle_vel_perp[0],2)/stl.q0)} eV\n'+
-                             '$v_{\parallel,0}$=' + f'{math.copysign(round(0.5*stl.m_e*np.power(particle_vel_Mu[0],2)/stl.q0),particle_vel_Mu[0])} eV\n' +
-                             f'V0 = {WaveFieldsToggles.inV_Volts}V')
-                ax[0].plot(T, particle_mu)
-                ax[0].set_ylabel('$\mu$')
-                ax[1].plot(T,stl.Re*(np.array(ScaleLengthClasses.r_muChi(particle_mu,np.array([DistributionToggles.chi0 for i in range(len(particle_mu))])))-1))
-                ax[1].set_ylabel('alt [km]')
-                ax[1].set_ylim(-250, 10000)
-                ax[1].axhline(y=WaveFieldsToggles.inV_Zmin,color='red')
-                ax[1].axhline(y=WaveFieldsToggles.inV_Zmax,color='red')
-                ax[1].axhline(y=DistributionToggles.lower_termination_altitude/stl.m_to_km,color='blue',linestyle='--')
-
-                ax[2].plot(T, particle_vel_Mu/(stl.m_to_km*1E5))
-                ax[2].set_ylabel('$v_{\mu}$ [10,000 km/s]')
-
-                ax[3].plot(T,pitch_angle)
-                ax[3].set_ylabel('Pitch Angle [deg]')
-
-                ax[4].plot(T, Energy)
-                ax[4].set_xlabel('Time [s] (Backward Propogated)')
-                ax[4].set_ylabel('Energy [eV]')
-
-                for i in range(5):
-                    ax[i].grid(True)
-                    ax[i].ticklabel_format(style='plain') # remove scientific notation
-
-                plt.gca().invert_xaxis()
-                plt.tight_layout()
-
-                fig.savefig(f'{SimToggles.sim_data_output_path}/distributions/plots/plot{paraIdx}{perpIdx}.png')
+                # fig, ax = plt.subplots(5,sharex=True)
+                # fig.set_figwidth(10)
+                # fig.set_figheight(15)
+                # fig.suptitle(f'T0 = {SimToggles.RK45_Teval[tmeIdx]} seconds\n'+
+                #              '$v_{\perp,0}$=' + f'{round(0.5*stl.m_e*np.power(particle_vel_perp[0],2)/stl.q0)} eV\n'+
+                #              '$v_{\parallel,0}$=' + f'{math.copysign(round(0.5*stl.m_e*np.power(particle_vel_Mu[0],2)/stl.q0),particle_vel_Mu[0])} eV\n' +
+                #              f'V0 = {WaveFieldsToggles.inV_Volts}V')
+                # ax[0].plot(T, particle_mu)
+                # ax[0].set_ylabel('$\mu$')
+                # ax[1].plot(T,stl.Re*(np.array(ScaleLengthClasses.r_muChi(particle_mu,np.array([DistributionToggles.chi0 for i in range(len(particle_mu))])))-1))
+                # ax[1].set_ylabel('alt [km]')
+                # ax[1].set_ylim(-250, 10000)
+                # ax[1].axhline(y=WaveFieldsToggles.inV_Zmin,color='red')
+                # ax[1].axhline(y=WaveFieldsToggles.inV_Zmax,color='red')
+                # ax[1].axhline(y=DistributionToggles.lower_termination_altitude/stl.m_to_km,color='blue',linestyle='--')
+                #
+                # ax[2].plot(T, particle_vel_Mu/(stl.m_to_km*1E5))
+                # ax[2].set_ylabel('$v_{\mu}$ [10,000 km/s]')
+                #
+                # ax[3].plot(T,pitch_angle)
+                # ax[3].set_ylabel('Pitch Angle [deg]')
+                #
+                # ax[4].plot(T, Energy)
+                # ax[4].set_xlabel('Time [s] (Backward Propogated)')
+                # ax[4].set_ylabel('Energy [eV]')
+                #
+                # for i in range(5):
+                #     ax[i].grid(True)
+                #     ax[i].ticklabel_format(style='plain') # remove scientific notation
+                #
+                # plt.gca().invert_xaxis()
+                # plt.tight_layout()
+                #
+                # fig.savefig(f'{SimToggles.sim_data_output_path}/distributions/plots/plot{paraIdx}{perpIdx}.png')
 
 
     ################

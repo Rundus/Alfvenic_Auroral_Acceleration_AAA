@@ -25,8 +25,7 @@ class DistributionToggles:
     #####################################
     # --- PLASMA DISTRIBUTION TOGGLES ---
     #####################################
-    N_vel_space_points = 10
-
+    N_vel_space_points = 15
 
     # LINEAR
     # E_lim = 10000 # in eV

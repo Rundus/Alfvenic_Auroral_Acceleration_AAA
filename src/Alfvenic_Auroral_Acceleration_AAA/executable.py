@@ -31,7 +31,8 @@ else:
     if dict_executable['regen_scale_length']==1:
         # spatial environment
         print('Solving IVP for Scale Lengths',end='\n')
-        from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_RK45_generator import scale_length_RK45_generator
+        # from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_RK45_generator import scale_length_RK45_generator
+        from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_RK45_generator_2D import scale_length_RK45_generator
         scale_length_RK45_generator()
         stl.Done(start_time)
 
