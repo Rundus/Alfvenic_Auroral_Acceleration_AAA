@@ -12,19 +12,16 @@ def distribution_generator():
     import math
     from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_toggles import DistributionToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_classes import DistributionClasses
-    from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_classes import ScaleLengthClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
     from itertools import product
     from tqdm import tqdm
 
     #################################################
     # --- IMPORT THE PLASMA ENVIRONMENT FUNCTIONS ---
     #################################################
-    envDict = ScaleLengthClasses().loadPickleFunctions()
+    envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
     B_dipole = envDict['B_dipole']
-    dB_dipole_dmu = envDict['dB_dipole_dmu']
-    h_factors = [envDict['h_mu'], envDict['h_chi'], envDict['h_phi']]
 
     # --- PREPARE OUTPUTS ---
     Distribution = np.zeros(shape=(len(SimToggles.RK45_Teval),
@@ -44,9 +41,9 @@ def distribution_generator():
         v_perp0 = np.sqrt(2*stl.q0*DistributionToggles.energy_range[engyIdx]/stl.m_e) * np.cos(np.radians(DistributionToggles.pitch_range[ptchIdx]))
         v_para0 = np.sqrt(2*stl.q0*DistributionToggles.energy_range[engyIdx]/stl.m_e) * np.sin(np.radians(DistributionToggles.pitch_range[ptchIdx]))
         v_mu0 = -1*v_para0
-        B0 = B_dipole(SimToggles.u0, SimToggles.chi0)
-        s0 = [SimToggles.u0,
-              SimToggles.chi0,
+        B0 = B_dipole(SimToggles.u0_obs, SimToggles.chi0_obs)
+        s0 = [SimToggles.u0_obs,
+              SimToggles.chi0_obs,
               v_mu0,
               v_perp0]
 
@@ -71,7 +68,6 @@ def distribution_generator():
                                                                                   Te=DistributionToggles.Te_PS,
                                                                                   vel_perp=deepcopy(mapped_v_perp[-1]),
                                                                                   vel_para=deepcopy(particle_vel_Mu[-1]))
-
 
     ################
     # --- OUTPUT ---

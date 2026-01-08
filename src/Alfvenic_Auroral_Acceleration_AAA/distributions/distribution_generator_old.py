@@ -15,7 +15,7 @@ def distribution_generator():
     from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_classes import DistributionClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_classes import ScaleLengthClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_classes import ScaleLengthClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import WaveFieldsClasses2D as WaveFieldsClasses
     from scipy.integrate import solve_ivp
     from itertools import product

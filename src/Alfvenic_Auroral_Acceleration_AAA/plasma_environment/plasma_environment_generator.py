@@ -9,7 +9,7 @@ def plasma_environment_generator():
     # --- File-specific imports ---
     from glob import glob
     from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_toggles import PlasmaEnvironmentToggles as toggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_classes import ScaleLengthClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_classes import ScaleLengthClasses
 
     start_time = time.time()
 

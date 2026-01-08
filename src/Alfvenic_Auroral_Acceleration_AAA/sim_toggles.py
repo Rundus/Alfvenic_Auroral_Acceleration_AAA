@@ -8,7 +8,7 @@ class SimToggles:
     # RK45_method = 'LSODA'
     RK45_rtol = 1E-6 # controls the relative accuracy. If rtol
     RK45_atol = 1E-7 # controls the absolute accuracy
-    RK45_tspan = [0, 1.5]  # time range (in seconds)
+    RK45_tspan = [0, 3]  # time range (in seconds)
     RK45_N_eval_points = 10
     RK45_Teval = np.linspace(RK45_tspan[0], RK45_tspan[-1], RK45_N_eval_points)
 
@@ -19,7 +19,7 @@ class SimToggles:
     omega0 = 2*np.pi*f_0 # in Hz
 
     # Initial Wave Position
-    z0_w = 20000  # in kilometers
+    z0_w = 500  # in kilometers
     Theta0_w = 70  # in geomagnetic latitude
     phi0_w = 0 # in geomagnetic longitude
 

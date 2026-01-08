@@ -1,7 +1,5 @@
-from src.Alfvenic_Auroral_Acceleration_AAA.archive.sim_toggles_grid import SimToggles
 
-
-def scale_length_RK45_generator():
+def ray_equations_RK45_generator():
 
     # --- general imports ---
     import spaceToolsLib as stl
@@ -10,12 +8,11 @@ def scale_length_RK45_generator():
     from copy import deepcopy
 
     # --- File-specific imports ---
-    from scipy.integrate import solve_ivp
-    from glob import glob
-    from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_toggles import ScaleLengthToggles as toggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_classes import ScaleLengthClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.sim_classes import SimClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
-    import dill
+    from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_classes import RayEquationsClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
 
     start_time = time.time()
 
@@ -44,16 +41,9 @@ def scale_length_RK45_generator():
     #################################################
     # --- IMPORT THE PLASMA ENVIRONMENT FUNCTIONS ---
     #################################################
-    envDict = ScaleLengthClasses().loadPickleFunctions()
+    envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
     V_A = envDict['V_A']
-    h_mu = envDict['h_mu']
-    h_chi = envDict['h_chi']
-    h_phi = envDict['h_phi']
     lmb_e = envDict['lambda_e']
-    pDD_mu_lmb_e = envDict['pDD_lambda_e_mu']
-    pDD_chi_lmb_e = envDict['pDD_lambda_e_chi']
-    pDD_mu_V_A =envDict['pDD_V_A_mu']
-    pDD_chi_V_A = envDict['pDD_V_A_chi']
     B_dipole = envDict['B_dipole']
 
     #######################################
@@ -62,109 +52,37 @@ def scale_length_RK45_generator():
 
     # Calculate the initial lambda_mu0 from the dispersion relation and initial conditions
     k_perp_0 = 2*np.pi/SimToggles.Lambda_perp0
-    k_mu_0 = (SimToggles.omega0*np.sqrt(1+np.square(k_perp_0*lmb_e(SimToggles.u0,SimToggles.chi0))))/V_A(SimToggles.u0,SimToggles.chi0)
+    k_mu_0 = (SimToggles.omega0*np.sqrt(1+np.square(k_perp_0*lmb_e(SimToggles.u0_w,SimToggles.chi0_w))))/V_A(SimToggles.u0_w,SimToggles.chi0_w)
     lambda_phi_0 = SimToggles.perp_ratio*SimToggles.Lambda_perp0
     k_phi_0 = 2*np.pi/lambda_phi_0
     lambda_chi_0 = SimToggles.Lambda_perp0*lambda_phi_0/np.sqrt(lambda_phi_0**2 - SimToggles.Lambda_perp0**2)
     k_chi_0 = 2*np.pi/lambda_chi_0
 
-    data_dict_output['lambda_phi_0'][0] = np.array([lambda_phi_0])
-    data_dict_output['lambda_chi_0'][0] = np.array([lambda_chi_0])
-    data_dict_output['lambda_mu_0'][0] = np.array([2 * np.pi / k_mu_0])
-
     # Calculate the initial B0 magnitude
-    B0 = B_dipole(SimToggles.u0, SimToggles.chi0)
 
-    # initial conditions [k_mu0,k_chi0,k_phi0, mu0, chi0, phi0]
-    s0 = [k_mu_0, k_chi_0, k_phi_0, SimToggles.u0, SimToggles.chi0, SimToggles.phi0, SimToggles.omega0]
 
-    # adjust initial mu0 condition so it's 1/2 of a wavelength above SimToggles.u0
+    # initial conditions [k_mu0,k_chi0,k_phi0, mu0, chi0_w, phi0_w]
+    s0 = [k_mu_0, k_chi_0, k_phi_0, SimToggles.u0_w, SimToggles.chi0_w, SimToggles.phi0_w, SimToggles.omega0]
+
+    # adjust initial mu0 condition so it's 1/2 of a wavelength above SimToggles.u0_w
     lambda_mu_0 = 2 * np.pi / k_mu_0
-    r = 1 + (SimToggles.z0 + 0.5*lambda_mu_0/stl.m_to_km) / stl.Re
-    u0 = -1 * np.sqrt(np.cos(np.radians(90 -SimToggles.Theta0))) / r
-    s0[3] = u0
+    r = 1 + (SimToggles.z0_w + 0.5*lambda_mu_0/stl.m_to_km) / stl.Re
+    u0_w = -1 * np.sqrt(np.cos(np.radians(90 -SimToggles.Theta0_w))) / r
+    s0[3] = u0_w
 
     ###################################
     # --- IMPLEMENT THE RK45 Solver ---
     ###################################
     stl.prgMsg('Solving Scale Length IVP')
-
-    def calc_k_perp(mu, chi):
-        return np.sqrt((B_dipole(mu,chi)/B0)) *k_perp_0
-
-    def ray_equations(t, S):
-
-        # Initial Conditions
-        k_mu, k_chi, k_phi, mu, chi, phi, omega = S[0], S[1], S[2], S[3], S[4], S[5], S[6]
-
-        # Calculate the current k_perp
-        k_perp = calc_k_perp(mu, chi)
-
-        ########################
-        # --- Ray equation 1 ---
-        ########################
-
-        # k_mu
-        term1 = (np.square(k_perp) * lmb_e(mu,chi)/(1 + np.square(k_perp*lmb_e(mu, chi)))) * pDD_mu_lmb_e(mu,chi)
-        term2 = (1/V_A(mu,chi)) * pDD_mu_V_A(mu,chi)
-        dk_mu = (1/h_mu(mu, chi)) * omega * (term1 - term2)
-
-        # k_chi
-        dk_chi = 0
-
-        # k_phi
-        dk_phi = 0
-
-        ########################
-        # --- Ray equation 2 ---
-        ########################
-        # dmu/dt
-        dmu = (1/h_mu(mu,chi))*(omega/k_mu)
-
-        # dchi/dt
-        dchi = 0
-
-        # dphi/dt
-        dphi = 0
-
-        ########################
-        # --- Ray Equation 3 ---
-        ########################
-
-        # domega/dt
-        domega = 0
-
-        dS = [dk_mu, dk_chi, dk_phi, dmu, dchi, dphi, domega]
-
-        return dS
-
-    # --- Run the Solver and Plot it ---
-    def my_RK45_solver(t_span, s0):
-
-        # Note: my_lorenz(t, S, sigma, rho, beta)
-        soln = solve_ivp(fun=ray_equations,
-                         t_span=t_span,
-                         y0=s0,
-                         method=SimToggles.RK45_method,
-                         rtol=SimToggles.RK45_rtol,
-                         atol=SimToggles.RK45_atol,
-                         # t_eval=SimToggles.RK45_Teval,
-                         )
-        T = soln.t
-        K_mu = soln.y[0, :]
-        K_chi = soln.y[1, :]
-        K_phi = soln.y[2, :]
-        Mu = soln.y[3, :]
-        Chi = soln.y[4, :]
-        Phi = soln.y[5,:]
-        Omega = soln.y[6,:]
-        print(soln.message)
-        return [T, K_mu, K_chi, K_phi, Mu, Chi, Phi, Omega]
-
-    [T, K_mu, K_chi, K_phi, Mu, Chi, Phi, Omega] = my_RK45_solver(SimToggles.RK45_tspan, s0)
+    [T, K_mu, K_chi, K_phi, Mu, Chi, Phi, Omega] = RayEquationsClasses().ray_equation_RK45_solver(SimToggles.RK45_tspan, s0, k_perp_0)
     stl.Done(start_time)
 
-    # --- store the output ---
+    ##########################
+    # --- STORE THE OUTPUT ---
+    ##########################
+    data_dict_output['lambda_phi_0'][0] = np.array([lambda_phi_0])
+    data_dict_output['lambda_chi_0'][0] = np.array([lambda_chi_0])
+    data_dict_output['lambda_mu_0'][0] = np.array([2 * np.pi / k_mu_0])
     data_dict_output['time'][0] = np.array(T)
     data_dict_output['k_mu'][0] = np.array(K_mu)
     data_dict_output['k_chi'][0] = np.array(K_chi)
@@ -173,11 +91,10 @@ def scale_length_RK45_generator():
     data_dict_output['phi_w'][0] = np.array(Phi)
     data_dict_output['phi_w_deg'][0] = np.array(np.degrees(deepcopy(Phi)))
     data_dict_output['k_phi'][0] = np.array(K_phi)
-    data_dict_output['k_perp'][0] = np.array([calc_k_perp(Mu[i],Chi[i]) for i in range(len(Mu))])
-
-    data_dict_output['colat'][0] = ScaleLengthClasses.theta_muChi(Mu,Chi)
+    data_dict_output['k_perp'][0] = np.array([RayEquationsClasses().calc_k_perp(Mu[i],Chi[i], k_perp_0) for i in range(len(Mu))])
+    data_dict_output['colat'][0] = SimClasses.theta_muChi(Mu,Chi)
     data_dict_output['lat'][0] = 90 - deepcopy(data_dict_output['colat'][0])
-    data_dict_output['r'][0] = ScaleLengthClasses.r_muChi(Mu,Chi)
+    data_dict_output['r'][0] = SimClasses.r_muChi(Mu,Chi)
     data_dict_output['z'][0] = (deepcopy(data_dict_output['r'][0])-1)*stl.Re
     data_dict_output['omega'][0] = np.array(Omega)
     data_dict_output['omega_calc'][0] = data_dict_output['k_mu'][0] * V_A(Mu,Chi)/np.sqrt(1 + np.square(data_dict_output['k_perp'][0]*lmb_e(Mu,Chi)))
@@ -194,5 +111,5 @@ def scale_length_RK45_generator():
     ################
     # --- OUTPUT ---
     ################
-    outputPath = rf'{toggles.outputFolder}/scale_length.cdf'
+    outputPath = rf'{RayEquationToggles.outputFolder}/ray_equations.cdf'
     stl.outputDataDict(outputPath, data_dict_output)

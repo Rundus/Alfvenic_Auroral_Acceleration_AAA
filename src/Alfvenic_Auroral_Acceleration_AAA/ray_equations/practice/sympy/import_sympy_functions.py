@@ -3,7 +3,7 @@ import time
 start_time = time.time()
 
 stl.prgMsg('Importing Plasma Environmental Functions')
-from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.practice.sympy.verify_sympy_functions import func_pDD_mu_V_A
+from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.practice.sympy.verify_sympy_functions import func_pDD_mu_V_A
 stl.Done(start_time)
 
 

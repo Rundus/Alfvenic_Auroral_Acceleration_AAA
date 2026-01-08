@@ -2,11 +2,11 @@ import numpy as np
 from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.sim_classes import SimClasses
-from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EvironmentExpressionsClasses
+from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
 import spaceToolsLib as stl
 from glob import glob
-envDict = EvironmentExpressionsClasses().loadPickleFunctions()
-data_dict_wavescale = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/scale_length/*.cdf*')[0])
+envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
+data_dict_wavescale = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/ray_equations/*.cdf*')[0])
 data_dict_plasma = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/plasma_environment/*.cdf*')[0])
 
 

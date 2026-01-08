@@ -1,4 +1,6 @@
-import scipy.integrate
+
+
+
 
 
 def wave_fields_generator():
@@ -10,16 +12,15 @@ def wave_fields_generator():
 
     # --- File-specific imports ---
     from glob import glob
-    from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.sim_classes import SimClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles as toggles
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import WaveFieldsClasses2D as WaveFieldsClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_classes import ScaleLengthClasses
     from tqdm import tqdm
     from scipy.integrate import simpson
 
     # --- Load the wave simulation data ---
-    data_dict_wavescale = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/scale_length/*.cdf*')[0])
+    data_dict_wavescale = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/ray_equations/*.cdf*')[0])
 
     # prepare the output
     data_dict_output = {
@@ -49,7 +50,7 @@ def wave_fields_generator():
     N_mu = 500  # number of points in mu direction
     mu_min, mu_max = [-1, 0]
     mu_grid = np.linspace(mu_min, mu_max, N_mu)
-    alt_grid = np.array(stl.Re*(ScaleLengthClasses.r_muChi(mu_grid,[SimToggles.chi0 for i in range(len(mu_grid))])-1))
+    alt_grid = np.array(stl.Re*(SimClasses.r_muChi(mu_grid,[SimToggles.chi0_w for i in range(len(mu_grid))])-1))
 
     # prepare some variables
     times = deepcopy(data_dict_output['time'][0])
@@ -68,7 +69,7 @@ def wave_fields_generator():
         Bperp = np.zeros_like(mu_grid)
 
         for i in range(len(mu_grid)):
-            eval_pos = [mu_grid[i], SimToggles.chi0, SimToggles.phi0]
+            eval_pos = [mu_grid[i], SimToggles.chi0_w, SimToggles.phi0_w]
             potential[i] = WaveFieldsClasses().field_generator(time, eval_pos, type='potential')
             Ephi[i] = WaveFieldsClasses().field_generator(time, eval_pos, type='eperp')
             Epara[i] = WaveFieldsClasses().field_generator(time, eval_pos, type='epara')
@@ -91,7 +92,6 @@ def wave_fields_generator():
     data_dict_output['B_perp'][0] = Bperp_store
     data_dict_output['mu_grid'][0] = mu_grid
     data_dict_output['alt_grid'][0] = alt_grid
-
 
     # Calculate the resonance window
     potential_para_max = np.array([np.max(np.abs(data_dict_output['potential_mu'][0][i])) for i in range(len(data_dict_output['potential_mu'][0]))])

@@ -1,12 +1,14 @@
 import numpy as np
 import spaceToolsLib as stl
-from src.Alfvenic_Auroral_Acceleration_AAA.scale_length.scale_length_classes import ScaleLengthClasses
+from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_classes import RayEquationsClasses
+from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
 from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_toggles import DistributionToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import ElectrostaticPotentialClasses
+from src.Alfvenic_Auroral_Acceleration_AAA.sim_classes import SimClasses
 from scipy.integrate import solve_ivp
 from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import WaveFieldsClasses2D as WaveFieldsClasses
-envDict = ScaleLengthClasses().loadPickleFunctions()
+envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
 
 class DistributionClasses:
 
@@ -50,7 +52,7 @@ class DistributionClasses:
     # An event is a function where the RK45 method determines event(t,y)=0
     def escaped_upper(self, t, S, deltaT, uB):
 
-        alt = stl.Re*stl.m_to_km*(ScaleLengthClasses.r_muChi(S[0],SimToggles.chi0) - 1)
+        alt = stl.Re*stl.m_to_km*(SimClasses.r_muChi(S[0],SimToggles.chi0_obs) - 1)
 
         # top boundary checker
         top_boundary_checker = alt - DistributionToggles.upper_termination_altitude
@@ -61,7 +63,7 @@ class DistributionClasses:
     escaped_upper.terminal = True
 
     def escaped_lower(self, t, S, deltaT, uB):
-        alt = stl.Re * stl.m_to_km * (ScaleLengthClasses.r_muChi(S[0], SimToggles.chi0) - 1)
+        alt = stl.Re * stl.m_to_km * (SimClasses.r_muChi(S[0], SimToggles.chi0_obs) - 1)
 
         # lower boundary
         lower_boundary_checker = alt - DistributionToggles.lower_termination_altitude
@@ -90,8 +92,6 @@ class DistributionClasses:
         vel_chi = soln.y[3, :]
         # print(soln.message)
         return [T, particle_mu, particle_chi, vel_Mu, vel_chi]
-
-
 
     def Maxwellian(self, n, Te, vel_para, vel_perp): # returns the maxwellian distribution for a given temperature, density and particle velocity
         """
