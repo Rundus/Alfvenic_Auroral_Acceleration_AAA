@@ -38,7 +38,7 @@ class DistributionClasses:
         # DvmuDt_inV = (stl.q0/stl.m_e)*ElectrostaticPotentialClasses().invertedVEField([S[0],S[1],S[2]])
 
         # wave fields + mirroring only
-        DvmuDt_Alfven =  - (stl.q0 / stl.m_e) * WaveFieldsClasses().field_generator(time=SimToggles.RK45_tspan[1] -deltaT-t,
+        DvmuDt_Alfven =  - (stl.q0 / stl.m_e) * WaveFieldsClasses().field_generator(time=t + deltaT,
                                                                                     eval_pos=[S[0],S[1]],
                                                                                     type='epara')
         DvmuDt = DvmuDt_mirror + DvmuDt_Alfven

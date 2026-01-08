@@ -9,7 +9,7 @@ class SimToggles:
     RK45_rtol = 1E-6 # controls the relative accuracy. If rtol
     RK45_atol = 1E-7 # controls the absolute accuracy
     RK45_tspan = [0, 3]  # time range (in seconds)
-    RK45_N_eval_points = 10
+    RK45_N_eval_points = 30
     RK45_Teval = np.linspace(RK45_tspan[0], RK45_tspan[-1], RK45_N_eval_points)
 
     # --- WAVE INITIAL CONDITIONS ---

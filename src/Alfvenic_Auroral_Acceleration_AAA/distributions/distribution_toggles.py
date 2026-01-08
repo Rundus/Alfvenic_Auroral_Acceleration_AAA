@@ -12,13 +12,13 @@ class DistributionToggles:
     #####################################
     # --- PLASMA DISTRIBUTION TOGGLES ---
     #####################################
-    N_vel_space_points = 5
+    N_vel_space_points = 50
 
     # ENERGY/PITCH
-    E_max = 3  # the POWER of 10^E_max for the maximum energy
+    E_max = 4  # the POWER of 10^E_max for the maximum energy
     E_min = 1  # the POWER of 10^E_min for the minimum energy
     pitch_range = np.linspace(0,180,19)
-    energy_range = np.logspace(1,3,N_vel_space_points)
+    energy_range = np.logspace(E_min,E_max,N_vel_space_points)
 
 
     ###########################
