@@ -1,7 +1,7 @@
 
 
 
-class RayEquationsToggles:
+class EnvironmentExpressionsToggles:
 
     # Density Model
     useChaston2006 = False # SOMETHING DEFINITLY WRONG WITH O2 density

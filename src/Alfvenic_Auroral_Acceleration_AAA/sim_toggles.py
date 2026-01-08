@@ -25,8 +25,8 @@ class SimToggles:
 
     # modified dipole coordinates
     r_w = 1 + z0_w / stl.Re
-    u0_w = -1 * np.sqrt(np.cos(np.radians(90 - Theta0_w))) / r
-    chi0_w = np.power(np.sin(np.radians(90 - Theta0_w)), 2) / r
+    u0_w = -1 * np.sqrt(np.cos(np.radians(90 - Theta0_w))) / r_w
+    chi0_w = np.power(np.sin(np.radians(90 - Theta0_w)), 2) / r_w
     phi0_w = np.radians(phi0_w)
 
     # Initial Wavelength

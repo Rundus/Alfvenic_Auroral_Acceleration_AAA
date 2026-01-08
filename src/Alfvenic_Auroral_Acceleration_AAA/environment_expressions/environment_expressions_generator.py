@@ -11,7 +11,7 @@ import dill
 dill.settings['recurse'] = True
 from sympy import lambdify
 from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
-from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationsToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_toggles import EnvironmentExpressionsToggles
 start_time = time.time()
 
 ####################################
@@ -36,14 +36,14 @@ zeta_coord = ((mu/chi)**4)
 ########################################
 
 # PLASMA NUMBER DENSITY
-if RayEquationsToggles.useChaston2006:
+if EnvironmentExpressionsToggles.useChaston2006:
     n_Hp_density = (stl.cm_to_m**3)*(0.1 + 10*sp.sqrt(stl.Re/(400*z)) + 100*(z)*sp.exp(-z/280)) # for z in km
     n_Op_density = (stl.cm_to_m**3)*(400*stl.Re*z*sp.exp(-z/175)) # for z in km
-elif RayEquationsToggles.useShroeder2021:
+elif EnvironmentExpressionsToggles.useShroeder2021:
     n_e = (stl.cm_to_m**3)*((6E4)*sp.exp(-(z-318)/383) + (1.34E7)*(z**(-1.55)))
     n_Op_density = n_e*0.5*(1 - sp.tanh((z-2370)/1800))
     n_Hp_density = n_e - n_Op_density
-elif RayEquationsToggles.useChaston2003_nightside:
+elif EnvironmentExpressionsToggles.useChaston2003_nightside:
 
     # parameters for [Oxygen+, H+]
     nM = [0, 1]
@@ -67,7 +67,7 @@ elif RayEquationsToggles.useChaston2003_nightside:
     n_E = nE[i] * sp.exp(-1 * (z - Ealt[i]) ** 2 / (wE[i] ** 2))
     n_F = nF[i] * (z - F0[i]) * sp.exp(-1 * ((z - F0[i]) / alpha_[i]) ** (eta[i]))
     n_Hp_density = (stl.cm_to_m ** 3) * (n_mag + n_E + n_F)
-elif RayEquationsToggles.useChaston2003_cusp:
+elif EnvironmentExpressionsToggles.useChaston2003_cusp:
     # parameters for [Oxygen+, H+]
     nM = [0, 1]
     gamma_ = [0, 0.5]
@@ -257,56 +257,8 @@ funcs = {'lmb_e': func_lmb_e,
 ###################
 # PICKLE EVERYTHING
 ###################
-folder = rf'{SimToggles.sim_root_path}/ray_equations/pickled_expressions/'
+folder = rf'{SimToggles.sim_root_path}/environment_expressions/pickled_expressions/'
 for key, funct in funcs.items():
     file = open(folder+f'{key}.pkl','wb')
     dill.dump(funct, file)
     file.close()
-
-
-# ##################
-# # PRINT EVERYTHING
-# ##################
-#
-# # lambda_e
-# print('Lambda_e:',end='\n')
-# print(lmb_e)
-# print('\n\n')
-#
-# print('pDD_mu Lambda_e:',end='\n')
-# print(diff_lmb_e_mu)
-# print('\n\n')
-#
-# print('pDD_chi Lambda_e:',end='\n')
-# print(diff_lmb_e_chi)
-# print('\n\n')
-#
-# # V_A
-# print('V_A:',end='\n')
-# print(V_A)
-# print('\n\n')
-#
-# print('pDD_mu V_A:',end='\n')
-# print(diff_V_A_mu)
-# print('\n\n')
-#
-# print('pDD_chi V_A:',end='\n')
-# print(diff_V_A_chi)
-# print('\n\n')
-#
-# print('scale dk_para/dt Term:',end='\n')
-# print(scale_dkpara)
-# print('\n\n')
-#
-# print('scale dk_perp/dt Term:',end='\n')
-# print(scale_dkperp)
-# print('\n\n')
-#
-# print('scale dmu/dt Term:',end='\n')
-# print(scale_dmu)
-# print('\n\n')
-#
-# print('scale dchi/dt Term:',end='\n')
-# print(scale_dchi)
-# print('\n\n')
-
