@@ -10,6 +10,7 @@ def wave_fields_generator():
 
     # --- File-specific imports ---
     from glob import glob
+    from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles as toggles
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import WaveFieldsClasses2D as WaveFieldsClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
@@ -22,7 +23,7 @@ def wave_fields_generator():
 
     # prepare the output
     data_dict_output = {
-        'time': deepcopy(data_dict_wavescale['time']),
+        'time': [np.array(deepcopy(data_dict_wavescale['time'][0])),deepcopy(data_dict_wavescale['time'][1])],
         'mu_w': deepcopy(data_dict_wavescale['mu_w']),
         'chi_w': deepcopy(data_dict_wavescale['chi_w']),
         'z': deepcopy(data_dict_wavescale['z']),
@@ -38,11 +39,6 @@ def wave_fields_generator():
         'DAW_velocity':[[],{'DEPEND_0': 'z',  'UNITS': 'eV', 'LABLAXIS': 'DAW Velocity', 'VAR_TYPE': 'data'}]
     }
 
-    #################################################
-    # --- IMPORT THE PLASMA ENVIRONMENT FUNCTIONS ---
-    #################################################
-    envDict = ScaleLengthClasses().loadPickleFunctions()
-
     ################################################
     # --- EVALUATE FUNCTIONS ON SIMULATION SPACE ---
     ################################################
@@ -51,12 +47,12 @@ def wave_fields_generator():
     # --- MU-Dimension ---
     # determine minimum/maximum mu value for the TOP colattitude
     N_mu = 500  # number of points in mu direction
-    mu_min, mu_max = [-1, -0.1]
+    mu_min, mu_max = [-1, 0]
     mu_grid = np.linspace(mu_min, mu_max, N_mu)
     alt_grid = np.array(stl.Re*(ScaleLengthClasses.r_muChi(mu_grid,[SimToggles.chi0 for i in range(len(mu_grid))])-1))
 
     # prepare some variables
-    times = deepcopy(data_dict_wavescale['time'][0])
+    times = deepcopy(data_dict_output['time'][0])
     Eperp_store = np.zeros(shape=(len(times), len(mu_grid)))
     potential_perp_store = np.zeros(shape=(len(times), len(mu_grid)))
     Epara_store = np.zeros(shape=(len(times), len(mu_grid)))
