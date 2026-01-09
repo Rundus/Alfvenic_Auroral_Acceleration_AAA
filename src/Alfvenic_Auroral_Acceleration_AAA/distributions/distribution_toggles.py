@@ -1,7 +1,19 @@
 import numpy as np
 import spaceToolsLib as stl
+from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
 
 class DistributionToggles:
+
+    ########################################
+    # --- OBSERVATION INITIAL CONDITIONS ---
+    ########################################
+    z0_obs = 500  # in kilometers
+    Theta0_obs = RayEquationToggles.Theta0_w
+    phi0_obs = RayEquationToggles.phi0_w
+    r_obs = 1 + z0_obs / stl.Re
+    u0_obs = -1 * np.sqrt(np.cos(np.radians(90 - Theta0_obs))) / r_obs
+    chi0_obs = np.power(np.sin(np.radians(90 - Theta0_obs)), 2) / r_obs
+    phi0_obs = np.radians(phi0_obs)
 
     #################################
     # --- PLASMA SHEET PARAMETERS ---

@@ -7,30 +7,28 @@ def wave_fields_generator():
 
     # --- File-specific imports ---
     from glob import glob
-    from src.Alfvenic_Auroral_Acceleration_AAA.sim_classes import SimClasses
-    from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import WaveFieldsClasses2D as WaveFieldsClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import WaveFieldsClasses as WaveFieldsClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
     from tqdm import tqdm
     from scipy.integrate import simpson
 
     # --- Load the wave simulation data ---
-    data_dict_wavescale = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/ray_equations/*.cdf*')[0])
+    data_dict_ray_eqns = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/ray_equations/*.cdf*')[0])
 
     # prepare the output
     data_dict_output = {
-        'time': [np.array(deepcopy(data_dict_wavescale['time'][0])),deepcopy(data_dict_wavescale['time'][1])],
-        'mu_w': deepcopy(data_dict_wavescale['mu_w']),
-        'chi_w': deepcopy(data_dict_wavescale['chi_w']),
-        'z': deepcopy(data_dict_wavescale['z']),
+        'time': [SimToggles.RK45_tspan[1] - np.array(deepcopy(data_dict_ray_eqns['time'][0])),deepcopy(data_dict_ray_eqns['time'][1])],
+        'mu_w': deepcopy(data_dict_ray_eqns['mu_w']),
+        'chi_w': deepcopy(data_dict_ray_eqns['chi_w']),
+        'z': deepcopy(data_dict_ray_eqns['z']),
         'E_perp': [[], {'DEPEND_0': 'time','DEPEND_1':'alt_grid', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&perp;!N', 'VAR_TYPE': 'data'}],
         'B_perp': [np.array([]), {'DEPEND_0': 'time','DEPEND_1':'alt_grid', 'UNITS': 'nT', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],
         'E_mu': [[], {'DEPEND_0': 'time','DEPEND_1':'alt_grid', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&mu;!N', 'VAR_TYPE': 'data'}],
         'potential_perp': [[], {'DEPEND_0': 'time','DEPEND_1':'alt_grid', 'UNITS': 'V', 'LABLAXIS': 'Perpendicular Potential', 'VAR_TYPE': 'data'}],
         'potential_mu': [[], {'DEPEND_0': 'time', 'DEPEND_1': 'alt_grid', 'UNITS': 'V', 'LABLAXIS': 'Parallel Potential', 'VAR_TYPE': 'data'}],
-        'mu_grid': [[],deepcopy(data_dict_wavescale['mu_w'][1])],
-        'alt_grid': [[], deepcopy(data_dict_wavescale['z'][1])],
+        'mu_grid': [[],deepcopy(data_dict_ray_eqns['mu_w'][1])],
+        'alt_grid': [[], deepcopy(data_dict_ray_eqns['z'][1])],
         'resonance_low': [[],{'DEPEND_0': 'z', 'UNITS': 'eV', 'LABLAXIS': 'Resonance Low', 'VAR_TYPE': 'data'}],
         'resonance_high': [[], {'DEPEND_0': 'z',  'UNITS': 'eV', 'LABLAXIS': 'Resonance High', 'VAR_TYPE': 'data'}],
         'DAW_velocity':[[],{'DEPEND_0': 'z',  'UNITS': 'eV', 'LABLAXIS': 'DAW Velocity', 'VAR_TYPE': 'data'}]
@@ -83,7 +81,7 @@ def wave_fields_generator():
 
     # Calculate the resonance window
     potential_para_max = np.array([np.max(np.abs(data_dict_output['potential_mu'][0][i])) for i in range(len(data_dict_output['potential_mu'][0]))])
-    DAW_vel = data_dict_wavescale['omega'][0]/deepcopy(data_dict_wavescale['k_mu'][0])
+    DAW_vel = data_dict_ray_eqns['omega'][0]/deepcopy(data_dict_ray_eqns['k_mu'][0])
     data_dict_output['resonance_high'][0] = 0.5*(stl.m_e/stl.q0)*np.square(DAW_vel + np.sqrt(2*stl.q0*potential_para_max/stl.m_e))
     data_dict_output['resonance_low'][0] = 0.5*(stl.m_e/stl.q0)*np.square((DAW_vel - np.sqrt(2 * stl.q0 * potential_para_max / stl.m_e)))
     data_dict_output['DAW_velocity'][0] = 0.5*(stl.m_e/stl.q0)*np.square(DAW_vel)

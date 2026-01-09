@@ -77,7 +77,7 @@ class RayEquationsClasses:
                          method=SimToggles.RK45_method,
                          rtol=SimToggles.RK45_rtol,
                          atol=SimToggles.RK45_atol,
-                         # t_eval=SimToggles.RK45_Teval,
+                         t_eval=SimToggles.RK45_Teval,
                          args=tuple([k_perp_0])
                          )
         T = soln.t

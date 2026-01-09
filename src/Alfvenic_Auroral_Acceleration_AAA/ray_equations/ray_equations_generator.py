@@ -9,7 +9,6 @@ def ray_equations_RK45_generator():
 
     # --- File-specific imports ---
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_classes import SimClasses
-    from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_classes import RayEquationsClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
@@ -51,30 +50,30 @@ def ray_equations_RK45_generator():
     #######################################
 
     # Calculate the initial lambda_mu0 from the dispersion relation and initial conditions
-    k_perp_0 = 2*np.pi/SimToggles.Lambda_perp0
-    k_mu_0 = (SimToggles.omega0*np.sqrt(1+np.square(k_perp_0*lmb_e(SimToggles.u0_w,SimToggles.chi0_w))))/V_A(SimToggles.u0_w,SimToggles.chi0_w)
-    lambda_phi_0 = SimToggles.perp_ratio*SimToggles.Lambda_perp0
+    k_perp_0 = 2*np.pi/RayEquationToggles.Lambda_perp0
+    k_mu_0 = (RayEquationToggles.omega0*np.sqrt(1+np.square(k_perp_0*lmb_e(RayEquationToggles.u0_w,RayEquationToggles.chi0_w))))/V_A(RayEquationToggles.u0_w,RayEquationToggles.chi0_w)
+    lambda_phi_0 = RayEquationToggles.perp_ratio*RayEquationToggles.Lambda_perp0
     k_phi_0 = 2*np.pi/lambda_phi_0
-    lambda_chi_0 = SimToggles.Lambda_perp0*lambda_phi_0/np.sqrt(lambda_phi_0**2 - SimToggles.Lambda_perp0**2)
+    lambda_chi_0 = RayEquationToggles.Lambda_perp0*lambda_phi_0/np.sqrt(lambda_phi_0**2 - RayEquationToggles.Lambda_perp0**2)
     k_chi_0 = 2*np.pi/lambda_chi_0
 
     # Calculate the initial B0 magnitude
 
 
     # initial conditions [k_mu0,k_chi0,k_phi0, mu0, chi0_w, phi0_w]
-    s0 = [k_mu_0, k_chi_0, k_phi_0, SimToggles.u0_w, SimToggles.chi0_w, SimToggles.phi0_w, SimToggles.omega0]
+    s0 = [k_mu_0, k_chi_0, k_phi_0, RayEquationToggles.u0_w, RayEquationToggles.chi0_w, RayEquationToggles.phi0_w, RayEquationToggles.omega0]
 
-    # adjust initial mu0 condition so it's 1/2 of a wavelength above SimToggles.u0_w
+    # adjust initial mu0 condition so it's 1/2 of a wavelength above RayEquationToggles.u0_w
     lambda_mu_0 = 2 * np.pi / k_mu_0
-    r = 1 + (SimToggles.z0_w + 0.5*lambda_mu_0/stl.m_to_km) / stl.Re
-    u0_w = -1 * np.sqrt(np.cos(np.radians(90 -SimToggles.Theta0_w))) / r
+    r = 1 + (RayEquationToggles.z0_w + 0.5*lambda_mu_0/stl.m_to_km) / stl.Re
+    u0_w = -1 * np.sqrt(np.cos(np.radians(90 -RayEquationToggles.Theta0_w))) / r
     s0[3] = u0_w
 
     ###################################
     # --- IMPLEMENT THE RK45 Solver ---
     ###################################
     stl.prgMsg('Solving Scale Length IVP')
-    [T, K_mu, K_chi, K_phi, Mu, Chi, Phi, Omega] = RayEquationsClasses().ray_equation_RK45_solver(SimToggles.RK45_tspan, s0, k_perp_0)
+    [T, K_mu, K_chi, K_phi, Mu, Chi, Phi, Omega] = RayEquationsClasses().ray_equation_RK45_solver(RayEquationToggles.RK45_tspan, s0, k_perp_0)
     stl.Done(start_time)
 
     ##########################
