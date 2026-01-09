@@ -30,7 +30,7 @@ class WaveFieldsClasses: # for parallel and perp only
         # --- Interpolate ---
         # Get wave position at chosen time
         wave_pos = np.array([
-                                np.interp(time,data_dict_ray_eqns['time'][0],data_dict_ray_eqns['mu_w'][0]),
+                                np.interp(time, data_dict_ray_eqns['time'][0], data_dict_ray_eqns['mu_w'][0]),
                                 np.interp(time, data_dict_ray_eqns['time'][0], data_dict_ray_eqns['chi_w'][0]),
                                 np.interp(time, data_dict_ray_eqns['time'][0], data_dict_ray_eqns['phi_w'][0]),
                              ])

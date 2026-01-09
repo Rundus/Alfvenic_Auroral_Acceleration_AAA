@@ -1,19 +1,26 @@
 import numpy as np
 import spaceToolsLib as stl
+from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
 
 class RayEquationToggles:
 
     # --- RK45 solver toggles ---
     RK45_method = 'RK45'
     # RK45_method = 'LSODA'
-    RK45_rtol = 1E-6  # controls the relative accuracy. If rtol
-    RK45_atol = 1E-7  # controls the absolute accuracy
-    RK45_tspan = [0, 3]  # time range (in seconds)
-    RK45_N_eval_points = 100
-    RK45_Teval = np.linspace(RK45_tspan[0], RK45_tspan[-1], RK45_N_eval_points)
+    RK45_rtol = 1E-10  # controls the relative accuracy. If rtol
+    RK45_atol = 1E-15  # controls the absolute accuracy
+
+    # --- Up the Field Line ---
+    RK45_N_eval_points_up = 500
+    RK45_tspan_up = [0, 3, RK45_N_eval_points_up]  # time range (in seconds)
+    RK45_Teval_up = np.linspace(*RK45_tspan_up)
+
+    # --- Down the Field Line ---
+    RK45_N_eval_points_down = 200
+    RK45_tspan_down = [1, 0, RK45_N_eval_points_down]  # time range (in seconds)
+    RK45_Teval_down = np.linspace(*RK45_tspan_down)
 
     # --- WAVE INITIAL CONDITIONS ---
-
     # Initial Wave Frequency
     f_0 = 5
     omega0 = 2 * np.pi * f_0  # in Hz

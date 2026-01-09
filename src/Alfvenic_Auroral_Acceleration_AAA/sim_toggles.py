@@ -1,5 +1,9 @@
+import numpy as np
 
 class SimToggles:
+
+    # --- SIMULATION TIME SPAN ---
+    RK45_tspan = [0, 3]  # time range (in seconds)
 
     # --- File I/O ---
     sim_root_path = r'/home/connor/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'

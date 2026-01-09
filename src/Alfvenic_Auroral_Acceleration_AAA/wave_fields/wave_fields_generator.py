@@ -9,6 +9,7 @@ def wave_fields_generator():
     from glob import glob
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import WaveFieldsClasses as WaveFieldsClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
     from tqdm import tqdm
     from scipy.integrate import simpson
@@ -18,7 +19,7 @@ def wave_fields_generator():
 
     # prepare the output
     data_dict_output = {
-        'time': [SimToggles.RK45_tspan[1] - np.array(deepcopy(data_dict_ray_eqns['time'][0])),deepcopy(data_dict_ray_eqns['time'][1])],
+        'time': [np.array(deepcopy(data_dict_ray_eqns['time'][0])),deepcopy(data_dict_ray_eqns['time'][1])],
         'mu_w': deepcopy(data_dict_ray_eqns['mu_w']),
         'chi_w': deepcopy(data_dict_ray_eqns['chi_w']),
         'z': deepcopy(data_dict_ray_eqns['z']),
@@ -39,7 +40,7 @@ def wave_fields_generator():
     ################################################
 
     # prepare some variables
-    times = deepcopy(data_dict_output['time'][0])
+    times = SimToggles.RK45_tspan[1] - deepcopy(data_dict_output['time'][0])
     Eperp_store = np.zeros(shape=(len(times), len(WaveFieldsToggles.mu_grid)))
     potential_perp_store = np.zeros(shape=(len(times), len(WaveFieldsToggles.mu_grid)))
     Epara_store = np.zeros(shape=(len(times), len(WaveFieldsToggles.mu_grid)))
@@ -55,7 +56,7 @@ def wave_fields_generator():
         Bperp = np.zeros_like(WaveFieldsToggles.mu_grid)
 
         for i in range(len(WaveFieldsToggles.mu_grid)):
-            eval_pos = [WaveFieldsToggles.mu_grid[i], SimToggles.chi0_w, SimToggles.phi0_w]
+            eval_pos = [WaveFieldsToggles.mu_grid[i], RayEquationToggles.chi0_w, RayEquationToggles.phi0_w]
             potential[i] = WaveFieldsClasses().field_generator(time, eval_pos, type='potential')
             Ephi[i] = WaveFieldsClasses().field_generator(time, eval_pos, type='eperp')
             Epara[i] = WaveFieldsClasses().field_generator(time, eval_pos, type='epara')

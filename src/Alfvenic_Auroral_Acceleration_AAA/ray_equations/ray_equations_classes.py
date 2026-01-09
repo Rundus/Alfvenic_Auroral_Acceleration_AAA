@@ -1,6 +1,7 @@
 import numpy as np
 from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
 from scipy.integrate import solve_ivp
+from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
 envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
 
@@ -18,7 +19,7 @@ class RayEquationsClasses:
         self.pDD_mu_V_A = envDict['pDD_V_A_mu']
         self.pDD_chi_V_A = envDict['pDD_V_A_chi']
         self.B_dipole = envDict['B_dipole']
-        self.B0 = self.B_dipole(SimToggles.u0_w, SimToggles.chi0_w)
+        self.B0 = self.B_dipole(RayEquationToggles.u0_w, RayEquationToggles.chi0_w)
 
     def calc_k_perp(self, mu, chi, k_perp_0):
         return np.sqrt((self.B_dipole(mu,chi)/self.B0))*k_perp_0
@@ -72,12 +73,12 @@ class RayEquationsClasses:
 
         # Note: my_lorenz(t, S, sigma, rho, beta)
         soln = solve_ivp(fun=self.ray_equations_ODE,
-                         t_span=t_span,
+                         t_span=SimToggles.RK45_tspan,
                          y0=s0,
-                         method=SimToggles.RK45_method,
-                         rtol=SimToggles.RK45_rtol,
-                         atol=SimToggles.RK45_atol,
-                         t_eval=SimToggles.RK45_Teval,
+                         method=RayEquationToggles.RK45_method,
+                         rtol=RayEquationToggles.RK45_rtol,
+                         atol=RayEquationToggles.RK45_atol,
+                         t_eval=RayEquationToggles.RK45_Teval,
                          args=tuple([k_perp_0])
                          )
         T = soln.t

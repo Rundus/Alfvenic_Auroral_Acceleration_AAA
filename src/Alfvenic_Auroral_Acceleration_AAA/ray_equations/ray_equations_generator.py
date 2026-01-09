@@ -12,6 +12,7 @@ def ray_equations_RK45_generator():
     from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_classes import RayEquationsClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
 
     start_time = time.time()
 
@@ -43,7 +44,6 @@ def ray_equations_RK45_generator():
     envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
     V_A = envDict['V_A']
     lmb_e = envDict['lambda_e']
-    B_dipole = envDict['B_dipole']
 
     #######################################
     # --- CREATE THE INITIAL CONDITIONS ---
@@ -57,24 +57,27 @@ def ray_equations_RK45_generator():
     lambda_chi_0 = RayEquationToggles.Lambda_perp0*lambda_phi_0/np.sqrt(lambda_phi_0**2 - RayEquationToggles.Lambda_perp0**2)
     k_chi_0 = 2*np.pi/lambda_chi_0
 
-    # Calculate the initial B0 magnitude
-
-
     # initial conditions [k_mu0,k_chi0,k_phi0, mu0, chi0_w, phi0_w]
     s0 = [k_mu_0, k_chi_0, k_phi_0, RayEquationToggles.u0_w, RayEquationToggles.chi0_w, RayEquationToggles.phi0_w, RayEquationToggles.omega0]
 
-    # adjust initial mu0 condition so it's 1/2 of a wavelength above RayEquationToggles.u0_w
-    lambda_mu_0 = 2 * np.pi / k_mu_0
-    r = 1 + (RayEquationToggles.z0_w + 0.5*lambda_mu_0/stl.m_to_km) / stl.Re
-    u0_w = -1 * np.sqrt(np.cos(np.radians(90 -RayEquationToggles.Theta0_w))) / r
-    s0[3] = u0_w
-
-    ###################################
-    # --- IMPLEMENT THE RK45 Solver ---
-    ###################################
-    stl.prgMsg('Solving Scale Length IVP')
-    [T, K_mu, K_chi, K_phi, Mu, Chi, Phi, Omega] = RayEquationsClasses().ray_equation_RK45_solver(RayEquationToggles.RK45_tspan, s0, k_perp_0)
+    #######################################################
+    # --- IMPLEMENT THE RK45 Solver - Up the Field Line ---
+    #######################################################
+    stl.prgMsg('Solving Ray Equations (Up the Field Line)')
+    [T_up, K_mu_up, K_chi_up, K_phi_up, Mu_up, Chi_up, Phi_up, Omega_up] = RayEquationsClasses().ray_equation_RK45_solver(RayEquationToggles.RK45_tspan_up, s0, k_perp_0)
     stl.Done(start_time)
+
+    #########################################################
+    # --- IMPLEMENT THE RK45 Solver - Down the Field Line ---
+    #########################################################
+    stl.prgMsg('Solving Ray Equations (Down the Field Line)')
+    [T_down, K_mu_down, K_chi_down, K_phi_down, Mu_down, Chi_down, Phi_down, Omega_down] = RayEquationsClasses().ray_equation_RK45_solver(RayEquationToggles.RK45_tspan_down,s0, k_perp_0)
+    stl.Done(start_time)
+
+    # Combine the two solutions
+    T_up = list(np.array(T_up[1:]) + RayEquationToggles.RK45_Teval_down[0])
+    T_down = T_down[::-1]
+    T, K_mu, K_chi, K_phi, Mu, Chi, Phi, Omega = T_down + T_up, K_mu_down+K_mu_up[1:], K_phi_down + K_phi_up[1:], Mu_down + Mu_up[1:], Chi_down + Chi_up[1:], Phi_down + Phi_up[1:], Omega_down +Omega_up[1:]
 
     ##########################
     # --- STORE THE OUTPUT ---

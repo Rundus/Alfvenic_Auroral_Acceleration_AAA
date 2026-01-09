@@ -1,14 +1,19 @@
-import numpy as np
-import spaceToolsLib as stl
-from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_classes import RayEquationsClasses
+# Simulation Imports
+from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
-from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_toggles import DistributionToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import ElectrostaticPotentialClasses
 from src.Alfvenic_Auroral_Acceleration_AAA.sim_classes import SimClasses
 from scipy.integrate import solve_ivp
-from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import WaveFieldsClasses2D as WaveFieldsClasses
+from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import WaveFieldsClasses as WaveFieldsClasses
+
+# General Imports
+from scipy.special import gamma
+import numpy as np
+import spaceToolsLib as stl
 envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
+
 
 class DistributionClasses:
 
@@ -38,7 +43,7 @@ class DistributionClasses:
         # DvmuDt_inV = (stl.q0/stl.m_e)*ElectrostaticPotentialClasses().invertedVEField([S[0],S[1],S[2]])
 
         # wave fields + mirroring only
-        DvmuDt_Alfven =  - (stl.q0 / stl.m_e) * WaveFieldsClasses().field_generator(time=t + deltaT,
+        DvmuDt_Alfven =  - (stl.q0 / stl.m_e) * WaveFieldsClasses().field_generator(time=SimToggles.RK45_tspan[1]- t + deltaT,
                                                                                     eval_pos=[S[0],S[1]],
                                                                                     type='epara')
         DvmuDt = DvmuDt_mirror + DvmuDt_Alfven
@@ -49,10 +54,13 @@ class DistributionClasses:
         return [DmuDt, DchiDt, DvmuDt, DvchiDt]
 
 
+    def time_ran_out(self,t, S,deltaT, ub):
+        return SimToggles.RK45_tspan[1]- t - deltaT
+
     # An event is a function where the RK45 method determines event(t,y)=0
     def escaped_upper(self, t, S, deltaT, uB):
 
-        alt = stl.Re*stl.m_to_km*(SimClasses.r_muChi(S[0],SimToggles.chi0_obs) - 1)
+        alt = stl.Re*stl.m_to_km*(SimClasses.r_muChi(S[0],DistributionToggles.chi0_obs) - 1)
 
         # top boundary checker
         top_boundary_checker = alt - DistributionToggles.upper_termination_altitude
@@ -63,7 +71,7 @@ class DistributionClasses:
     escaped_upper.terminal = True
 
     def escaped_lower(self, t, S, deltaT, uB):
-        alt = stl.Re * stl.m_to_km * (SimClasses.r_muChi(S[0], SimToggles.chi0_obs) - 1)
+        alt = stl.Re * stl.m_to_km * (SimClasses.r_muChi(S[0], DistributionToggles.chi0_obs) - 1)
 
         # lower boundary
         lower_boundary_checker = alt - DistributionToggles.lower_termination_altitude
@@ -76,14 +84,14 @@ class DistributionClasses:
     #####################
     def louivilleMapper(self, t_span, s0, deltaT, uB):
         soln = solve_ivp(fun=self.equations_of_motion,
-                         t_span=t_span,
+                         t_span=SimToggles.RK45_tspan[::-1],
                          y0=s0,
-                         method=SimToggles.RK45_method,
-                         rtol=SimToggles.RK45_rtol,
-                         atol=SimToggles.RK45_atol,
+                         method=DistributionToggles.RK45_method,
+                         rtol=DistributionToggles.RK45_rtol,
+                         atol=DistributionToggles.RK45_atol,
                          # t_eval=SimToggles.RK45_Teval,
-                         events=(self.escaped_lower,self.escaped_upper),
-                         args=tuple([deltaT,uB])
+                         events=(self.escaped_lower,self.escaped_upper, self.time_ran_out),
+                         args=tuple([deltaT, uB])
                          )
         T = soln.t
         particle_mu = soln.y[0, :]
@@ -111,5 +119,12 @@ class DistributionClasses:
         """
 
         return n*np.sqrt(np.power(stl.m_e/(2*np.pi*Te*stl.q0),3)) * np.exp(-0.5*stl.m_e*(np.square(vel_perp) + np.square(vel_para))/(stl.q0*Te))
+
+    # def Kappa(self, n, Te, vel_para, vel_perp, kappa):
+    #     # Input: density [cm^-3], Temperature [eV], Velocities [m/s]
+    #     # output: the distribution function in SI units [s^3 m^-6]
+    #     Emag = (0.5 * mass * (Vperp ** 2 + Vpara ** 2)) / charge
+    #     Ek = T * (1 - 3 / (2 * kappa))
+    #     return (1E6) * n * np.power(mass / (2 * np.pi * kappa * stl.q0 * Ek), 3 / 2) * (gamma(kappa + 1) / gamma(kappa - 0.5)) * np.power(1 + Emag / (kappa * Ek), -(kappa + 1))
 
 
