@@ -2,16 +2,21 @@ import numpy as np
 import spaceToolsLib as stl
 from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import data_dict_ray_eqns
+from glob import glob
+data_dict_ray_eqns = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/ray_equations/*.cdf*')[0])
+
 
 class DistributionToggles:
 
     # --- RK45 solver toggles ---
     RK45_method = 'RK45'
     # RK45_method = 'LSODA'
-    RK45_rtol = 1E-6  # controls the relative accuracy. If rtol
-    RK45_atol = 1E-7  # controls the absolute accuracy
-    RK45_N_eval_points = 30
-    RK45_Teval = np.linspace(SimToggles.RK45_tspan[0], SimToggles.RK45_tspan[-1], RK45_N_eval_points)
+    RK45_rtol = 1E-10  # controls the relative accuracy. If rtol
+    RK45_atol = 1E-11  # controls the absolute accuracy
+    RK45_N_eval_points = 2
+    RK45_tspan = [data_dict_ray_eqns['time'][0][0], data_dict_ray_eqns['time'][0][-1]]  # time range (in seconds)
+    RK45_Teval = np.linspace(RK45_tspan[0], RK45_tspan[-1], RK45_N_eval_points)
 
     ########################################
     # --- OBSERVATION INITIAL CONDITIONS ---
@@ -19,6 +24,7 @@ class DistributionToggles:
     z0_obs = 500  # in kilometers
     Theta0_obs = RayEquationToggles.Theta0_w
     phi0_obs = RayEquationToggles.phi0_w
+
     r_obs = 1 + z0_obs / stl.Re
     u0_obs = -1 * np.sqrt(np.cos(np.radians(90 - Theta0_obs))) / r_obs
     chi0_obs = np.power(np.sin(np.radians(90 - Theta0_obs)), 2) / r_obs
@@ -33,7 +39,7 @@ class DistributionToggles:
     #####################################
     # --- PLASMA DISTRIBUTION TOGGLES ---
     #####################################
-    N_energy_space_points = 30
+    N_energy_space_points = 25
 
     # ENERGY/PITCH
     E_max = 4  # the POWER of 10^E_max for the maximum energy

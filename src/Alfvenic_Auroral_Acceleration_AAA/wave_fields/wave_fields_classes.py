@@ -53,7 +53,7 @@ class WaveFieldsClasses: # for parallel and perp only
                 return self.Potential_phi(inputs)
             elif which.lower() == 'eperp':
                 return self.EField_phi(inputs)
-            elif which.lower() == 'epara':
+            elif which.lower() == 'emu':
                 return self.EField_mu(inputs)
             elif which.lower() == 'bperp':
                 return self.BField_perp(inputs)

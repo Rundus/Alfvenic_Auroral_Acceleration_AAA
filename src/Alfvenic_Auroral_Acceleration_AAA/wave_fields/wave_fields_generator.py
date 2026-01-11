@@ -1,3 +1,6 @@
+from timebudget import timebudget
+
+@timebudget
 def wave_fields_generator():
 
     # --- general imports ---

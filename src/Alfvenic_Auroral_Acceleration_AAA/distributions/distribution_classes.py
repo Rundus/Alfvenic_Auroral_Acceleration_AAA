@@ -43,19 +43,14 @@ class DistributionClasses:
         # DvmuDt_inV = (stl.q0/stl.m_e)*ElectrostaticPotentialClasses().invertedVEField([S[0],S[1],S[2]])
 
         # wave fields + mirroring only
-        DvmuDt_Alfven =  - (stl.q0 / stl.m_e) * WaveFieldsClasses().field_generator(time=SimToggles.RK45_tspan[1]- t + deltaT,
-                                                                                    eval_pos=[S[0],S[1]],
-                                                                                    type='epara')
-        DvmuDt = DvmuDt_mirror + DvmuDt_Alfven
+        # DvmuDt_Alfven =  - (stl.q0 / stl.m_e) * WaveFieldsClasses().field_generator(time=DistributionToggles.RK45_tspan[1]- t + deltaT, eval_pos=[S[0],S[1]], type='eMu')
+        # DvmuDt = DvmuDt_mirror + DvmuDt_Alfven
+        DvmuDt = DvmuDt_mirror
 
         # dv_chi/dt
         DvchiDt = 0
 
         return [DmuDt, DchiDt, DvmuDt, DvchiDt]
-
-
-    def time_ran_out(self,t, S,deltaT, ub):
-        return SimToggles.RK45_tspan[1]- t - deltaT
 
     # An event is a function where the RK45 method determines event(t,y)=0
     def escaped_upper(self, t, S, deltaT, uB):
@@ -84,13 +79,12 @@ class DistributionClasses:
     #####################
     def louivilleMapper(self, t_span, s0, deltaT, uB):
         soln = solve_ivp(fun=self.equations_of_motion,
-                         t_span=SimToggles.RK45_tspan[::-1],
+                         t_span=DistributionToggles.RK45_tspan[::-1],
                          y0=s0,
                          method=DistributionToggles.RK45_method,
                          rtol=DistributionToggles.RK45_rtol,
                          atol=DistributionToggles.RK45_atol,
-                         # t_eval=SimToggles.RK45_Teval,
-                         events=(self.escaped_lower,self.escaped_upper, self.time_ran_out),
+                         # events=(self.escaped_lower, self.escaped_upper),
                          args=tuple([deltaT, uB])
                          )
         T = soln.t

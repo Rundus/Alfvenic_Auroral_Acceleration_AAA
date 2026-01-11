@@ -1,4 +1,6 @@
+from timebudget import timebudget
 
+@timebudget
 def ray_equations_RK45_generator():
 
     # --- general imports ---
@@ -60,39 +62,43 @@ def ray_equations_RK45_generator():
     # initial conditions [k_mu0,k_chi0,k_phi0, mu0, chi0_w, phi0_w]
     s0 = [k_mu_0, k_chi_0, k_phi_0, RayEquationToggles.u0_w, RayEquationToggles.chi0_w, RayEquationToggles.phi0_w, RayEquationToggles.omega0]
 
-    #######################################################
-    # --- IMPLEMENT THE RK45 Solver - Up the Field Line ---
-    #######################################################
-    stl.prgMsg('Solving Ray Equations (Up the Field Line)')
-    [T_up, K_mu_up, K_chi_up, K_phi_up, Mu_up, Chi_up, Phi_up, Omega_up] = RayEquationsClasses().ray_equation_RK45_solver(RayEquationToggles.RK45_tspan_up, s0, k_perp_0)
-    stl.Done(start_time)
+    ###################################
+    # --- IMPLEMENT THE RK45 Solver ---
+    ###################################
 
-    #########################################################
-    # --- IMPLEMENT THE RK45 Solver - Down the Field Line ---
-    #########################################################
-    stl.prgMsg('Solving Ray Equations (Down the Field Line)')
-    [T_down, K_mu_down, K_chi_down, K_phi_down, Mu_down, Chi_down, Phi_down, Omega_down] = RayEquationsClasses().ray_equation_RK45_solver(RayEquationToggles.RK45_tspan_down,s0, k_perp_0)
-    stl.Done(start_time)
+    # Format: [T, K_mu, K_chi, K_phi, Mu, Chi, Phi, Omega]
+    Solution = [[] for i in range(8)]
+    UpSolution = RayEquationsClasses().ray_equation_RK45_solver(t_span=RayEquationToggles.RK45_tspan_up[0:2], s0=s0, k_perp_0=k_perp_0)
+    DownSolution = RayEquationsClasses().ray_equation_RK45_solver(t_span=RayEquationToggles.RK45_tspan_down[0:2], s0=s0, k_perp_0=k_perp_0)
 
-    # Combine the two solutions
-    T_up = list(np.array(T_up[1:]) + RayEquationToggles.RK45_Teval_down[0])
-    T_down = T_down[::-1]
-    T, K_mu, K_chi, K_phi, Mu, Chi, Phi, Omega = T_down + T_up, K_mu_down+K_mu_up[1:], K_phi_down + K_phi_up[1:], Mu_down + Mu_up[1:], Chi_down + Chi_up[1:], Phi_down + Phi_up[1:], Omega_down +Omega_up[1:]
+    # Combine the two solutions into one
+    for i in range(len(Solution)):
+        if i == 0: # For the TimeRange
+            Down_actual = DownSolution[i] - DownSolution[i][-1]
+            Down = Down_actual[::-1]
+            Up = np.array(UpSolution[i][1:]) - DownSolution[i][-1]
+        else:
+            Up = UpSolution[i][1:]
+            Down = DownSolution[i][::-1]
+
+        Solution[i] = np.append(Down, Up)
 
     ##########################
     # --- STORE THE OUTPUT ---
     ##########################
+    # Format: [T, K_mu, K_chi, K_phi, Mu, Chi, Phi, Omega]
     data_dict_output['lambda_phi_0'][0] = np.array([lambda_phi_0])
     data_dict_output['lambda_chi_0'][0] = np.array([lambda_chi_0])
     data_dict_output['lambda_mu_0'][0] = np.array([2 * np.pi / k_mu_0])
-    data_dict_output['time'][0] = np.array(T)
-    data_dict_output['k_mu'][0] = np.array(K_mu)
-    data_dict_output['k_chi'][0] = np.array(K_chi)
-    data_dict_output['mu_w'][0] = np.array(Mu)
-    data_dict_output['chi_w'][0] = np.array(Chi)
-    data_dict_output['phi_w'][0] = np.array(Phi)
-    data_dict_output['phi_w_deg'][0] = np.array(np.degrees(deepcopy(Phi)))
-    data_dict_output['k_phi'][0] = np.array(K_phi)
+    data_dict_output['time'][0] = np.array(Solution[0])
+    data_dict_output['k_mu'][0] = np.array(Solution[1])
+    data_dict_output['k_chi'][0] = np.array(Solution[2])
+    data_dict_output['k_phi'][0] = np.array(Solution[3])
+    data_dict_output['mu_w'][0] = np.array(Solution[4])
+    data_dict_output['chi_w'][0] = np.array(Solution[5])
+    data_dict_output['phi_w'][0] = np.array(Solution[6])
+    data_dict_output['phi_w_deg'][0] = np.array(np.degrees(deepcopy(Solution[6])))
+    Mu, Chi, Omega = Solution[4], Solution[5], Solution[7]
     data_dict_output['k_perp'][0] = np.array([RayEquationsClasses().calc_k_perp(Mu[i],Chi[i], k_perp_0) for i in range(len(Mu))])
     data_dict_output['colat'][0] = SimClasses.theta_muChi(Mu,Chi)
     data_dict_output['lat'][0] = 90 - deepcopy(data_dict_output['colat'][0])

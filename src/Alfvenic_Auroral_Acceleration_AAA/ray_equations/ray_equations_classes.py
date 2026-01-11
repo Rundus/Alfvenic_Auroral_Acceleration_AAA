@@ -2,7 +2,9 @@ import numpy as np
 from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
 from scipy.integrate import solve_ivp
 from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
-from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.sim_classes import SimClasses
+from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
+import spaceToolsLib as stl
 envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
 
 
@@ -68,17 +70,28 @@ class RayEquationsClasses:
 
         return [dk_mu, dk_chi, dk_phi, dmu, dchi, dphi, domega]
 
+
+    # --- Lower boundary on solution ---
+    def wave_escaped(self, t, S, k_perp_0):
+        alt = stl.Re * (SimClasses.r_muChi(S[3], RayEquationToggles.chi0_w) - 1)
+        return alt - RayEquationToggles.lower_boundary
+
+    wave_escaped.terminal = True
+
     # --- Run the Solver and Plot it ---
-    def ray_equation_RK45_solver(self, t_span, s0, k_perp_0):
+    def ray_equation_RK45_solver(self, t_span, s0, k_perp_0, **kwargs):
+
+        t_eval = kwargs.get('t_eval', None)
 
         # Note: my_lorenz(t, S, sigma, rho, beta)
         soln = solve_ivp(fun=self.ray_equations_ODE,
-                         t_span=SimToggles.RK45_tspan,
+                         t_span=t_span,
                          y0=s0,
                          method=RayEquationToggles.RK45_method,
                          rtol=RayEquationToggles.RK45_rtol,
                          atol=RayEquationToggles.RK45_atol,
-                         t_eval=RayEquationToggles.RK45_Teval,
+                         t_eval=t_eval,
+                         events=self.wave_escaped,
                          args=tuple([k_perp_0])
                          )
         T = soln.t

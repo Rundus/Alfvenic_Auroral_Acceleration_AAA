@@ -1,3 +1,6 @@
+from timebudget import timebudget
+
+@timebudget
 def plasma_environment_generator():
 
     # --- general imports ---

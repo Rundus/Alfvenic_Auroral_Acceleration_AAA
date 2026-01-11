@@ -1,4 +1,6 @@
+from timebudget import timebudget
 
+@timebudget
 def flux_generator():
 
     # --- general imports ---
@@ -42,6 +44,9 @@ def flux_generator():
         'Pitch_Angle': deepcopy(data_dict_distribution['Pitch_Angle']),
         'Differential_Number_Flux': [np.array(JN), {'DEPEND_0':'time','DEPEND_2':'Energy','DEPEND_1':'Pitch_Angle','UNITS':'cm!U-2!N str!U-1!N s!U-1!N eV!U-1!N','LABLAXIS': 'Differential_Number_Flux','VAR_TYPE':'data'}],
         'Differential_Energy_Flux': [np.array(JE), {'DEPEND_0': 'time', 'DEPEND_2': 'Energy', 'DEPEND_1': 'Pitch_Angle', 'UNITS': 'cm!U-2!N str!U-1!N s!U-1!N eV/eV', 'LABLAXIS': 'Differential_Energy_Flux', 'VAR_TYPE': 'data'}],
+        'E_mu_obs':deepcopy(data_dict_distribution['E_mu_obs']),
+        'E_perp_obs':deepcopy(data_dict_distribution['E_perp_obs']),
+        'B_perp_obs':deepcopy(data_dict_distribution['B_perp_obs'])
     }
 
     outputPath = rf'{FluxToggles.outputFolder}/flux.cdf'
