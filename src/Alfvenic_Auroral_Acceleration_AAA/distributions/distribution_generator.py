@@ -73,13 +73,18 @@ def louisville_mapping(tmeIdx):
         # Note: If the last velocity value in a mapping is invalid b/c teh particle would trigger an event,
         # the simulation just reports a np.nan value. In these cases, just take the next available value
         # print(stl.Re*(SimClasses.r_muChi(particle_mu[-1],DistributionToggles.chi0_obs)-1))
-        if stl.Re*(SimClasses.r_muChi(particle_mu[-1],DistributionToggles.chi0_obs)-1) >= 10000:
-            Distribution[tmeIdx][ptchIdx][engyIdx] = DistributionClasses().Maxwellian(n=DistributionToggles.n_PS,
+        Distribution[tmeIdx][ptchIdx][engyIdx] = DistributionClasses().Maxwellian(n=DistributionToggles.n_PS,
                                                                                   Te=DistributionToggles.Te_PS,
                                                                                   vel_perp=deepcopy(mapped_v_perp[-1]),
-                                                                                  vel_para=deepcopy(particle_vel_Mu[-1]))
-        else:
-            Distribution[tmeIdx][ptchIdx][engyIdx] = 0
+                                                                                  vel_para=deepcopy(
+                                                                                      particle_vel_Mu[-1]))
+        # if stl.Re*(SimClasses.r_muChi(particle_mu[-1],DistributionToggles.chi0_obs)-1) >= 10000:
+        #     Distribution[tmeIdx][ptchIdx][engyIdx] = DistributionClasses().Maxwellian(n=DistributionToggles.n_PS,
+        #                                                                           Te=DistributionToggles.Te_PS,
+        #                                                                           vel_perp=deepcopy(mapped_v_perp[-1]),
+        #                                                                           vel_para=deepcopy(particle_vel_Mu[-1]))
+        # else:
+        #     Distribution[tmeIdx][ptchIdx][engyIdx] = 0
 
 # Parallelize the Code
 @timebudget
