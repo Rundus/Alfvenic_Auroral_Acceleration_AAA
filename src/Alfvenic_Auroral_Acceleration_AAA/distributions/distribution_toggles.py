@@ -12,10 +12,10 @@ class DistributionToggles:
     # --- RK45 solver toggles ---
     RK45_method = 'RK45'
     # RK45_method = 'LSODA'
-    RK45_rtol = 1E-10  # controls the relative accuracy. If rtol
-    RK45_atol = 1E-11  # controls the absolute accuracy
+    RK45_rtol = 1E-5  # controls the relative accuracy. If rtol
+    RK45_atol = 1E-6  # controls the absolute accuracy
     RK45_N_eval_points = 2
-    RK45_tspan = [data_dict_ray_eqns['time'][0][0], data_dict_ray_eqns['time'][0][-1]]  # time range (in seconds)
+    RK45_tspan = [data_dict_ray_eqns['time'][0][-1],data_dict_ray_eqns['time'][0][0]]  # time range (in seconds). MAKE SURE THIS IS REVERSED IN TIME
     RK45_Teval = np.linspace(RK45_tspan[0], RK45_tspan[-1], RK45_N_eval_points)
 
     ########################################
@@ -39,10 +39,10 @@ class DistributionToggles:
     #####################################
     # --- PLASMA DISTRIBUTION TOGGLES ---
     #####################################
-    N_energy_space_points = 25
+    N_energy_space_points = 10
 
     # ENERGY/PITCH
-    E_max = 4  # the POWER of 10^E_max for the maximum energy
+    E_max = 3  # the POWER of 10^E_max for the maximum energy
     E_min = 1  # the POWER of 10^E_min for the minimum energy
     pitch_range = np.linspace(0,180,19)
     energy_range = np.logspace(E_min,E_max,N_energy_space_points)
@@ -53,8 +53,8 @@ class DistributionToggles:
     ###########################
 
     # altitude to terminate simulation
-    upper_termination_altitude = 10000 * stl.m_to_km # in meters
-    lower_termination_altitude = 100 * stl.m_to_km
+    upper_termination_altitude = 10000  # in kilometers
+    lower_termination_altitude = 100
 
     # --- File I/O ---
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles

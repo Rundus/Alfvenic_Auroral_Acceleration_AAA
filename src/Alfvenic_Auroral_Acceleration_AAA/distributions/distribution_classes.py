@@ -66,7 +66,7 @@ class DistributionClasses:
     escaped_upper.terminal = True
 
     def escaped_lower(self, t, S, deltaT, uB):
-        alt = stl.Re * stl.m_to_km * (SimClasses.r_muChi(S[0], DistributionToggles.chi0_obs) - 1)
+        alt = stl.Re  * (SimClasses.r_muChi(S[0], DistributionToggles.chi0_obs) - 1)
 
         # lower boundary
         lower_boundary_checker = alt - DistributionToggles.lower_termination_altitude

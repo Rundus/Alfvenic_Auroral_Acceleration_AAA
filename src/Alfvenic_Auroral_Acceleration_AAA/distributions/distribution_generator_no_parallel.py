@@ -11,7 +11,6 @@ def distribution_generator():
     # --- File-specific imports ---
     from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_toggles import DistributionToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_classes import DistributionClasses
-    from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
     from itertools import product
     from tqdm import tqdm
@@ -51,7 +50,7 @@ def distribution_generator():
         uB = (0.5 * stl.m_e * np.power(v_perp0, 2)) / B0
 
         # Perform the RK45 Solver
-        [T, particle_mu, particle_chi, particle_vel_Mu, particle_vel_chi] = DistributionClasses().louivilleMapper(SimToggles.RK45_tspan, s0, deltaT, uB)
+        [T, particle_mu, particle_chi, particle_vel_Mu, particle_vel_chi] = DistributionClasses().louivilleMapper(DistributionToggles.RK45_tspan, s0, deltaT, uB)
 
         ################################
         # --- PERPENDICULAR DYNAMICS ---
@@ -72,7 +71,7 @@ def distribution_generator():
     # --- OUTPUT ---
     ################
     data_dict_output = {
-        'time' : [SimToggles.RK45_tspan[1] - np.array(DistributionToggles.RK45_Teval),{'UNITS': 's', 'LABLAXIS': 'Time Eval','VAR_TYPE':'data'}],
+        'time' : [DistributionToggles.RK45_tspan[1] - np.array(DistributionToggles.RK45_Teval),{'UNITS': 's', 'LABLAXIS': 'Time Eval','VAR_TYPE':'data'}],
         'Distribution': [np.array(Distribution), {'DEPEND_0':'time','DEPEND_1':'Pitch_Angle','DEPEND_2':'Energy','UNITS':'m!A-6!Ns!A-3!N','LABLAXIS':'Distribution Function','VAR_TYPE':'data'}],
         'Energy': [np.array(DistributionToggles.energy_range), {'UNITS':'eV', 'LABLAXIS':'Energy'}],
         'Pitch_Angle': [np.array(DistributionToggles.pitch_range), {'UNITS': 'deg', 'LABLAXIS': 'Pitch Angle'}],

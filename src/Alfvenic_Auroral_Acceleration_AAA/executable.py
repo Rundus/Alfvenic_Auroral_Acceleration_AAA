@@ -52,6 +52,8 @@ if dict_executable['regen_wave_fields']==1:
 
 if dict_executable['regen_particle_distributions'] == 1:
     print('\n--- Calculating Liouville Mapping ---',end='\n')
+    # from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_generator_no_parallel import distribution_generator
+    # distribution_generator()
     from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_generator import run_louisville_mapping
     run_louisville_mapping()
     stl.Done(start_time)

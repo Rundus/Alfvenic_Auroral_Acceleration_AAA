@@ -95,7 +95,10 @@ def louisville_mapping(tmeIdx):
                                                                                   Te=DistributionToggles.Te_PS,
                                                                                   vel_perp=deepcopy(v_perp0),
                                                                                   vel_para=deepcopy(v_mu0))
-        print(Energy_checker, a*1E14, b*1E14, (a - b)*1E14)
+        # print(f'{DistributionToggles.pitch_range[ptchIdx]} deg     ',
+        #       f'{DistributionToggles.energy_range[engyIdx]} eV     ',
+        #       f'{Energy_checker} dE    ',
+        #       f'{(a - b)*1E14} df\n\n')
 
         ##############################
         # --- OBSERVED WAVE FIELDS ---
