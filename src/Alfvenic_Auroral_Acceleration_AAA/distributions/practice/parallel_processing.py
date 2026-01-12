@@ -14,7 +14,6 @@ b = arr.reshape((N,M))
 print(b)
 
 # --- define the parallelization function ---
-
 def complex_operation(idx):
     # print("Complex operation. Input index: {:2d}\n".format(input_index))
     iterations_count = round(1e7)

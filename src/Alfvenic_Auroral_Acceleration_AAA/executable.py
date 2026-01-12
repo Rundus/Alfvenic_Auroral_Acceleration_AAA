@@ -58,6 +58,12 @@ if dict_executable['regen_flux_calculation'] ==1:
     flux_generator()
     stl.Done(start_time)
 
+if dict_executable['regen_field_particle_correlation'] == 1:
+    print('\n--- Calculating Field-Particle Correlation ---', end='\n')
+    from src.Alfvenic_Auroral_Acceleration_AAA.field_particle_correlation.field_particle_correlation_generator import field_particle_correlation_generator
+    field_particle_correlation_generator()
+    stl.Done(start_time)
+
 
 
 

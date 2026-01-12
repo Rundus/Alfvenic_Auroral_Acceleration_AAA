@@ -40,6 +40,7 @@ def flux_generator():
     # --- prepare the output ---
     data_dict_output = {
         'time': [deepcopy(data_dict_distribution['time'][0]), {'DEPEND_0':'time','UNITS': 's', 'LABLAXIS': 'Time','VAR_TYPE':'data'}],
+        'time_waves': deepcopy(data_dict_distribution['time_waves']),
         'Energy': deepcopy(data_dict_distribution['Energy']),
         'Pitch_Angle': deepcopy(data_dict_distribution['Pitch_Angle']),
         'Differential_Number_Flux': [np.array(JN), {'DEPEND_0':'time','DEPEND_2':'Energy','DEPEND_1':'Pitch_Angle','UNITS':'cm!U-2!N str!U-1!N s!U-1!N eV!U-1!N','LABLAXIS': 'Differential_Number_Flux','VAR_TYPE':'data'}],
