@@ -25,44 +25,47 @@ class WaveFieldsClasses: # for parallel and perp only
 
     def field_generator(self, time, eval_pos, **kwargs):
 
-        which = kwargs.get('type')
-
-        # --- Interpolate ---
-        # Get wave position at chosen time
-        wave_pos = np.array([
-                                np.interp(time, data_dict_ray_eqns['time'][0], data_dict_ray_eqns['mu_w'][0]),
-                                np.interp(time, data_dict_ray_eqns['time'][0], data_dict_ray_eqns['chi_w'][0]),
-                                np.interp(time, data_dict_ray_eqns['time'][0], data_dict_ray_eqns['phi_w'][0]),
-                             ])
-
-        # Get wave k-vector at chosen time
-        k = np.array([
-            np.interp(time, data_dict_ray_eqns['time'][0], data_dict_ray_eqns['k_mu'][0]),
-            np.interp(time, data_dict_ray_eqns['time'][0], data_dict_ray_eqns['k_perp'][0]),
-        ])
-
-        # form the h-factors and k vectors for this specific time
-        h = np.array([envDict['h_mu'](wave_pos[0], wave_pos[1]), envDict['h_chi'](wave_pos[0], wave_pos[1])])
-
-        # create the inputs
-        inputs = [eval_pos, wave_pos, k, h]
-
-        # Return the desired parameter at this time
-        if self.InWaveChecker(inputs):
-            if which.lower() == 'potential':
-                return self.Potential_phi(inputs)
-            elif which.lower() == 'eperp':
-                return self.EField_phi(inputs)
-            elif which.lower() == 'emu':
-                return self.EField_mu(inputs)
-            elif which.lower() == 'bperp':
-                return self.BField_perp(inputs)
-        else:
+        if (time < 0) or (time>np.max(data_dict_ray_eqns['time'][0])): # always return a zero value if you try to evaluate beyond where the wave is
             return 0
+        else:
+            which = kwargs.get('type')
+
+            # --- Interpolate ---
+            # Get wave position at chosen time
+            wave_pos = np.array([
+                                    np.interp(time, data_dict_ray_eqns['time'][0], data_dict_ray_eqns['mu_w'][0]),
+                                    np.interp(time, data_dict_ray_eqns['time'][0], data_dict_ray_eqns['chi_w'][0]),
+                                    np.interp(time, data_dict_ray_eqns['time'][0], data_dict_ray_eqns['phi_w'][0]),
+                                 ])
+
+            # Get wave k-vector at chosen time
+            k = np.array([
+                np.interp(time, data_dict_ray_eqns['time'][0], data_dict_ray_eqns['k_mu'][0]),
+                np.interp(time, data_dict_ray_eqns['time'][0], data_dict_ray_eqns['k_perp'][0]),
+            ])
+
+            # form the h-factors and k vectors for this specific time
+            h = np.array([envDict['h_mu'](wave_pos[0], wave_pos[1]), envDict['h_chi'](wave_pos[0], wave_pos[1])])
+
+            # create the inputs
+            inputs = [eval_pos, wave_pos, k, h]
+
+            # Return the desired parameter at this time
+            if self.InWaveChecker(inputs):
+                if which.lower() == 'potential':
+                    return self.Potential_phi(inputs)
+                elif which.lower() == 'eperp':
+                    return self.EField_phi(inputs)
+                elif which.lower() == 'emu':
+                    return self.EField_mu(inputs)
+                elif which.lower() == 'bperp':
+                    return self.BField_perp(inputs)
+            else:
+                return 0
 
     def Potential_phi(self, inputs):
         eval_pos, wave_pos, k, h = inputs
-        return (WaveFieldsToggles.Phi_0/2)*np.sin(k[0]*h[0]*(eval_pos[0]-wave_pos[0]))
+        return (WaveFieldsToggles.Phi_0)*np.sin(k[0]*h[0]*(eval_pos[0]-wave_pos[0]))
 
     def EField_phi(self, inputs):
         eval_pos, wave_pos, k, h= inputs

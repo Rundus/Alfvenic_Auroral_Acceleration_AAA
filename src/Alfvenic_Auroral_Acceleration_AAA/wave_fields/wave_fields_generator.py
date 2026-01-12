@@ -43,10 +43,10 @@ def wave_fields_generator():
     ################################################
 
     # prepare some variables
-    times = SimToggles.RK45_tspan[1] - deepcopy(data_dict_output['time'][0])
+    times = deepcopy(data_dict_output['time'][0])
     Eperp_store = np.zeros(shape=(len(times), len(WaveFieldsToggles.mu_grid)))
     potential_perp_store = np.zeros(shape=(len(times), len(WaveFieldsToggles.mu_grid)))
-    Epara_store = np.zeros(shape=(len(times), len(WaveFieldsToggles.mu_grid)))
+    Emu_store = np.zeros(shape=(len(times), len(WaveFieldsToggles.mu_grid)))
     Bperp_store = np.zeros(shape=(len(times), len(WaveFieldsToggles.mu_grid)))
     potential_para_store = np.zeros(shape=(len(times), len(WaveFieldsToggles.mu_grid)))
 
@@ -55,28 +55,28 @@ def wave_fields_generator():
     for loopidx, time in tqdm(enumerate(times)):
         potential = np.zeros_like(WaveFieldsToggles.mu_grid)
         Ephi = np.zeros_like(WaveFieldsToggles.mu_grid)
-        Epara = np.zeros_like(WaveFieldsToggles.mu_grid)
+        E_mu = np.zeros_like(WaveFieldsToggles.mu_grid)
         Bperp = np.zeros_like(WaveFieldsToggles.mu_grid)
 
         for i in range(len(WaveFieldsToggles.mu_grid)):
             eval_pos = [WaveFieldsToggles.mu_grid[i], RayEquationToggles.chi0_w, RayEquationToggles.phi0_w]
             potential[i] = WaveFieldsClasses().field_generator(time, eval_pos, type='potential')
             Ephi[i] = WaveFieldsClasses().field_generator(time, eval_pos, type='eperp')
-            Epara[i] = WaveFieldsClasses().field_generator(time, eval_pos, type='epara')
+            E_mu[i] = WaveFieldsClasses().field_generator(time, eval_pos, type='emu')
             Bperp[i] = WaveFieldsClasses().field_generator(time, eval_pos, type='bperp')
 
         # Store the outputs
         Eperp_store[loopidx] = Ephi
-        Epara_store[loopidx] = Epara
+        Emu_store[loopidx] = E_mu
         potential_perp_store[loopidx] = potential
         Bperp_store[loopidx] = Bperp
 
         # calculate the parallel potential via line integration
-        potential_para_store[loopidx] = np.array([-1*simpson(y=Epara[0:i],x=stl.m_to_km*WaveFieldsToggles.alt_grid[0:i]) if i != 0 else 0 for i in range(len(WaveFieldsToggles.mu_grid)) ])
+        potential_para_store[loopidx] = np.array([-1*simpson(y=E_mu[0:i],x=stl.m_to_km*WaveFieldsToggles.alt_grid[0:i]) if i != 0 else 0 for i in range(len(WaveFieldsToggles.mu_grid)) ])
 
     # store everything
     data_dict_output['E_perp'][0] = Eperp_store
-    data_dict_output['E_mu'][0] = Epara_store
+    data_dict_output['E_mu'][0] = Emu_store
     data_dict_output['potential_perp'][0] = potential_perp_store
     data_dict_output['potential_mu'][0] = potential_para_store
     data_dict_output['B_perp'][0] = Bperp_store
@@ -89,6 +89,8 @@ def wave_fields_generator():
     data_dict_output['resonance_high'][0] = 0.5*(stl.m_e/stl.q0)*np.square(DAW_vel + np.sqrt(2*stl.q0*potential_para_max/stl.m_e))
     data_dict_output['resonance_low'][0] = 0.5*(stl.m_e/stl.q0)*np.square((DAW_vel - np.sqrt(2 * stl.q0 * potential_para_max / stl.m_e)))
     data_dict_output['DAW_velocity'][0] = 0.5*(stl.m_e/stl.q0)*np.square(DAW_vel)
+
+
 
     ################
     # --- OUTPUT ---

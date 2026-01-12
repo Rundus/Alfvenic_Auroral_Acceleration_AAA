@@ -90,7 +90,7 @@ def ray_equations_RK45_generator():
     data_dict_output['lambda_phi_0'][0] = np.array([lambda_phi_0])
     data_dict_output['lambda_chi_0'][0] = np.array([lambda_chi_0])
     data_dict_output['lambda_mu_0'][0] = np.array([2 * np.pi / k_mu_0])
-    data_dict_output['time'][0] = np.array(Solution[0])
+    data_dict_output['time'][0] = np.array(Solution[0]) # REVERSE THE TIME SO THE WAVE PROPAGATES EARTHWARD
     data_dict_output['k_mu'][0] = np.array(Solution[1])
     data_dict_output['k_chi'][0] = np.array(Solution[2])
     data_dict_output['k_phi'][0] = np.array(Solution[3])
@@ -115,6 +115,13 @@ def ray_equations_RK45_generator():
                             'lambda_phi': [2 * np.pi / data_dict_output['k_phi'][0], {'DEPEND_0': 'time', 'UNITS': 'm', 'LABLAXIS': '&lambda;!B&phi;', 'VAR_TYPE': 'data'}],
                             'lambda_chi': [2 * np.pi / data_dict_output['k_chi'][0], {'DEPEND_0': 'time', 'UNITS': 'm', 'LABLAXIS': '&lambda;!B&chi;', 'VAR_TYPE': 'data'}],
                         }}
+
+    # "Reverse time" on all the variables by flipping everything and time shifting time
+    for key in data_dict_output.keys():
+        if key == 'time':
+            data_dict_output[key][0] = data_dict_output[key][0][-1] - data_dict_output[key][0][::-1]
+        else:
+            data_dict_output[key][0] = data_dict_output[key][0][::-1]
 
     ################
     # --- OUTPUT ---

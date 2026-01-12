@@ -1,5 +1,8 @@
 # ignore warings
 import warnings
+
+from src.Alfvenic_Auroral_Acceleration_AAA.sim_classes import SimClasses
+
 warnings.filterwarnings("ignore")
 
 # --- general imports ---
@@ -27,7 +30,7 @@ envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
 B_dipole = envDict['B_dipole']
 
 # --- PREPARE PARALLELIZED OUTPUTS ---
-Ntimes = len(DistributionToggles.RK45_Teval)
+Ntimes = len(DistributionToggles.obs_times)
 Nptchs = len(DistributionToggles.pitch_range)
 Nengy = len(DistributionToggles.energy_range)
 sizes = [Ntimes, Nptchs, Nengy]
@@ -36,18 +39,6 @@ sizes = [Ntimes, Nptchs, Nengy]
 mp_array_1 = mp.Array('d', Ntimes * Nptchs * Nengy)
 arr_1 = np.frombuffer(mp_array_1.get_obj())
 Distribution = arr_1.reshape((Ntimes, Nptchs, Nengy))
-
-# Eperp
-mp_array_2 = mp.Array('d', Ntimes)
-E_perp_obs = np.frombuffer(mp_array_2.get_obj())
-
-# E_mu
-mp_array_3 = mp.Array('d', Ntimes)
-E_mu_obs = np.frombuffer(mp_array_3.get_obj())
-
-# B_perp
-mp_array_4 = mp.Array('d', Ntimes)
-B_perp_obs = np.frombuffer(mp_array_4.get_obj())
 
 
 def louisville_mapping(tmeIdx):
@@ -61,7 +52,7 @@ def louisville_mapping(tmeIdx):
         s0 = [DistributionToggles.u0_obs, DistributionToggles.chi0_obs, v_mu0, v_perp0]
 
         # get the solver arguments
-        deltaT = DistributionToggles.RK45_Teval[tmeIdx]
+        deltaT = DistributionToggles.obs_times[tmeIdx]
         uB = (0.5 * stl.m_e * np.square(v_perp0)) / B0
 
         # Perform the RK45 Solver
@@ -72,45 +63,27 @@ def louisville_mapping(tmeIdx):
         ################################
         # geomagnetic field experienced by particle
         B_mag_particle = B_dipole(deepcopy(particle_mu), deepcopy(particle_chi))
-        # mapped_v_perp = v_perp0 * np.sqrt(B_mag_particle / np.array([B0 for i in range(len(B_mag_particle))]))
-
-        # try conservation of energy (wont work for Any kind of acceleration)
-        mapped_v_perp = np.sqrt(np.array([(np.square(v_perp0) + np.square(v_mu0)) for i in range(len(particle_vel_Mu))]) - np.square(particle_vel_Mu))
+        mapped_v_perp = v_perp0 * np.sqrt(B_mag_particle / np.array([B0 for i in range(len(B_mag_particle))]))
 
         ####################################################
         # --- UPDATE DISTRIBUTION GRID AT simulation END ---
         ####################################################
 
-        Energy_checker = 0.5*(stl.m_e/stl.q0)*((np.square(v_perp0) + np.square(v_mu0)) - (np.square(mapped_v_perp[-1]) + np.square(particle_vel_Mu[-1])))
-
-        Distribution[tmeIdx][ptchIdx][engyIdx] = DistributionClasses().Maxwellian(n=DistributionToggles.n_PS,
+        # Check if the Last velocity is a valid velocity
+        # Note: If the last velocity value in a mapping is invalid b/c teh particle would trigger an event,
+        # the simulation just reports a np.nan value. In these cases, just take the next available value
+        # print(stl.Re*(SimClasses.r_muChi(particle_mu[-1],DistributionToggles.chi0_obs)-1))
+        if stl.Re*(SimClasses.r_muChi(particle_mu[-1],DistributionToggles.chi0_obs)-1) >= 10000:
+            Distribution[tmeIdx][ptchIdx][engyIdx] = DistributionClasses().Maxwellian(n=DistributionToggles.n_PS,
                                                                                   Te=DistributionToggles.Te_PS,
                                                                                   vel_perp=deepcopy(mapped_v_perp[-1]),
                                                                                   vel_para=deepcopy(particle_vel_Mu[-1]))
-        a = DistributionClasses().Maxwellian(n=DistributionToggles.n_PS,
-                                                                                  Te=DistributionToggles.Te_PS,
-                                                                                  vel_perp=deepcopy(mapped_v_perp[-1]),
-                                                                                  vel_para=deepcopy(particle_vel_Mu[-1]))
-        b = DistributionClasses().Maxwellian(n=DistributionToggles.n_PS,
-                                                                                  Te=DistributionToggles.Te_PS,
-                                                                                  vel_perp=deepcopy(v_perp0),
-                                                                                  vel_para=deepcopy(v_mu0))
-        # print(f'{DistributionToggles.pitch_range[ptchIdx]} deg     ',
-        #       f'{DistributionToggles.energy_range[engyIdx]} eV     ',
-        #       f'{Energy_checker} dE    ',
-        #       f'{(a - b)*1E14} df\n\n')
-
-        ##############################
-        # --- OBSERVED WAVE FIELDS ---
-        ##############################
-        eval_pos = [DistributionToggles.u0_obs, DistributionToggles.chi0_obs]
-        E_perp_obs[tmeIdx] = WaveFieldsClasses().field_generator(time=DistributionToggles.RK45_Teval[tmeIdx], eval_pos=eval_pos, type='eperp')
-        E_mu_obs[tmeIdx] = WaveFieldsClasses().field_generator(time=DistributionToggles.RK45_Teval[tmeIdx], eval_pos=eval_pos, type='eMu')
-        B_perp_obs[tmeIdx] = WaveFieldsClasses().field_generator(time=DistributionToggles.RK45_Teval[tmeIdx], eval_pos=eval_pos, type='eperp')
+        else:
+            Distribution[tmeIdx][ptchIdx][engyIdx] = 0
 
 # Parallelize the Code
 @timebudget
-def run_louisville_mapping():
+def distribution_generator():
     # Execute the Louiville Parallel Process Mapping
     processes_count = 32  # Number of CPU cores to commit to this operation
     pool_object = mp.Pool(processes_count)
@@ -118,20 +91,36 @@ def run_louisville_mapping():
     for _ in tqdm(pool_object.imap_unordered(louisville_mapping, inputs), total=Ntimes):
         pass
 
+    ##############################
+    # --- OBSERVED WAVE FIELDS ---
+    ##############################
+    # Eperp
+    E_perp_obs = np.zeros(shape=(DistributionToggles.N_obs_wave_points))
+
+    # E_mu
+    E_mu_obs = np.zeros(shape=(DistributionToggles.N_obs_wave_points))
+
+    # B_perp
+    B_perp_obs = np.zeros(shape=(DistributionToggles.N_obs_wave_points))
+
+    for tmeIdx in range(DistributionToggles.N_obs_wave_points):
+        eval_pos = [DistributionToggles.u0_obs, DistributionToggles.chi0_obs]
+        E_perp_obs[tmeIdx] = WaveFieldsClasses().field_generator(time=DistributionToggles.obs_waves_times[tmeIdx], eval_pos=eval_pos, type='eperp')
+        E_mu_obs[tmeIdx] = WaveFieldsClasses().field_generator(time=DistributionToggles.obs_waves_times[tmeIdx], eval_pos=eval_pos, type='eMu')
+        B_perp_obs[tmeIdx] = WaveFieldsClasses().field_generator(time=DistributionToggles.obs_waves_times[tmeIdx], eval_pos=eval_pos, type='bperp')
+
     ################
     # --- OUTPUT ---
     ################
     data_dict_output = {
-        'time': [DistributionToggles.RK45_tspan[1] - np.array(DistributionToggles.RK45_Teval),
-                 {'UNITS': 's', 'LABLAXIS': 'Time Eval', 'VAR_TYPE': 'data'}],
-        'Distribution': [np.array(Distribution), {'DEPEND_0': 'time', 'DEPEND_1': 'Pitch_Angle', 'DEPEND_2': 'Energy',
-                                                  'UNITS': 'm!A-6!Ns!A-3!N', 'LABLAXIS': 'Distribution Function',
-                                                  'VAR_TYPE': 'data'}],
+        'time': [np.array(DistributionToggles.obs_times), {'UNITS': 's', 'LABLAXIS': 'Time', 'VAR_TYPE': 'data'}],
+        'time_waves': [np.array(DistributionToggles.obs_waves_times), {'UNITS': 's', 'LABLAXIS': 'Time', 'VAR_TYPE': 'data'}],
+        'Distribution': [np.array(Distribution), {'DEPEND_0': 'time', 'DEPEND_1': 'Pitch_Angle', 'DEPEND_2': 'Energy', 'UNITS': 'm!A-6!Ns!A-3!N', 'LABLAXIS': 'Distribution Function', 'VAR_TYPE': 'data'}],
         'Energy': [np.array(DistributionToggles.energy_range), {'UNITS': 'eV', 'LABLAXIS': 'Energy'}],
         'Pitch_Angle': [np.array(DistributionToggles.pitch_range), {'UNITS': 'deg', 'LABLAXIS': 'Pitch Angle'}],
-        'B_perp_obs': [B_perp_obs, {'DEPEND_0': 'time', 'UNITS': 'nT', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],
-        'E_perp_obs': [E_perp_obs, {'DEPEND_0': 'time', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&perp;!N', 'VAR_TYPE': 'data'}],
-        'E_mu_obs': [E_mu_obs, {'DEPEND_0': 'time', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&mu;!N', 'VAR_TYPE': 'data'}]
+        'B_perp_obs': [B_perp_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'nT', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],
+        'E_perp_obs': [E_perp_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&perp;!N', 'VAR_TYPE': 'data'}],
+        'E_mu_obs': [E_mu_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&mu;!N', 'VAR_TYPE': 'data'}]
     }
 
     outputPath = rf'{DistributionToggles.outputFolder}/distributions.cdf'

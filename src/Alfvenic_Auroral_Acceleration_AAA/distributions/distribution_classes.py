@@ -31,7 +31,8 @@ class DistributionClasses:
         DmuDt = S[2] / self.h_factors[0](S[0], S[1])
 
         # dchi/dt
-        DchiDt = S[3] / self.h_factors[1](S[0], S[1])
+        # DchiDt = S[3] / self.h_factors[1](S[0], S[1])
+        DchiDt = 0
 
         # --- Velocity ---
         # dv_mu/dt
@@ -43,9 +44,11 @@ class DistributionClasses:
         # DvmuDt_inV = (stl.q0/stl.m_e)*ElectrostaticPotentialClasses().invertedVEField([S[0],S[1],S[2]])
 
         # wave fields + mirroring only
-        # DvmuDt_Alfven =  - (stl.q0 / stl.m_e) * WaveFieldsClasses().field_generator(time=DistributionToggles.RK45_tspan[1]- t + deltaT, eval_pos=[S[0],S[1]], type='eMu')
-        # DvmuDt = DvmuDt_mirror + DvmuDt_Alfven
-        DvmuDt = DvmuDt_mirror
+        DvmuDt_Alfven =  - (stl.q0 / stl.m_e) * WaveFieldsClasses().field_generator(time=t + deltaT,
+                                                                                    eval_pos=[S[0],S[1]],
+                                                                                    type='eMu')
+        DvmuDt = DvmuDt_mirror + DvmuDt_Alfven
+
 
         # dv_chi/dt
         DvchiDt = 0
@@ -55,7 +58,7 @@ class DistributionClasses:
     # An event is a function where the RK45 method determines event(t,y)=0
     def escaped_upper(self, t, S, deltaT, uB):
 
-        alt = stl.Re*stl.m_to_km*(SimClasses.r_muChi(S[0],DistributionToggles.chi0_obs) - 1)
+        alt = stl.Re*stl.m_to_km*(SimClasses.r_muChi(S[0],S[1]) - 1)
 
         # top boundary checker
         top_boundary_checker = alt - DistributionToggles.upper_termination_altitude
@@ -79,12 +82,12 @@ class DistributionClasses:
     #####################
     def louivilleMapper(self, t_span, s0, deltaT, uB):
         soln = solve_ivp(fun=self.equations_of_motion,
-                         t_span=DistributionToggles.RK45_tspan[::-1],
+                         t_span=t_span,
                          y0=s0,
                          method=DistributionToggles.RK45_method,
                          rtol=DistributionToggles.RK45_rtol,
                          atol=DistributionToggles.RK45_atol,
-                         # events=(self.escaped_lower, self.escaped_upper),
+                         events=[self.escaped_lower, self.escaped_upper],
                          args=tuple([deltaT, uB])
                          )
         T = soln.t

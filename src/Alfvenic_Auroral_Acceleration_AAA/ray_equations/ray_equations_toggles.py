@@ -17,7 +17,7 @@ class RayEquationToggles:
 
     # --- Down the Field Line ---
     RK45_N_eval_points_down = 200
-    RK45_tspan_down = [0, -1, RK45_N_eval_points_down]  # time range (in seconds)
+    RK45_tspan_down = [0, -0.5, RK45_N_eval_points_down]  # time range (in seconds)
     RK45_Teval_down = np.linspace(*RK45_tspan_down)
 
     # --- Ray Equation Simulation Boundaries ---

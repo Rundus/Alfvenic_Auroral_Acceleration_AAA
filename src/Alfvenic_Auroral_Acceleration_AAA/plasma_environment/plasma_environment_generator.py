@@ -12,23 +12,23 @@ def plasma_environment_generator():
     # --- File-specific imports ---
     from glob import glob
     from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_toggles import PlasmaEnvironmentToggles as toggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_classes import ScaleLengthClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
 
     start_time = time.time()
 
 
     # --- Load the wave simulation data ---
     from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
-    data_dict_wavescale = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/scale_length/*.cdf*')[0])
+    data_dict_ray_eqns = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/ray_equations/*.cdf*')[0])
 
 
     # prepare the output
     data_dict_output = {
-                        'time': deepcopy(data_dict_wavescale['time']),
-                        'mu_w': deepcopy(data_dict_wavescale['mu_w']),
-                        'chi_w': deepcopy(data_dict_wavescale['chi_w']),
-                        'omega': deepcopy(data_dict_wavescale['omega']),
-                        'z':deepcopy(data_dict_wavescale['z']),
+                        'time': deepcopy(data_dict_ray_eqns['time']),
+                        'mu_w': deepcopy(data_dict_ray_eqns['mu_w']),
+                        'chi_w': deepcopy(data_dict_ray_eqns['chi_w']),
+                        'omega': deepcopy(data_dict_ray_eqns['omega']),
+                        'z':deepcopy(data_dict_ray_eqns['z']),
                         'V_A':[[],{'DEPEND_0': 'time', 'UNITS': 'm/s', 'LABLAXIS': 'Alfven Speed (MHD)', 'VAR_TYPE': 'data'}],
                         'n': [[], {'DEPEND_0': 'time', 'UNITS': 'm!A-3', 'LABLAXIS': 'Plasma Density', 'VAR_TYPE': 'data'}],
                         'm_i': [[], {'DEPEND_0': 'time', 'UNITS': 'kg', 'LABLAXIS': 'Alfven Speed (MHD)', 'VAR_TYPE': 'data'}],
@@ -57,7 +57,7 @@ def plasma_environment_generator():
     #################################################
     # --- IMPORT THE PLASMA ENVIRONMENT FUNCTIONS ---
     #################################################
-    envDict = ScaleLengthClasses().loadPickleFunctions()
+    envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
 
     ################################################
     # --- EVALUATE FUNCTIONS ON SIMULATION SPACE ---
@@ -68,7 +68,7 @@ def plasma_environment_generator():
     ###################################
     # --- EVALUATE OTHER PARAMETERS ---
     ###################################
-    data_dict_output['inertial_term'][0] = np.sqrt(1 + np.square(data_dict_wavescale['k_perp'][0]*data_dict_output['lambda_e'][0]))
+    data_dict_output['inertial_term'][0] = np.sqrt(1 + np.square(data_dict_ray_eqns['k_perp'][0]*data_dict_output['lambda_e'][0]))
 
     ########################################
     # CONSTRUCT THE GRIDDED SIMULATION SPACE
