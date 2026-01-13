@@ -14,7 +14,7 @@ class WaveFieldsToggles:
     alt_grid = np.array(stl.Re * (SimClasses.r_muChi(mu_grid, [RayEquationToggles.chi0_w for i in range(len(mu_grid))]) - 1))
 
     # Initial Electric Wave Field Strength - At the initial position
-    Phi_0 = 100  # Amplitude of the potential pulse in the perpendicular direction [in Volts]
+    Phi_0 = 1000  # Amplitude of the potential pulse in the perpendicular direction [in Volts]
 
     # --- Inverted-V potential ---
     inV_Volts = 5000 # in Volts

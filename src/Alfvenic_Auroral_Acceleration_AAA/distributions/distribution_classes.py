@@ -114,8 +114,9 @@ class DistributionClasses:
 
         :return: Plasma Distribution Function in [m^-6 s^-3] evaluated at vel_para, vel_perp
         """
-
-        return n*np.sqrt(np.power(stl.m_e/(2*np.pi*Te*stl.q0),3)) * np.exp(-0.5*stl.m_e*(np.square(vel_perp) + np.square(vel_para))/(stl.q0*Te))
+        if # check if energy is above
+        else:
+            return n*np.sqrt(np.power(stl.m_e/(2*np.pi*Te*stl.q0),3)) * np.exp(-0.5*stl.m_e*(np.square(vel_perp) + np.square(vel_para))/(stl.q0*Te))
 
     # def Kappa(self, n, Te, vel_para, vel_perp, kappa):
     #     # Input: density [cm^-3], Temperature [eV], Velocities [m/s]

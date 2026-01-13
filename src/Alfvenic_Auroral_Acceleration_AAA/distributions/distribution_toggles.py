@@ -23,7 +23,7 @@ class DistributionToggles:
     #############################
 
     # Observation Spatial Coordinate
-    z0_obs = 500  # in kilometers
+    z0_obs = 3000  # in kilometers
     Theta0_obs = RayEquationToggles.Theta0_w
     phi0_obs = RayEquationToggles.phi0_w
     r_obs = 1 + z0_obs / stl.Re
@@ -32,7 +32,7 @@ class DistributionToggles:
     phi0_obs = np.radians(phi0_obs)
 
     # ESA particle sampling
-    time_rez = 0.05 # in seconds
+    time_rez = 0.025 # in seconds
     time_obs_end = 6 # in seconds
     N_obs_points = int(time_obs_end/time_rez)
     obs_times = np.linspace(0, time_obs_end, N_obs_points)
@@ -47,6 +47,7 @@ class DistributionToggles:
     #################################
     n_PS = 100E6 # in [m^-3]
     Te_PS = 100 # in [eV]
+    Emax_PS = 1000 # in [eV]. maximum energy in the plasma sheet distribution
 
     #####################################
     # --- PLASMA DISTRIBUTION TOGGLES ---
@@ -58,6 +59,7 @@ class DistributionToggles:
     E_min = 1  # the POWER of 10^E_min for the minimum energy
     pitch_range = np.linspace(0,180,19)
     energy_range = np.logspace(E_min,E_max,N_energy_space_points)
+
 
     ###########################
     # --- SIMULATION EXTENT ---
