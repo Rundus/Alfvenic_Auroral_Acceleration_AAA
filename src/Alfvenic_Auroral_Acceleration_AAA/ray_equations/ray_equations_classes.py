@@ -72,11 +72,16 @@ class RayEquationsClasses:
 
 
     # --- Lower boundary on solution ---
-    def wave_escaped(self, t, S, k_perp_0):
+    def wave_lower_boundry(self, t, S, k_perp_0):
         alt = stl.Re * (SimClasses.r_muChi(S[3], RayEquationToggles.chi0_w) - 1)
         return alt - RayEquationToggles.lower_boundary
+    wave_lower_boundry.terminal = True
 
-    wave_escaped.terminal = True
+    # --- Upper Boundary on Solution ---
+    def wave_upper_boundry(self, t, S, k_perp_0):
+        alt = stl.Re * (SimClasses.r_muChi(S[3], RayEquationToggles.chi0_w) - 1)
+        return alt - RayEquationToggles.upper_boundary
+    wave_upper_boundry.terminal = True
 
     # --- Run the Solver and Plot it ---
     def ray_equation_RK45_solver(self, t_span, s0, k_perp_0, **kwargs):
@@ -91,7 +96,7 @@ class RayEquationsClasses:
                          rtol=RayEquationToggles.RK45_rtol,
                          atol=RayEquationToggles.RK45_atol,
                          t_eval=t_eval,
-                         events=self.wave_escaped,
+                         events=[self.wave_lower_boundry,self.wave_upper_boundry],
                          args=tuple([k_perp_0])
                          )
         T = soln.t

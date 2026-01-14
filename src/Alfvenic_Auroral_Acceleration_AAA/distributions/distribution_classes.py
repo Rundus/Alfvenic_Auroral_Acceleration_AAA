@@ -114,7 +114,8 @@ class DistributionClasses:
 
         :return: Plasma Distribution Function in [m^-6 s^-3] evaluated at vel_para, vel_perp
         """
-        if # check if energy is above
+        if 0.5*(stl.m_e/stl.q0)*(np.square(vel_para) + np.square(vel_perp)) > DistributionToggles.Emax_PS: # check if energy is above the specific level the distribution
+            return 0
         else:
             return n*np.sqrt(np.power(stl.m_e/(2*np.pi*Te*stl.q0),3)) * np.exp(-0.5*stl.m_e*(np.square(vel_perp) + np.square(vel_para))/(stl.q0*Te))
 

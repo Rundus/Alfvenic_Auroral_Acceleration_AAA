@@ -12,7 +12,7 @@ class RayEquationToggles:
 
     # --- Up the Field Line ---
     RK45_N_eval_points_up = 500
-    RK45_tspan_up = [0, 3, RK45_N_eval_points_up]  # time range (in seconds)
+    RK45_tspan_up = [0, 2, RK45_N_eval_points_up]  # time range (in seconds)
     RK45_Teval_up = np.linspace(*RK45_tspan_up)
 
     # --- Down the Field Line ---
@@ -22,6 +22,7 @@ class RayEquationToggles:
 
     # --- Ray Equation Simulation Boundaries ---
     lower_boundary = 100 # in kilometers
+    upper_boundary = 6500  # in kilometers
 
     # --- WAVE INITIAL CONDITIONS ---
     # Initial Wave Frequency

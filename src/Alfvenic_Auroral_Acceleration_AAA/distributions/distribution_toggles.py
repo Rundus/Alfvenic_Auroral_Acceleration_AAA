@@ -23,7 +23,7 @@ class DistributionToggles:
     #############################
 
     # Observation Spatial Coordinate
-    z0_obs = 3000  # in kilometers
+    z0_obs = 500  # in kilometers
     Theta0_obs = RayEquationToggles.Theta0_w
     phi0_obs = RayEquationToggles.phi0_w
     r_obs = 1 + z0_obs / stl.Re
@@ -32,8 +32,8 @@ class DistributionToggles:
     phi0_obs = np.radians(phi0_obs)
 
     # ESA particle sampling
-    time_rez = 0.025 # in seconds
-    time_obs_end = 6 # in seconds
+    time_rez = 0.05 # in seconds
+    time_obs_end = 4 # in seconds
     N_obs_points = int(time_obs_end/time_rez)
     obs_times = np.linspace(0, time_obs_end, N_obs_points)
 
@@ -66,7 +66,7 @@ class DistributionToggles:
     ###########################
 
     # altitude to terminate simulation
-    upper_termination_altitude = np.max(data_dict_ray_eqns['z'][0])  # [in km] use the maximum height of the wave reaches as an upper boundary for particles.
+    upper_termination_altitude = 15000  # [in km] use the maximum height of the wave reaches as an upper boundary for particles.
     lower_termination_altitude = 100
 
     # --- File I/O ---
