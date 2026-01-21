@@ -89,4 +89,4 @@ for i in range(len(alts)):
         ax[k][i].axvline(x=np.sqrt(2 * stl.q0 * DAW / stl.m_e)/vth, linestyle='-',alpha=0.35)
 
 plt.tight_layout()
-fig.savefig(f'{ResultsToggles.outputFolder}/plotting/plots/FPC_twoAlts.png')
+fig.savefig(f'{SimToggles.sim_root_path}/results/plotting/plots/FPC_twoAlts.png')

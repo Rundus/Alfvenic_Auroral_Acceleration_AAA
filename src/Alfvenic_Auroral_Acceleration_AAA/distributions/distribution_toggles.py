@@ -22,7 +22,7 @@ class DistributionToggles:
     #############################
 
     # Observation Spatial Coordinate
-    z0_obs = 5000  # in kilometers
+    z0_obs = 1000  # in kilometers
     Theta0_obs = RayEquationToggles.Theta0_w
     phi0_obs = RayEquationToggles.phi0_w
     r_obs = 1 + z0_obs / stl.Re
@@ -47,6 +47,7 @@ class DistributionToggles:
     n_PS = 100E6 # in [m^-3]
     Te_PS = 100 # in [eV]
     Emax_PS = 1000 # in [eV]. maximum energy in the plasma sheet distribution
+    alpha_min = 2.5 # minimum pitch angle of particles in source distribution
 
     #####################################
     # --- PLASMA DISTRIBUTION TOGGLES ---

@@ -17,6 +17,12 @@ mu_val = round(-1*np.cos(np.radians(theta))/np.square(r),5)
 B_source = envDict['B_dipole'](mu_val, RayEquationToggles.chi0_w)
 
 # --- Determine where mirroring occurs ---
+source_min_pitch = 0.5 * np.pi/180
+theta_mirror = 19.4*np.pi/180 # assume it mirrors at 19.4 coltatitude
+
+alt_mirror = (3.12E-5 * np.square(np.sin(source_min_pitch))*np.power(stl.Re,3)*np.sqrt(1 + 3*np.square(np.cos(theta_mirror))) /(B_source))**(1/3)
+
+print(alt_mirror)
 
 
 
