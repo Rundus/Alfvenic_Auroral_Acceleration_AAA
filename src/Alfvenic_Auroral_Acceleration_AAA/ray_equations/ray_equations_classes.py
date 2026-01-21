@@ -1,12 +1,10 @@
 import numpy as np
 from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
 from scipy.integrate import solve_ivp
-from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
-from src.Alfvenic_Auroral_Acceleration_AAA.sim_classes import SimClasses
+from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_classes import SimClasses
 from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
 import spaceToolsLib as stl
 envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
-
 
 class RayEquationsClasses:
 

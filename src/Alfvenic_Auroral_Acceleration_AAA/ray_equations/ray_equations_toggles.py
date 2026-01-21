@@ -1,6 +1,6 @@
 import numpy as np
 import spaceToolsLib as stl
-from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
+
 
 class RayEquationToggles:
 
@@ -45,5 +45,5 @@ class RayEquationToggles:
     perp_ratio = 1.1  # what % of the initial lambda_perp is lambda_phi
 
     # --- File I/O ---
-    from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_toggles import SimToggles
     outputFolder = f'{SimToggles.sim_data_output_path}/ray_equations'

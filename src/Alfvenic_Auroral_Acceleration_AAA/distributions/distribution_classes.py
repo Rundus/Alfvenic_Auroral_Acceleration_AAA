@@ -1,15 +1,11 @@
 # Simulation Imports
-from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
 from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_toggles import DistributionToggles
-from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
-from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import ElectrostaticPotentialClasses
-from src.Alfvenic_Auroral_Acceleration_AAA.sim_classes import SimClasses
+from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_classes import SimClasses
 from scipy.integrate import solve_ivp
 from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import WaveFieldsClasses as WaveFieldsClasses
 
 # General Imports
-from scipy.special import gamma
 import numpy as np
 import spaceToolsLib as stl
 envDict = EnvironmentExpressionsClasses().loadPickleFunctions()

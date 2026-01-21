@@ -4,11 +4,10 @@
 import numpy as np
 from tqdm import tqdm
 from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import WaveFieldsClasses
-import matplotlib.pyplot as plt
 from copy import  deepcopy
 import spaceToolsLib as stl
 from glob import glob
-from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_toggles import SimToggles
 
 
 #################

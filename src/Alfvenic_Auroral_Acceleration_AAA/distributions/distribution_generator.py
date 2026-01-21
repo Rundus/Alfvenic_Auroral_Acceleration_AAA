@@ -1,19 +1,16 @@
 # ignore warings
 import warnings
 
-from src.Alfvenic_Auroral_Acceleration_AAA.sim_classes import SimClasses
-
 warnings.filterwarnings("ignore")
 
 # --- general imports ---
 import spaceToolsLib as stl
 import numpy as np
 from copy import deepcopy
+from src.Alfvenic_Auroral_Acceleration_AAA.simulation.my_imports import *
 
 # --- File-specific imports ---
-from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_toggles import DistributionToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_classes import DistributionClasses
-from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
 from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_classes import WaveFieldsClasses
 from itertools import product
@@ -128,8 +125,14 @@ def distribution_generator():
         'E_mu_obs': [E_mu_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&mu;!N', 'VAR_TYPE': 'data'}]
     }
 
+    # Save the base run
     outputPath = rf'{DistributionToggles.outputFolder}/distributions.cdf'
     stl.outputDataDict(outputPath, data_dict_output)
+
+    if SimToggles.store_output:
+        # save the results
+        outputPath = rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/distributions_{DistributionToggles.z0_obs}km.cdf'
+        stl.outputDataDict(outputPath, data_dict_output)
 
 
 

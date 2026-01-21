@@ -1,8 +1,7 @@
 import numpy as np
 import spaceToolsLib as stl
 from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
-from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
-from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import data_dict_ray_eqns
+from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_toggles import SimToggles
 from glob import glob
 data_dict_ray_eqns = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/ray_equations/*.cdf*')[0])
 
@@ -23,7 +22,7 @@ class DistributionToggles:
     #############################
 
     # Observation Spatial Coordinate
-    z0_obs = 500  # in kilometers
+    z0_obs = 5000  # in kilometers
     Theta0_obs = RayEquationToggles.Theta0_w
     phi0_obs = RayEquationToggles.phi0_w
     r_obs = 1 + z0_obs / stl.Re
@@ -32,7 +31,7 @@ class DistributionToggles:
     phi0_obs = np.radians(phi0_obs)
 
     # ESA particle sampling
-    time_rez = 0.05 # in seconds
+    time_rez = 0.025 # in seconds
     time_obs_end = 4 # in seconds
     N_obs_points = int(time_obs_end/time_rez)
     obs_times = np.linspace(0, time_obs_end, N_obs_points)
@@ -70,7 +69,7 @@ class DistributionToggles:
     lower_termination_altitude = 100
 
     # --- File I/O ---
-    from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_toggles import SimToggles
     outputFolder = f'{SimToggles.sim_data_output_path}/distributions'
 
 

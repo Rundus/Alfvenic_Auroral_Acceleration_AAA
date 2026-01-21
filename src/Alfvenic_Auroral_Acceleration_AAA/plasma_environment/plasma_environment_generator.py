@@ -1,4 +1,5 @@
 from timebudget import timebudget
+from src.Alfvenic_Auroral_Acceleration_AAA.simulation.my_imports import *
 
 @timebudget
 def plasma_environment_generator():
@@ -11,14 +12,14 @@ def plasma_environment_generator():
 
     # --- File-specific imports ---
     from glob import glob
-    from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_toggles import PlasmaEnvironmentToggles as toggles
     from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
+
 
     start_time = time.time()
 
 
     # --- Load the wave simulation data ---
-    from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_toggles import SimToggles
     data_dict_ray_eqns = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/ray_equations/*.cdf*')[0])
 
 
@@ -74,17 +75,21 @@ def plasma_environment_generator():
     # CONSTRUCT THE GRIDDED SIMULATION SPACE
     ########################################
     data_dict_output = {**data_dict_output,
-                        **{'mu': [toggles.mu_range, {'LABLAXIS':'&mu;'}],
-                           'chi': [toggles.chi_range, {'LABLAXIS':'&chi;'}],}
+                        **{'mu': [PlasmaEnvironmentToggles.mu_range, {'LABLAXIS':'&mu;'}],
+                           'chi': [PlasmaEnvironmentToggles.chi_range, {'LABLAXIS':'&chi;'}],}
                         }
 
     for key, func in envDict.items():
-        data_dict_output = {**data_dict_output, **{f'grid_{key}': [func(toggles.mu_grid, toggles.chi_grid), {'DEPEND_0':'mu', 'DEPEND_1':'chi'}]}}
+        data_dict_output = {**data_dict_output, **{f'grid_{key}': [func(PlasmaEnvironmentToggles.mu_grid, PlasmaEnvironmentToggles.chi_grid), {'DEPEND_0':'mu', 'DEPEND_1':'chi'}]}}
 
 
 
     ################
     # --- OUTPUT ---
     ################
-    outputPath = rf'{toggles.outputFolder}/plasma_environment.cdf'
+    outputPath = rf'{PlasmaEnvironmentToggles.outputFolder}/plasma_environment.cdf'
     stl.outputDataDict(outputPath, data_dict_output)
+
+    if SimToggles.store_output:
+        outputPath = rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/plasma_environment_{DistributionToggles.z0_obs}km.cdf'
+        stl.outputDataDict(outputPath, data_dict_output)

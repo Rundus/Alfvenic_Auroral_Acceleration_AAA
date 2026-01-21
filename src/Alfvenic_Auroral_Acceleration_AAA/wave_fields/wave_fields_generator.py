@@ -1,3 +1,4 @@
+from src.Alfvenic_Auroral_Acceleration_AAA.simulation.my_imports import *
 from timebudget import timebudget
 
 @timebudget
@@ -11,9 +12,6 @@ def wave_fields_generator():
     # --- File-specific imports ---
     from glob import glob
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import WaveFieldsClasses as WaveFieldsClasses
-    from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
     from tqdm import tqdm
     from scipy.integrate import simpson
 
@@ -95,5 +93,12 @@ def wave_fields_generator():
     ################
     # --- OUTPUT ---
     ################
+
+    # save this particular run
     outputPath = rf'{WaveFieldsToggles.outputFolder}/wave_fields.cdf'
     stl.outputDataDict(outputPath, data_dict_output)
+
+    if SimToggles.store_output:
+        # save the results
+        outputPath = rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/wave_fields_{DistributionToggles.z0_obs}km.cdf'
+        stl.outputDataDict(outputPath, data_dict_output)

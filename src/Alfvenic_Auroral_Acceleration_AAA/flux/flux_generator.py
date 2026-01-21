@@ -1,3 +1,4 @@
+from src.Alfvenic_Auroral_Acceleration_AAA.simulation.my_imports import *
 from timebudget import timebudget
 
 @timebudget
@@ -10,8 +11,6 @@ def flux_generator():
 
     # --- File-specific imports ---
     from glob import glob
-    from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.flux.flux_toggles import FluxToggles
     from itertools import product
 
     # --- Load the wave simulation data ---
@@ -50,5 +49,11 @@ def flux_generator():
         'B_perp_obs':deepcopy(data_dict_distribution['B_perp_obs'])
     }
 
-    outputPath = rf'{FluxToggles.outputFolder}/flux.cdf'
+    # save this particular run
+    outputPath = rf'{FluxToggles.outputFolder}/flux_{DistributionToggles.z0_obs}km.cdf'
     stl.outputDataDict(outputPath, data_dict_output)
+
+    if SimToggles.store_output:
+        # save the results
+        outputPath = rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/flux_{DistributionToggles.z0_obs}km.cdf'
+        stl.outputDataDict(outputPath, data_dict_output)

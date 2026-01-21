@@ -1,6 +1,5 @@
 import numpy as np
-from src.Alfvenic_Auroral_Acceleration_AAA.sim_classes import SimClasses
-from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_classes import SimClasses
 from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
 import spaceToolsLib as stl
 
@@ -22,5 +21,5 @@ class WaveFieldsToggles:
     inV_Zmax = 10000 # in km
 
     # --- File I/O ---
-    from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_toggles import SimToggles
     outputFolder = f'{SimToggles.sim_data_output_path}/wave_fields'

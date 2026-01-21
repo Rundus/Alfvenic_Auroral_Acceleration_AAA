@@ -1,6 +1,5 @@
-import itertools
 
-import matplotlib.pyplot as plt
+from src.Alfvenic_Auroral_Acceleration_AAA.simulation.my_imports import *
 from timebudget import timebudget
 
 @timebudget
@@ -12,13 +11,12 @@ def field_particle_correlation_generator():
     from copy import deepcopy
     from glob import glob
 
+
     # --- File-specific imports ---
-    from src.Alfvenic_Auroral_Acceleration_AAA.field_particle_correlation.field_particle_correlation_toggles import FPCToggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_toggles import DistributionToggles
     from scipy.interpolate import LinearNDInterpolator
     from tqdm import tqdm
-    from scipy import signal
+    from scipy.integrate import simpson
+    import itertools
 
     # --- Load the simulation data ---
     data_dict_flux = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/flux/flux.cdf')[0])
@@ -66,14 +64,24 @@ def field_particle_correlation_generator():
     E_mu_corr = np.interp(deepcopy(data_dict_distribution['time'][0]), data_dict_flux['time_waves'][0], data_dict_flux['E_mu_obs'][0])
     B_perp_corr = np.interp(deepcopy(data_dict_distribution['time'][0]), data_dict_flux['time_waves'][0], data_dict_flux['B_perp_obs'][0])
     E_perp_corr = np.interp(deepcopy(data_dict_distribution['time'][0]), data_dict_flux['time_waves'][0],data_dict_flux['E_perp_obs'][0])
+
+    # 2 Determine the period of the wave in the data
+    grad = np.gradient(E_mu_corr)
+    finder = np.where(np.abs(grad) > 0)[0]
+    low_idx = finder[0]
+    high_idx = finder[-1]
+    corr_times = deepcopy(data_dict_distribution['time'][0][low_idx:high_idx + 1])
+
     print(f'\n{sizes_vspace[0] * sizes_vspace[1]} Number of Iterations')
     for perpIdx, paraIdx in tqdm(itertools.product(*[range(thing) for thing in sizes_vspace])):
 
         # 2 cross-correlate the E-Field timeseries
-        corr = signal.correlate(df_dvE[:,perpIdx,paraIdx], -1*E_mu_corr, mode='same')
-        instant_correlation[:, perpIdx, paraIdx] = corr
-        corr[np.where(np.abs(corr)<1E-33)] = 0
-        FPC[perpIdx, paraIdx] = np.mean(corr[np.where(corr != 0)])
+        A_term = df_dvE[low_idx:high_idx+1,perpIdx,paraIdx]
+        B_term = -1*E_mu_corr[low_idx:high_idx+1]
+
+        instant_correlation[:, perpIdx, paraIdx] = df_dvE[:,perpIdx,paraIdx] * (-1*E_mu_corr)
+
+        FPC[perpIdx, paraIdx] = (1/len(corr_times))*simpson(y=A_term*B_term,x=corr_times)
 
 
     ################
@@ -97,5 +105,12 @@ def field_particle_correlation_generator():
     data_dict_output['E_perp_corr'][1]['DEPEND_0'] = 'time'
     data_dict_output['B_perp_corr'][1]['DEPEND_0'] = 'time'
     data_dict_output['E_mu_corr'][1]['DEPEND_0'] = 'time'
-    outputPath = rf'{FPCToggles.outputFolder}/field_particle_correlation.cdf'
+
+    # Save the base run
+    outputPath = rf'{FPCToggles.outputFolder}/FPC.cdf'
     stl.outputDataDict(outputPath, data_dict_output)
+
+    if SimToggles.store_output:
+        # save the results
+        outputPath = rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/FPC_{DistributionToggles.z0_obs}km.cdf'
+        stl.outputDataDict(outputPath, data_dict_output)

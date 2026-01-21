@@ -1,21 +1,18 @@
 # scale_length_Sympy_expression_Generator
 # Description: Use sympy to generate analytic expressions for the AAA simulation
 from timebudget import timebudget
+from src.Alfvenic_Auroral_Acceleration_AAA.simulation.my_imports import *
 
 @timebudget
 def environment_expressions_generator():
 
     # --- IMPORTS ---
-    import numpy as np
     import spaceToolsLib as stl
     import sympy as sp
     import time
-    import pickle
     import dill
     dill.settings['recurse'] = True
     from sympy import lambdify
-    from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_toggles import EnvironmentExpressionsToggles
     start_time = time.time()
 
     ####################################

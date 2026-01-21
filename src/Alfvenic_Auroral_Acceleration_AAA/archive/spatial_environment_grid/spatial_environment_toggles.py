@@ -2,7 +2,7 @@ class SpatialToggles:
     import datetime as dt
     import numpy as np
     import spaceToolsLib as stl
-    from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_toggles import SimToggles
 
     # --- Spatial Grid Description ---
     # the "modified" dipole coordinates described by [kageyama 2006] are used to define a spatial grid.

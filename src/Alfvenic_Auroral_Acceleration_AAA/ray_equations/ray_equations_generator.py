@@ -1,3 +1,4 @@
+from src.Alfvenic_Auroral_Acceleration_AAA.simulation.my_imports import *
 from timebudget import timebudget
 
 @timebudget
@@ -10,11 +11,9 @@ def ray_equations_RK45_generator():
     from copy import deepcopy
 
     # --- File-specific imports ---
-    from src.Alfvenic_Auroral_Acceleration_AAA.sim_classes import SimClasses
-    from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_classes import SimClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_classes import RayEquationsClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
-    from src.Alfvenic_Auroral_Acceleration_AAA.sim_toggles import SimToggles
 
     start_time = time.time()
 
@@ -126,5 +125,11 @@ def ray_equations_RK45_generator():
     ################
     # --- OUTPUT ---
     ################
+    # save this run
     outputPath = rf'{RayEquationToggles.outputFolder}/ray_equations.cdf'
     stl.outputDataDict(outputPath, data_dict_output)
+
+    if SimToggles.store_output:
+        # save the results
+        outputPath = rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/ray_equations_{DistributionToggles.z0_obs}km.cdf'
+        stl.outputDataDict(outputPath, data_dict_output)
