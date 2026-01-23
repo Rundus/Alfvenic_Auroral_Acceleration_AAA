@@ -50,7 +50,7 @@ def flux_generator():
     }
 
     # save this particular run
-    outputPath = rf'{FluxToggles.outputFolder}/flux_{DistributionToggles.z0_obs}km.cdf'
+    outputPath = rf'{FluxToggles.outputFolder}/flux.cdf'
     stl.outputDataDict(outputPath, data_dict_output)
 
     if SimToggles.store_output:

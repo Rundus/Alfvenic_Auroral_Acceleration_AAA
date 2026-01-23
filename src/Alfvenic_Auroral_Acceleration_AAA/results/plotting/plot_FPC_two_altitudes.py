@@ -79,7 +79,7 @@ for i in range(len(alts)):
         ax[0][i].set_ylabel(r'$V_{\perp}/v_{th,PS}$')
         ax[1][i].set_ylabel(r'$V_{\perp}/v_{th,PS}$')
 
-    ax[1][i].set_xlabel(r'$V_{\parallel}/v_{th,PS}$')
+    ax[1][i].set_xlabel(r'$V_{\parallel}/av_{th,PS}$')
     cb = plt.colorbar(cmap)
 
     # plot the resonance bands
