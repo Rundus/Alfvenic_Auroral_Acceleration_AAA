@@ -10,6 +10,8 @@ import spaceToolsLib as stl
 import warnings
 from src.Alfvenic_Auroral_Acceleration_AAA.executable_toggles import dict_executable
 from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_toggles import DistributionToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
+import numpy as np
 warnings.filterwarnings("ignore")
 start_time = time.time()
 
@@ -21,7 +23,12 @@ start_time = time.time()
 # Run the Code for Each observation altitude
 for altitude_val in DistributionToggles.Observation_altitudes:
 
+    # For each new altitude, update the initial conditions of the simulation
     DistributionToggles.z0_obs = altitude_val
+    DistributionToggles.r_obs = 1 + DistributionToggles.z0_obs / stl.Re
+    DistributionToggles.Theta0_obs = RayEquationToggles.Theta0_w
+    DistributionToggles.u0_obs = -1 * np.sqrt(np.cos(np.radians(90 - DistributionToggles.Theta0_obs))) / DistributionToggles.r_obs
+    DistributionToggles.chi0_obs = np.power(np.sin(np.radians(90 - DistributionToggles.Theta0_obs)), 2) / DistributionToggles.r_obs
 
     print('--------------------')
     print(stl.color.RED + f'--- Altitude {DistributionToggles.z0_obs} km ---' + stl.color.END)

@@ -6,5 +6,5 @@ class SimToggles:
     sim_data_output_path = r'/home/connor/Data/physicsModels/alfvenic_auroral_acceleration_AAA'
 
     # --- SAVE OUTPUT ---
-    store_output = True
+    store_output = False
 

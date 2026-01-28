@@ -18,6 +18,8 @@ from tqdm import tqdm
 from timebudget import timebudget
 import multiprocessing as mp
 
+print(f'MAPPING ALTITUDE: {DistributionToggles.z0_obs}')
+
 
 
 #################################################
@@ -70,8 +72,7 @@ def louisville_mapping(tmeIdx):
         # Note: If the last velocity value in a mapping is invalid b/c teh particle would trigger an event,
         # the simulation just reports a np.nan value. In these cases, just take the next available value
         # print(stl.Re*(SimClasses.r_muChi(particle_mu[-1],DistributionToggles.chi0_obs)-1))
-        Distribution[tmeIdx][ptchIdx][engyIdx] = DistributionClasses().Maxwellian(n=DistributionToggles.n_PS,
-                                                                                  Te=DistributionToggles.Te_PS,
+        Distribution[tmeIdx][ptchIdx][engyIdx] = DistributionClasses().Maxwellian(
                                                                                   vel_perp=deepcopy(mapped_v_perp[-1]),
                                                                                   vel_para=deepcopy(
                                                                                       particle_vel_Mu[-1]))
@@ -86,7 +87,7 @@ def louisville_mapping(tmeIdx):
 # Parallelize the Code
 @timebudget
 def distribution_generator():
-    # Execute the Louiville Parallel Process Mapping
+    # Execute the Louiville Mapping (Parallel Processing)
     processes_count = 32  # Number of CPU cores to commit to this operation
     pool_object = mp.Pool(processes_count)
     inputs = range(Ntimes)

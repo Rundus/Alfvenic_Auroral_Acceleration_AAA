@@ -30,8 +30,6 @@ def flux_generator():
     # convert from SI to eV-s^-1-cm^-2-eV^-1
     JE = JE * (1/np.square(stl.cm_to_m))
 
-
-
     ###########################
     # --- OUTPUT EVERYTHING ---
     ###########################

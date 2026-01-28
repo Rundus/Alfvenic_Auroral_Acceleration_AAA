@@ -94,14 +94,30 @@ class DistributionClasses:
         # print(soln.message)
         return [T, particle_mu, particle_chi, vel_Mu, vel_chi]
 
-    def Maxwellian(self, n, Te, vel_para, vel_perp): # returns the maxwellian distribution for a given temperature, density and particle velocity
+    def Maxwellian_iono(self, vel_para, vel_perp):
         """
-        :param n: Plasma Density in [m^-3]
-        :type n : float
+                :param vel_para: Particle Velocity parallel to the background geomagnetic field in [m/s]
+                :type vel_para: float
 
-        :param Te: Plasma Temperature in [eV]
-        :type Te: float
+                :param vel_perp: Particle Velocity parallel to the background geomagnetic field in [m/s]
+                :type vel_perp: float
 
+                :return: Plasma Distribution Function in [m^-6 s^-3] evaluated at vel_para, vel_perp
+                """
+        if 0.5 * (stl.m_e / stl.q0) * (np.square(vel_para) + np.square(vel_perp)) > DistributionToggles.Emax_iono:  # check if energy is above the specific level the distribution
+            return 0
+        elif 0.5 * (stl.m_e / stl.q0) * (np.square(vel_para) + np.square(vel_perp)) < DistributionToggles.Emin_iono:  # check if energy is below the specific level the distribution:
+            return 0
+        else:
+            return DistributionToggles.n_iono * np.sqrt(np.power(stl.m_e / (2 * np.pi * DistributionToggles.Te_iono * stl.q0), 3)) * np.exp(-0.5 * stl.m_e * (np.square(vel_perp) + np.square(vel_para)) / (stl.q0 * DistributionToggles.Te_iono))
+
+    def Maxwellian(self,vel_para, vel_perp):
+        # return self.Maxwellian_PS(vel_para, vel_perp) + self.Maxwellian_iono(vel_para, vel_perp)
+        return self.Maxwellian_PS(vel_para, vel_perp)
+
+
+    def Maxwellian_PS(self, vel_para, vel_perp): # returns the maxwellian distribution for a given temperature, density and particle velocity
+        """
         :param vel_para: Particle Velocity parallel to the background geomagnetic field in [m/s]
         :type vel_para: float
 
@@ -115,7 +131,7 @@ class DistributionClasses:
         elif 0.5*(stl.m_e/stl.q0)*(np.square(vel_para) + np.square(vel_perp)) < DistributionToggles.Emin_PS: # check if energy is below the specific level the distribution:
             return 0
         else:
-            return n*np.sqrt(np.power(stl.m_e/(2*np.pi*Te*stl.q0),3)) * np.exp(-0.5*stl.m_e*(np.square(vel_perp) + np.square(vel_para))/(stl.q0*Te))
+            return DistributionToggles.n_PS*np.sqrt(np.power(stl.m_e/(2*np.pi*DistributionToggles.Te_PS*stl.q0),3)) * np.exp(-0.5*stl.m_e*(np.square(vel_perp) + np.square(vel_para))/(stl.q0*DistributionToggles.Te_PS))
 
     # def Kappa(self, n, Te, vel_para, vel_perp, kappa):
     #     # Input: density [cm^-3], Temperature [eV], Velocities [m/s]

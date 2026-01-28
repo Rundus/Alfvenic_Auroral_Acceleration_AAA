@@ -16,6 +16,7 @@ def field_particle_correlation_generator():
     from scipy.interpolate import LinearNDInterpolator
     from tqdm import tqdm
     from scipy.integrate import simpson
+    from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_classes import DistributionClasses
     import itertools
 
     # --- Load the simulation data ---
@@ -40,6 +41,7 @@ def field_particle_correlation_generator():
     # --- interpolate distribution function onto velocity space ---
     sizes_vspace = [len(FPCToggles.v_perp_space), len(FPCToggles.v_para_space)]
     Distribution_interp = np.zeros(shape=(len(data_dict_flux['time'][0]), sizes_vspace[0], sizes_vspace[1]))
+
     X, Y = np.meshgrid(FPCToggles.v_perp_space, FPCToggles.v_para_space)
     for tmeIdx in tqdm(range(sizes[0])):
         xData = perp_velocity_grid[tmeIdx].flatten()
@@ -56,14 +58,33 @@ def field_particle_correlation_generator():
     for tmeIdx, perpIdx in tqdm(itertools.product(*[range(sizes[0]),range(sizes_vspace[0])])):
         df_dvE[tmeIdx, perpIdx] = (stl.q0*np.square(FPCToggles.v_para_space)/2)*np.gradient(Distribution_interp[tmeIdx, perpIdx], FPCToggles.v_para_space)
 
-    # correlate the results
+    # Calculate the un-perturbed distribution function in velocity space
+    f0 = np.zeros(shape=(len(data_dict_flux['time'][0]), sizes_vspace[0], sizes_vspace[1]))
+
+    for idx1, vperpVal in enumerate(FPCToggles.v_perp_space):
+        for idx2, vparaVal in enumerate(FPCToggles.v_para_space):
+            f0[0][idx1][idx2] = DistributionClasses().Maxwellian(vperpVal, vparaVal)
+
+    # calculate the gradient in f0
+    f0_df_dvE = np.zeros_like(f0)
+    for perpIdx in range(sizes_vspace[0]):
+        f0_df_dvE[0, perpIdx] = (stl.q0*np.square(FPCToggles.v_para_space)/2)*np.gradient(f0[0][perpIdx], FPCToggles.v_para_space)
+
+    # Fill in the rest of the times with the f0
+    for tme in range(1, len(data_dict_flux['time'][0])):
+        f0[tme] = f0[0]
+        f0_df_dvE[tme] = f0_df_dvE[0]
+
+    # --- correlate the results ---
     instant_correlation = np.zeros(shape=(Ntimes ,sizes_vspace[0], sizes_vspace[1]))
+    instant_correlation_f0 = np.zeros(shape=(Ntimes, sizes_vspace[0], sizes_vspace[1]))
     FPC = np.zeros(shape=(sizes_vspace))
+    FPC_f0 = np.zeros(shape=(sizes_vspace))
 
     # 1 interpolate the E-Field data onto the particle data timebase
     E_mu_corr = np.interp(deepcopy(data_dict_distribution['time'][0]), data_dict_flux['time_waves'][0], data_dict_flux['E_mu_obs'][0])
     B_perp_corr = np.interp(deepcopy(data_dict_distribution['time'][0]), data_dict_flux['time_waves'][0], data_dict_flux['B_perp_obs'][0])
-    E_perp_corr = np.interp(deepcopy(data_dict_distribution['time'][0]), data_dict_flux['time_waves'][0],data_dict_flux['E_perp_obs'][0])
+    E_perp_corr = np.interp(deepcopy(data_dict_distribution['time'][0]), data_dict_flux['time_waves'][0], data_dict_flux['E_perp_obs'][0])
 
     # 2 Determine the period of the wave in the data
     grad = np.gradient(E_mu_corr)
@@ -77,20 +98,39 @@ def field_particle_correlation_generator():
 
         # 2 cross-correlate the E-Field timeseries
         A_term = df_dvE[low_idx:high_idx+1,perpIdx,paraIdx]
+        A_term_f0 = f0_df_dvE[low_idx:high_idx + 1, perpIdx, paraIdx]
         B_term = -1*E_mu_corr[low_idx:high_idx+1]
-
         instant_correlation[:, perpIdx, paraIdx] = df_dvE[:,perpIdx,paraIdx] * (-1*E_mu_corr)
-
+        instant_correlation_f0[:,perpIdx, paraIdx] = f0_df_dvE[:, perpIdx, paraIdx] * (-1 * E_mu_corr)
         FPC[perpIdx, paraIdx] = (1/len(corr_times))*simpson(y=A_term*B_term,x=corr_times)
+        FPC_f0[perpIdx, paraIdx] = (1 / len(corr_times)) * simpson(y=A_term_f0 * B_term, x=corr_times)
 
+    # integrate over Perpendicular Velocity space to get the J dot E for a given inital electron energy
+    FPC_vpara_int = np.zeros(shape=(sizes_vspace[1]))
+    FPC_vpara_int_f0 = np.zeros(shape=(sizes_vspace[1]))
+
+    for idx in range(sizes_vspace[1]):
+        FPC_vpara_int[idx] = simpson(FPC[:,idx], FPCToggles.v_perp_space)
+        FPC_vpara_int_f0[idx] = simpson(FPC_f0[:, idx], FPCToggles.v_perp_space)
+
+    FPC_total = simpson(FPC_vpara_int,FPCToggles.v_para_space)
+    FPC_total_f0 = simpson(FPC_vpara_int_f0, FPCToggles.v_para_space)
 
     ################
     # --- OUTPUT ---
     ################
     data_dict_output = {
         'time':deepcopy(data_dict_distribution['time']),
+        'FPC_total': [np.array([FPC_total]), {'VAR_TYPE': 'data'}],
+        'FPC(vpara)': [np.array(FPC_vpara_int), {'DEPEND_0': 'v_para', 'VAR_TYPE': 'data'}],
         'FPC': [np.array(FPC), {'DEPEND_0': 'v_perp', 'DEPEND_1': 'v_para', 'VAR_TYPE': 'data'}],
         'instant_correlation':[np.array(instant_correlation),{'DEPEND_0':'time','DEPEND_1':'v_perp','DEPEND_2':'v_para','VAR_TYPE':'data'}],
+
+        'FPC_total_f0': [np.array([FPC_total_f0]), {'VAR_TYPE': 'data'}],
+        'FPC(vpara)_f0': [np.array(FPC_vpara_int_f0), {'DEPEND_0': 'v_para', 'VAR_TYPE': 'data'}],
+        'FPC_f0': [np.array(FPC_f0), {'DEPEND_0': 'v_perp', 'DEPEND_1': 'v_para', 'VAR_TYPE': 'data'}],
+        'instant_correlation_f0': [np.array(instant_correlation_f0),{'DEPEND_0': 'time', 'DEPEND_1': 'v_perp', 'DEPEND_2': 'v_para', 'VAR_TYPE': 'data'}],
+
         'Distribution_Function' :[np.array(Distribution_interp),deepcopy(data_dict_distribution['Distribution'][1])],
         'df_dvpara' : [np.array(df_dvE), {'DEPEND_0':'time','DEPEND_1':'v_perp','DEPEND_2':'v_para','LABALAXIS':'df/dv_para','UNITS':'m^-3s^-6/m/s','VAR_TYPE':'data'}],
         'v_para': [FPCToggles.v_para_space,{'UNITS': 'm/s', 'LABLAXIS': 'v_para'}],
