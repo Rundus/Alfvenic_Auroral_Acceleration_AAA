@@ -22,8 +22,8 @@ class DistributionToggles:
     #############################
 
     # Observation Spatial Coordinate
-    Observation_altitudes = [500,1000,2000,2500,3000,4000,5000,6000,7000,7500,8000,9000,10000,11000,12000,12500,13000,14000,15000]
-    # Observation_altitudes = [500]
+    # Observation_altitudes = [500,1000,2000,2500,3000,4000,5000,6000,7000,7500,8000,9000,10000,11000,12000,12500,13000,14000,15000]
+    Observation_altitudes = [500]
     # Observation_altitudes = [4000,5000,6000,7000,7500,8000,9000,10000,11000,12000,12500,13000,14000,15000]
     z0_obs = 3000  # in kilometers
 
@@ -51,7 +51,7 @@ class DistributionToggles:
     #################################
     n_PS = 1E6 # in [m^-3]
     Te_PS = 80 # in [eV]
-    Emax_PS = 3000 # in [eV]. maximum energy in the plasma sheet distribution
+    Emax_PS = 10000 # in [eV]. maximum energy in the plasma sheet distribution
     Emin_PS = 10  # in [eV]. maximum energy in the plasma sheet distribution
     alpha_min = 2.5 # minimum pitch angle of particles in source distribution
 
@@ -71,7 +71,7 @@ class DistributionToggles:
 
     # ENERGY/PITCH
     E_max = 4  # the POWER of 10^E_max for the maximum energy
-    E_min = 0.1  # the POWER of 10^E_min for the minimum energy
+    E_min = 1  # the POWER of 10^E_min for the minimum energy
     pitch_range = np.linspace(0,180,19)
     energy_range = np.logspace(E_min,E_max,N_energy_space_points)
 
@@ -80,7 +80,7 @@ class DistributionToggles:
     ###########################
 
     # altitude to terminate simulation
-    upper_termination_altitude = 25000  # [in km] use the maximum height of the wave reaches as an upper boundary for particles.
+    upper_termination_altitude = 20000  # [in km] use the maximum height of the wave reaches as an upper boundary for particles.
     lower_termination_altitude = 100
 
     # --- File I/O ---

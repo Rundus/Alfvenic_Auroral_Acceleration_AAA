@@ -30,9 +30,9 @@ for altitude_val in DistributionToggles.Observation_altitudes:
     DistributionToggles.u0_obs = -1 * np.sqrt(np.cos(np.radians(90 - DistributionToggles.Theta0_obs))) / DistributionToggles.r_obs
     DistributionToggles.chi0_obs = np.power(np.sin(np.radians(90 - DistributionToggles.Theta0_obs)), 2) / DistributionToggles.r_obs
 
-    print('--------------------')
+    print('-----------------------')
     print(stl.color.RED + f'--- Altitude {DistributionToggles.z0_obs} km ---' + stl.color.END)
-    print('--------------------')
+    print('-----------------------')
 
     # re-run everything
     if dict_executable['regen_EVERYTHING']==1:

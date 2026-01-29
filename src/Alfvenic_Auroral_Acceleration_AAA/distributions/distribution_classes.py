@@ -33,16 +33,17 @@ class DistributionClasses:
         # --- Velocity ---
         # dv_mu/dt
 
-        # magnetic mirroring only
+        # magnetic mirroring effects
         DvmuDt_mirror = - (uB/stl.m_e) * (self.dB_dipole_dmu(S[0],S[1])/self.h_factors[0](S[0],S[1]))
 
-        # inverted-V only
+        # inverted-V effects
         # DvmuDt_inV = (stl.q0/stl.m_e)*ElectrostaticPotentialClasses().invertedVEField([S[0],S[1],S[2]])
 
-        # wave fields + mirroring only
+        # Wave Field Effects
         DvmuDt_Alfven =  - (stl.q0 / stl.m_e) * WaveFieldsClasses().field_generator(time=t + deltaT,
                                                                                     eval_pos=[S[0],S[1]],
                                                                                     type='eMu')
+        # Combine all the parallel efects together
         DvmuDt = DvmuDt_mirror + DvmuDt_Alfven
 
 
