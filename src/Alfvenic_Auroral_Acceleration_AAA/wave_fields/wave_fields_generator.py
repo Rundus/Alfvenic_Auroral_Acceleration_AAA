@@ -16,7 +16,7 @@ def wave_fields_generator():
     from scipy.integrate import simpson
 
     # --- Load the wave simulation data ---
-    data_dict_ray_eqns = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/ray_equations/*.cdf*')[0])
+    data_dict_ray_eqns = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/results/{DistributionToggles.z0_obs}km/ray_equations_{DistributionToggles.z0_obs}km.cdf')[0])
 
     # prepare the output
     data_dict_output = {

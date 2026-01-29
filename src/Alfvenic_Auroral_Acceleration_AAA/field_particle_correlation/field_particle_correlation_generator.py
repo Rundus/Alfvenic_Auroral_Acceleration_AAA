@@ -14,14 +14,15 @@ def field_particle_correlation_generator():
 
     # --- File-specific imports ---
     from scipy.interpolate import LinearNDInterpolator
+    from scipy.interpolate import RegularGridInterpolator
     from tqdm import tqdm
     from scipy.integrate import simpson
     from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_classes import DistributionClasses
     import itertools
 
     # --- Load the simulation data ---
-    data_dict_flux = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/flux/flux.cdf')[0])
-    data_dict_distribution = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/distributions/distributions.cdf')[0])
+    data_dict_flux = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/results/{DistributionToggles.z0_obs}km/flux_{DistributionToggles.z0_obs}km.cdf')[0])
+    data_dict_distribution = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/results/{DistributionToggles.z0_obs}km/distributions_{DistributionToggles.z0_obs}km.cdf')[0])
 
     ################################
     # --- CALCULATE CORRELATION ----
@@ -80,6 +81,7 @@ def field_particle_correlation_generator():
     instant_correlation_f0 = np.zeros(shape=(Ntimes, sizes_vspace[0], sizes_vspace[1]))
     FPC = np.zeros(shape=(sizes_vspace))
     FPC_f0 = np.zeros(shape=(sizes_vspace))
+    FPC_residual = np.zeros(shape=(sizes_vspace))
 
     # 1 interpolate the E-Field data onto the particle data timebase
     E_mu_corr = np.interp(deepcopy(data_dict_distribution['time'][0]), data_dict_flux['time_waves'][0], data_dict_flux['E_mu_obs'][0])
@@ -92,29 +94,38 @@ def field_particle_correlation_generator():
     low_idx = finder[0]
     high_idx = finder[-1]
     corr_times = deepcopy(data_dict_distribution['time'][0][low_idx:high_idx + 1])
+    tau = corr_times[-1] - corr_times[0]
 
     print(f'\n{sizes_vspace[0] * sizes_vspace[1]} Number of Iterations')
     for perpIdx, paraIdx in tqdm(itertools.product(*[range(thing) for thing in sizes_vspace])):
 
         # 2 cross-correlate the E-Field timeseries
-        A_term = df_dvE[low_idx:high_idx+1,perpIdx,paraIdx]
-        A_term_f0 = f0_df_dvE[low_idx:high_idx + 1, perpIdx, paraIdx]
+        A_term = deepcopy(df_dvE[low_idx:high_idx+1,perpIdx,paraIdx])
+        A_term_f0 = deepcopy(f0_df_dvE[low_idx:high_idx + 1, perpIdx, paraIdx])
+        A_term_residual = deepcopy(df_dvE[low_idx:high_idx+1,perpIdx,paraIdx] - f0_df_dvE[low_idx:high_idx + 1, perpIdx, paraIdx])
         B_term = -1*E_mu_corr[low_idx:high_idx+1]
+
         instant_correlation[:, perpIdx, paraIdx] = df_dvE[:,perpIdx,paraIdx] * (-1*E_mu_corr)
         instant_correlation_f0[:,perpIdx, paraIdx] = f0_df_dvE[:, perpIdx, paraIdx] * (-1 * E_mu_corr)
-        FPC[perpIdx, paraIdx] = (1/len(corr_times))*simpson(y=A_term*B_term,x=corr_times)
-        FPC_f0[perpIdx, paraIdx] = (1 / len(corr_times)) * simpson(y=A_term_f0 * B_term, x=corr_times)
+
+        FPC[perpIdx, paraIdx] = (1/tau)*simpson(y=A_term*B_term,x=corr_times)
+        FPC_f0[perpIdx, paraIdx] = (1 / tau) * simpson(y=A_term_f0 * B_term, x=corr_times)
+        FPC_residual[perpIdx,paraIdx] = (1 / tau) * simpson(y=A_term_residual * B_term, x=corr_times)
 
     # integrate over Perpendicular Velocity space to get the J dot E for a given inital electron energy
     FPC_vpara_int = np.zeros(shape=(sizes_vspace[1]))
     FPC_vpara_int_f0 = np.zeros(shape=(sizes_vspace[1]))
+    FPC_vpara_int_residual = np.zeros(shape=(sizes_vspace[1]))
 
     for idx in range(sizes_vspace[1]):
         FPC_vpara_int[idx] = simpson(FPC[:,idx], FPCToggles.v_perp_space)
         FPC_vpara_int_f0[idx] = simpson(FPC_f0[:, idx], FPCToggles.v_perp_space)
+        FPC_vpara_int_residual[idx] = simpson(FPC_residual[:, idx], FPCToggles.v_perp_space)
 
-    FPC_total = simpson(FPC_vpara_int,FPCToggles.v_para_space)
-    FPC_total_f0 = simpson(FPC_vpara_int_f0, FPCToggles.v_para_space)
+    # Integrate over v_perp to get the total FPC and add 2pi to cover all other v_perp directions (assuming gyrotropy)
+    FPC_total = 2*np.pi*simpson(FPC_vpara_int,FPCToggles.v_para_space)
+    FPC_total_f0 = 2*np.pi*simpson(FPC_vpara_int_f0, FPCToggles.v_para_space)
+    FPC_total_residual = 2*np.pi*simpson(FPC_vpara_int_residual, FPCToggles.v_para_space)
 
     ################
     # --- OUTPUT ---
@@ -130,6 +141,9 @@ def field_particle_correlation_generator():
         'FPC(vpara)_f0': [np.array(FPC_vpara_int_f0), {'DEPEND_0': 'v_para', 'VAR_TYPE': 'data'}],
         'FPC_f0': [np.array(FPC_f0), {'DEPEND_0': 'v_perp', 'DEPEND_1': 'v_para', 'VAR_TYPE': 'data'}],
         'instant_correlation_f0': [np.array(instant_correlation_f0),{'DEPEND_0': 'time', 'DEPEND_1': 'v_perp', 'DEPEND_2': 'v_para', 'VAR_TYPE': 'data'}],
+
+        'FPC_residual': [np.array(FPC_residual), {'DEPEND_0': 'v_perp', 'DEPEND_1': 'v_para', 'VAR_TYPE': 'data'}],
+        'FPC_total_residual': [np.array([FPC_total_residual]), {'VAR_TYPE': 'data'}],
 
         'Distribution_Function' :[np.array(Distribution_interp),deepcopy(data_dict_distribution['Distribution'][1])],
         'df_dvpara' : [np.array(df_dvE), {'DEPEND_0':'time','DEPEND_1':'v_perp','DEPEND_2':'v_para','LABALAXIS':'df/dv_para','UNITS':'m^-3s^-6/m/s','VAR_TYPE':'data'}],

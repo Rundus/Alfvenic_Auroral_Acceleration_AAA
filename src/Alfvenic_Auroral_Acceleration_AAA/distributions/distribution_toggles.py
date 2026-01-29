@@ -26,13 +26,13 @@ class DistributionToggles:
     # Observation_altitudes = [500]
     # Observation_altitudes = [4000,5000,6000,7000,7500,8000,9000,10000,11000,12000,12500,13000,14000,15000]
     z0_obs = 3000  # in kilometers
-    Theta0_obs = RayEquationToggles.Theta0_w
-    phi0_obs = RayEquationToggles.phi0_w
 
     # Calculate the initial observation position in dipole coordinates
+    Theta0_obs = RayEquationToggles.Theta0_w
+    phi0_obs = RayEquationToggles.phi0_w
     r_obs = 1 + z0_obs / stl.Re
-    u0_obs = -1 * np.sqrt(np.cos(np.radians(90 - Theta0_obs))) / r_obs
-    chi0_obs = np.power(np.sin(np.radians(90 - Theta0_obs)), 2) / r_obs
+    chi0_obs = np.square(np.sin(np.radians(phi0_obs)))/1 # get the Chi0 point at the Earth's surface. Don't change Chi at all, only mu.
+    u0_obs = (1- chi0_obs*r_obs)**(1/4) / r_obs # Solve for mu at the new altitude, given a constant Chi0
     phi0_obs = np.radians(phi0_obs)
 
     # ESA particle sampling

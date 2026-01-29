@@ -7,13 +7,13 @@ class WaveFieldsToggles:
 
     # --- MU-Plotting Grid ---
     # determine minimum/maximum mu value for the TOP colattitude
-    N_mu = 1000  # number of points in mu direction
+    N_mu = 10000  # number of points in mu direction
     mu_min, mu_max = [-0.9, -0.1]
     mu_grid = np.linspace(mu_min, mu_max, N_mu)
     alt_grid = np.array(stl.Re * (SimClasses.r_muChi(mu_grid, [RayEquationToggles.chi0_w for i in range(len(mu_grid))]) - 1))
 
     # Initial Electric Wave Field Strength - At the initial position
-    Phi_0 = 250  # Amplitude of the potential pulse in the perpendicular direction [in Volts]
+    Phi_0 = 150  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The
 
     # --- Inverted-V potential ---
     inV_Volts = 5000 # in Volts

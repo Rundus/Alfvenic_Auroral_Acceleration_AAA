@@ -106,7 +106,7 @@ def environment_expressions_generator():
     B_dipole = (3.12E-5) * ((1/(1 + z/stl.Re))**3) * THETA
 
     # ALFVEN VELOCITY (MHD)
-    V_A = B/sp.sqrt(stl.u0*(rho))
+    V_A = (B/sp.sqrt(stl.u0*(rho))) / sp.sqrt(1 + ((B/sp.sqrt(stl.u0*(rho)))/stl.lightSpeed)**(2))
 
     # SCALE FACTOR - mu
     h_mu = 1/(THETA/(2*(stl.Re*stl.m_to_km)*(R**2)*sp.sqrt(sp.cos(theta))))

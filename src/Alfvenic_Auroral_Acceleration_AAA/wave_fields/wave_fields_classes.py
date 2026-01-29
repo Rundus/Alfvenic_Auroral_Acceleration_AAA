@@ -55,7 +55,7 @@ class WaveFieldsClasses: # for parallel and perp only
                 if which.lower() == 'potential':
                     return self.Potential_phi(inputs)
                 elif which.lower() == 'eperp':
-                    return self.EField_phi(inputs)
+                    return self.EField_perp(inputs)
                 elif which.lower() == 'emu':
                     return self.EField_mu(inputs)
                 elif which.lower() == 'bperp':
@@ -67,18 +67,18 @@ class WaveFieldsClasses: # for parallel and perp only
         eval_pos, wave_pos, k, h = inputs
         return (WaveFieldsToggles.Phi_0)*np.sin(k[0]*h[0]*(eval_pos[0]-wave_pos[0]))
 
-    def EField_phi(self, inputs):
+    def EField_perp(self, inputs):
         eval_pos, wave_pos, k, h= inputs
-        return -1*(k[1]*WaveFieldsToggles.Phi_0 / (4*np.pi)) * (np.sin(k[0] * h[0] * (eval_pos[0]-wave_pos[0])))
+        return -1*(k[1]*WaveFieldsToggles.Phi_0 / (2*np.pi)) * (np.sin(k[0] * h[0] * (eval_pos[0]-wave_pos[0])))
 
     def BField_perp(self, inputs):
         eval_pos, wave_pos, k, h = inputs
-        E_perp = self.EField_phi(inputs)
+        E_perp = self.EField_perp(inputs)
         return E_perp/(self.V_A(wave_pos[0],wave_pos[1])*np.sqrt(1 + np.power(k[0]*self.lmb_e(wave_pos[0],wave_pos[1]),2)))
 
     def EField_mu(self, inputs):
         eval_pos, wave_pos, k, h = inputs
-        E_perp = self.EField_phi(inputs)
+        E_perp = self.EField_perp(inputs)
         k_perp = k[1]
         return (k[0]*k_perp*np.square(self.lmb_e(wave_pos[0],wave_pos[1])))*E_perp/(1 + np.square(self.lmb_e(wave_pos[0],wave_pos[1])*k_perp))
 
