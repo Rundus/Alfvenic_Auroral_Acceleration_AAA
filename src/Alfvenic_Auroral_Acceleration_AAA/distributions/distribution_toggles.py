@@ -22,8 +22,8 @@ class DistributionToggles:
     #############################
 
     # Observation Spatial Coordinate
-    # Observation_altitudes = [500,1000,2000,2500,3000,4000,5000,6000,7000,7500,8000,9000,10000,11000,12000,12500,13000,14000,15000]
-    Observation_altitudes = [500]
+    Observation_altitudes = [500,1000,2000,2500,3000,4000,5000,6000,7000,7500,8000,9000,10000,11000,12000,12500,13000,14000,15000]
+    # Observation_altitudes = [500]
     # Observation_altitudes = [4000,5000,6000,7000,7500,8000,9000,10000,11000,12000,12500,13000,14000,15000]
     z0_obs = 3000  # in kilometers
 

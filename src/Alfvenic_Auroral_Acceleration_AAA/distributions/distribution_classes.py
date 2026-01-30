@@ -46,7 +46,6 @@ class DistributionClasses:
         # Combine all the parallel efects together
         DvmuDt = DvmuDt_mirror + DvmuDt_Alfven
 
-
         # dv_chi/dt
         DvchiDt = 0
 
