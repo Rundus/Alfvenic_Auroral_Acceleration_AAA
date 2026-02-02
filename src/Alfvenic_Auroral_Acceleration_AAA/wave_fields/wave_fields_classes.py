@@ -1,4 +1,6 @@
 import numpy as np
+
+from Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_toggles import WaveFieldsToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_toggles import SimToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_classes import SimClasses
@@ -69,7 +71,11 @@ class WaveFieldsClasses: # for parallel and perp only
 
     def EField_perp(self, inputs):
         eval_pos, wave_pos, k, h= inputs
-        return -1*(k[1]*WaveFieldsToggles.Phi_0 / (2*np.pi)) * (np.sin(k[0] * h[0] * (eval_pos[0]-wave_pos[0])))
+        Eperp_val  = -1*(k[1]*WaveFieldsToggles.Phi_0 / (2*np.pi)) * (np.sin(k[0] * h[0] * (eval_pos[0]-wave_pos[0])))
+        eval_z = (SimClasses.r_muChi(eval_pos[0],eval_pos[1])-1)*stl.Re
+        weight = 0.5*(np.tanh((eval_z - 500)/1000) - np.tanh((eval_z - 12000)/1000))
+        return Eperp_val*weight
+        # return weight
 
     def BField_perp(self, inputs):
         eval_pos, wave_pos, k, h = inputs

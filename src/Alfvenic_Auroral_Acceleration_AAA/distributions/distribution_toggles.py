@@ -22,8 +22,8 @@ class DistributionToggles:
     #############################
 
     # Observation Spatial Coordinate
-    Observation_altitudes = [500,1000,2000,2500,3000,4000,5000,6000,7000,7500,8000,9000,10000,11000,12000,12500,13000,14000,15000]
-    # Observation_altitudes = [500]
+    # Observation_altitudes = [500,1000,2000,2500,3000,4000,5000,6000,7000,7500,8000,9000,10000,11000,12000,12500,13000,14000,15000]
+    Observation_altitudes = [500]
     # Observation_altitudes = [4000,5000,6000,7000,7500,8000,9000,10000,11000,12000,12500,13000,14000,15000]
     z0_obs = 3000  # in kilometers
 
@@ -36,8 +36,8 @@ class DistributionToggles:
     phi0_obs = np.radians(phi0_obs)
 
     # ESA particle sampling
-    time_rez = 0.025 # in seconds
-    time_obs_end = 4 # in seconds
+    time_rez = 0.05 # in seconds
+    time_obs_end = 5 # in seconds
     N_obs_points = int(time_obs_end/time_rez)
     obs_times = np.linspace(0, time_obs_end, N_obs_points)
 
@@ -74,6 +74,15 @@ class DistributionToggles:
     E_min = 1  # the POWER of 10^E_min for the minimum energy
     pitch_range = np.linspace(0,180,19)
     energy_range = np.logspace(E_min,E_max,N_energy_space_points)
+
+
+    # VELOCITY SPACE
+    N_vel_space = 25
+    # para_space_temp = np.linspace(np.sqrt(2 * stl.q0 * np.power(10,DistributionToggles.E_min) / stl.m_e), np.sqrt(2 * stl.q0 * np.power(10,DistributionToggles.E_max) / stl.m_e), N_vel_space)
+    para_space_temp = np.logspace(0, 8, N_vel_space)
+    v_para_space = np.append(-1 * para_space_temp[::-1], para_space_temp[1:])
+    # v_perp_space = np.linspace(0, np.sqrt(2 * stl.q0 * np.power(10, E_max) / stl.m_e), N_vel_space)
+    v_perp_space = np.logspace(0, 8, N_vel_space)
 
     ###########################
     # --- SIMULATION EXTENT ---

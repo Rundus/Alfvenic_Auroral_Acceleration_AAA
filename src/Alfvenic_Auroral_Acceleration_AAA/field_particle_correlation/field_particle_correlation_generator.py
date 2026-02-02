@@ -14,7 +14,6 @@ def field_particle_correlation_generator():
 
     # --- File-specific imports ---
     from scipy.interpolate import LinearNDInterpolator
-    from scipy.interpolate import RegularGridInterpolator
     from tqdm import tqdm
     from scipy.integrate import simpson
     from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_classes import DistributionClasses

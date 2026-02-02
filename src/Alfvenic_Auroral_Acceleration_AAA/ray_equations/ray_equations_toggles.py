@@ -40,7 +40,7 @@ class RayEquationToggles:
     chi0_w = np.power(np.sin(np.radians(90 - Theta0_w)), 2) / r_w
     phi0_w = np.radians(phi0_w)
 
-    # Initial Wavelength
+    # Wavelength in the ionosphere
     Lambda_perp0 = 4 * 1000  # perpendicular wavelength (in meters) AT THE IONOSPHERE
     perp_ratio = 1.1  # what % of the initial lambda_perp is lambda_phi
 
