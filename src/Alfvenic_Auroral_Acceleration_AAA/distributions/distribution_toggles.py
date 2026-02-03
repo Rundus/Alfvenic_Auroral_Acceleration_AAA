@@ -2,6 +2,7 @@ import numpy as np
 import spaceToolsLib as stl
 from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_toggles import SimToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_classes import SimClasses
 from glob import glob
 data_dict_ray_eqns = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/ray_equations/*.cdf*')[0])
 
@@ -70,19 +71,17 @@ class DistributionToggles:
     N_energy_space_points = 50
 
     # ENERGY/PITCH
-    E_max = 4  # the POWER of 10^E_max for the maximum energy
+    E_max = 3.5  # the POWER of 10^E_max for the maximum energy
     E_min = 1  # the POWER of 10^E_min for the minimum energy
     pitch_range = np.linspace(0,180,19)
     energy_range = np.logspace(E_min,E_max,N_energy_space_points)
 
 
     # VELOCITY SPACE
-    N_vel_space = 25
-    # para_space_temp = np.linspace(np.sqrt(2 * stl.q0 * np.power(10,DistributionToggles.E_min) / stl.m_e), np.sqrt(2 * stl.q0 * np.power(10,DistributionToggles.E_max) / stl.m_e), N_vel_space)
-    para_space_temp = np.logspace(0, 8, N_vel_space)
+    N_vel_space = 10
+    para_space_temp = np.linspace(SimClasses().to_Vel(10**(E_min)), SimClasses().to_Vel(10**(E_max)), N_vel_space)
     v_para_space = np.append(-1 * para_space_temp[::-1], para_space_temp[1:])
-    # v_perp_space = np.linspace(0, np.sqrt(2 * stl.q0 * np.power(10, E_max) / stl.m_e), N_vel_space)
-    v_perp_space = np.logspace(0, 8, N_vel_space)
+    v_perp_space = np.linspace(0, para_space_temp[-1], N_vel_space)
 
     ###########################
     # --- SIMULATION EXTENT ---

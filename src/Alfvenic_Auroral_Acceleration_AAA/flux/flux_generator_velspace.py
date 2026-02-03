@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 from src.Alfvenic_Auroral_Acceleration_AAA.simulation.my_imports import *
 from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_classes import *
 from timebudget import timebudget
@@ -18,30 +19,26 @@ def flux_generator():
     from itertools import product
 
     # --- Load the wave simulation data ---
-    # data_dict_distribution = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/results/{DistributionToggles.z0_obs}km/distributions_{DistributionToggles.z0_obs}km.cdf')[0])
-    data_dict_distribution = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/distributions/*.cdf')[0])
+    data_dict_distribution = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/results/{DistributionToggles.z0_obs}km/distributions_{DistributionToggles.z0_obs}km.cdf')[0])
+    # data_dict_distribution = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/distributions/*.cdf')[0])
 
     ###########################################################
     # --- INTERPOLATE DISTRIBUTIONS ONTO PITCH/ENERGY SPACE ---
     ###########################################################
     # --- interpolate distribution function onto velocity space ---
-    sizes = [len(DistributionToggles.pitch_range), len(DistributionToggles.energy_range)]
-    Distribution_interp = np.zeros(shape=(len(data_dict_distribution['time'][0]), sizes[0], sizes[1]))
+    sizes = [len(data_dict_distribution['time'][0]), len(DistributionToggles.pitch_range), len(DistributionToggles.energy_range)]
+    vel_sizes = [range(len(DistributionToggles.v_perp_space)),range(len(DistributionToggles.v_para_space))]
+    Distribution_interp = np.zeros(shape=tuple(sizes))
+    X, Y = np.meshgrid(DistributionToggles.pitch_range, DistributionToggles.energy_range)
+    for tmeIdx in tqdm(range(sizes[0])):
 
-    X, Y = np.meshgrid(DistributionToggles.v_perp_space, DistributionToggles.v_para_space)
-    for tmeIdx in tqdm(range(len(Distribution_interp[0]))):
-        zData = np.array(deepcopy(data_dict_distribution['Distribution_Function'][0][tmeIdx])).flatten()
-        interp = LinearNDInterpolator(list(zip(X.flatten(), Y.flatten())), zData)
+        zData = np.array([data_dict_distribution['Distribution_Function'][0][tmeIdx][vperpIdx][vparaIdx] for vperpIdx, vparaIdx in product(*vel_sizes)])
+        engy_points = np.array([0.5*(stl.m_e/stl.q0)*(np.square(DistributionToggles.v_perp_space[vperpIdx]) + np.square(DistributionToggles.v_para_space[vparaIdx])) for vperpIdx, vparaIdx in product(*vel_sizes)])
+        ptch_points = np.array([np.degrees(np.arctan2(DistributionToggles.v_perp_space[vperpIdx],DistributionToggles.v_para_space[vparaIdx])) for vperpIdx, vparaIdx in product(*vel_sizes)])
 
-        for ptchIdx, engyIdx in product(*[range(sizes[0]), range(sizes[1])]):
-            Vbar = SimClasses().to_Vel(DistributionToggles.energy_range[engyIdx])
-            Vpara_interp = Vbar * np.cos(np.radians(DistributionToggles.pitch_range[ptchIdx]))
-            Vperp_interp = Vbar * np.sin(np.radians(DistributionToggles.pitch_range[ptchIdx]))
-            Distribution_interp[tmeIdx][ptchIdx][engyIdx] = interp(Vperp_interp, Vpara_interp)
-            print(Vperp_interp, Vpara_interp)
-
-    # Distribution_interp[np.isnan(Distribution_interp)] = 0
-
+        interp = LinearNDInterpolator(list(zip(ptch_points, engy_points)), zData)
+        # print('\n',tmeIdx, engy_points, ptch_points, zData)
+        Distribution_interp[tmeIdx] = interp(X,Y).T
 
 
     #####################################
@@ -49,10 +46,6 @@ def flux_generator():
     #####################################
     JE = np.zeros_like(Distribution_interp) # In S.I units
     JN = np.zeros_like(Distribution_interp)  # In S.I units
-
-    sizes = [len(data_dict_distribution['time'][0]),
-             len(DistributionToggles.pitch_range),
-             len(DistributionToggles.energy_range)]
 
     for tmeIdx, ptchIdx, engyIdx in product(*[range(thing) for thing in sizes]):
         Energy_val = DistributionToggles.energy_range[engyIdx]*stl.q0 # convert from eV to Joules (for now)

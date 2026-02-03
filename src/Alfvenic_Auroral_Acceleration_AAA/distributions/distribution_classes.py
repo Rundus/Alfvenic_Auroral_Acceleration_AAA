@@ -91,7 +91,6 @@ class DistributionClasses:
         particle_chi = soln.y[1, :]
         vel_Mu = soln.y[2, :]
         vel_chi = soln.y[3, :]
-        # print(soln.message)
         return [T, particle_mu, particle_chi, vel_Mu, vel_chi]
 
     def Maxwellian_iono(self, vel_para, vel_perp):
@@ -111,9 +110,15 @@ class DistributionClasses:
         else:
             return DistributionToggles.n_iono * np.sqrt(np.power(stl.m_e / (2 * np.pi * DistributionToggles.Te_iono * stl.q0), 3)) * np.exp(-0.5 * stl.m_e * (np.square(vel_perp) + np.square(vel_para)) / (stl.q0 * DistributionToggles.Te_iono))
 
-    def Maxwellian(self,vel_para, vel_perp):
-        # return self.Maxwellian_PS(vel_para, vel_perp) + self.Maxwellian_iono(vel_para, vel_perp)
-        return self.Maxwellian_PS(vel_para, vel_perp)
+    def mapped_distribution(self, mu, chi,vel_para, vel_perp):
+
+        # Determine if particle triggered a termination event
+        particle_alt = stl.Re  * (SimClasses.r_muChi(mu, chi) - 1)
+
+        if particle_alt <= DistributionToggles.lower_termination_altitude: # if trajectory was forbidden due to ionospheric collisional loss
+            return 0
+        else:
+            return self.Maxwellian_PS(vel_para, vel_perp)
 
 
     def Maxwellian_PS(self, vel_para, vel_perp): # returns the maxwellian distribution for a given temperature, density and particle velocity
@@ -132,6 +137,10 @@ class DistributionClasses:
         #     return 0
         # else:
         return DistributionToggles.n_PS*np.sqrt(np.power(stl.m_e/(2*np.pi*DistributionToggles.Te_PS*stl.q0),3)) * np.exp(-0.5*stl.m_e*(np.square(vel_perp) + np.square(vel_para))/(stl.q0*DistributionToggles.Te_PS))
+
+
+
+
 
     # def Kappa(self, n, Te, vel_para, vel_perp, kappa):
     #     # Input: density [cm^-3], Temperature [eV], Velocities [m/s]

@@ -28,7 +28,6 @@ B_dipole = envDict['B_dipole']
 Ntimes = len(DistributionToggles.obs_times)
 Nvperps = len(DistributionToggles.v_perp_space)
 Nvparas = len(DistributionToggles.v_para_space)
-sizes = [Ntimes, Nvperps, Nvparas]
 
 # distribution
 mp_array_1 = mp.Array('d', Ntimes * Nvperps * Nvparas)
@@ -43,13 +42,11 @@ def louisville_mapping(tmeIdx):
     B0 = B_dipole(DistributionToggles.u0_obs, DistributionToggles.chi0_obs)
 
     for perpIdx, paraIdx in product(*[range(Nvperps), range(Nvparas)]):
+
         # get the initial state vector
-        # v_perp0 = np.sqrt(2 * stl.q0 * DistributionToggles.energy_range[engyIdx] / stl.m_e) * np.sin(np.radians(DistributionToggles.pitch_range[ptchIdx]))
         v_perp0 = DistributionToggles.v_perp_space[perpIdx]
         v_para0 = DistributionToggles.v_para_space[paraIdx]
-        # v_para0 = np.sqrt(2 * stl.q0 * DistributionToggles.energy_range[engyIdx] / stl.m_e) * np.cos(np.radians(DistributionToggles.pitch_range[ptchIdx]))
         v_mu0 = -1 * v_para0
-
         s0 = [DistributionToggles.u0_obs, DistributionToggles.chi0_obs, v_mu0, v_perp0]
 
         # get the solver arguments
@@ -63,14 +60,13 @@ def louisville_mapping(tmeIdx):
         # --- PERPENDICULAR DYNAMICS ---
         ################################
         # geomagnetic field experienced by particle
-        B_mag_particle = B_dipole(deepcopy(particle_mu), deepcopy(particle_chi))
+        B_mag_particle = B_dipole(particle_mu, particle_chi)
         mapped_v_perp = v_perp0 * np.sqrt(B_mag_particle / np.array([B0 for i in range(len(B_mag_particle))]))
 
         ####################################################
         # --- UPDATE DISTRIBUTION GRID AT simulation END ---
         ####################################################
-        Distribution[tmeIdx][perpIdx][paraIdx] = DistributionClasses().Maxwellian(vel_perp=deepcopy(mapped_v_perp[-1]),
-                                                                                  vel_para=deepcopy(-1*particle_vel_Mu[-1]))
+        Distribution[tmeIdx][perpIdx][paraIdx] = DistributionClasses().mapped_distribution(mu=particle_mu[-1], chi=particle_chi[-1], vel_perp=deepcopy(mapped_v_perp[-1]), vel_para=deepcopy(-1*particle_vel_Mu[-1]))
 
 # Parallelize the Code
 @timebudget

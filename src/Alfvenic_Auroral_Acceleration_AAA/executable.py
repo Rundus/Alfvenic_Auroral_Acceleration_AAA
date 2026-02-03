@@ -73,7 +73,8 @@ for altitude_val in DistributionToggles.Observation_altitudes:
 
     if dict_executable['regen_field_particle_correlation'] == 1:
         print('\n--- Calculating Field-Particle Correlation ---', end='\n')
-        from src.Alfvenic_Auroral_Acceleration_AAA.field_particle_correlation.field_particle_correlation_generator import field_particle_correlation_generator
+        # from src.Alfvenic_Auroral_Acceleration_AAA.field_particle_correlation.field_particle_correlation_generator import field_particle_correlation_generator
+        from src.Alfvenic_Auroral_Acceleration_AAA.field_particle_correlation.field_particle_correlation_generator_velspace import field_particle_correlation_generator
         field_particle_correlation_generator()
 
     stl.Done(start_time)
