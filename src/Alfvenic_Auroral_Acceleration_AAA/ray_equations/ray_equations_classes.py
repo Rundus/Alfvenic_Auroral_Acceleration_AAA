@@ -105,5 +105,4 @@ class RayEquationsClasses:
         Chi = soln.y[4, :]
         Phi = soln.y[5,:]
         Omega = soln.y[6,:]
-        print(soln.message)
         return [T, K_mu, K_chi, K_phi, Mu, Chi, Phi, Omega]

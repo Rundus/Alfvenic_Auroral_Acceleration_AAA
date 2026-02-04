@@ -43,8 +43,10 @@ class DistributionClasses:
         DvmuDt_Alfven =  - (stl.q0 / stl.m_e) * WaveFieldsClasses().field_generator(time=t + deltaT,
                                                                                     eval_pos=[S[0],S[1]],
                                                                                     type='eMu')
-        # Combine all the parallel efects together
+        # Combine all the parallel effects together
+        # DvmuDt = DvmuDt_mirror
         DvmuDt = DvmuDt_mirror + DvmuDt_Alfven
+
 
         # dv_chi/dt
         DvchiDt = 0
@@ -54,13 +56,12 @@ class DistributionClasses:
     # An event is a function where the RK45 method determines event(t,y)=0
     def escaped_upper(self, t, S, deltaT, uB):
 
-        alt = stl.Re*stl.m_to_km*(SimClasses.r_muChi(S[0],S[1]) - 1)
+        alt = stl.Re*(SimClasses.r_muChi(S[0],S[1]) - 1)
 
         # top boundary checker
         top_boundary_checker = alt - DistributionToggles.upper_termination_altitude
 
         return top_boundary_checker
-        # return lower_boundary_checkerz
 
     escaped_upper.terminal = True
 
@@ -115,10 +116,13 @@ class DistributionClasses:
         # Determine if particle triggered a termination event
         particle_alt = stl.Re  * (SimClasses.r_muChi(mu, chi) - 1)
 
-        if particle_alt <= DistributionToggles.lower_termination_altitude: # if trajectory was forbidden due to ionospheric collisional loss
+        if particle_alt <= DistributionToggles.lower_termination_altitude+DistributionToggles.deltaTerm: # if trajectory was forbidden due to ionospheric collisional loss
             return 0
+        # if particle_alt >= DistributionToggles.upper_termination_altitude: # if trajectory made the particle come from the plasma sheet
+        #     return self.Maxwellian_PS(vel_para, vel_perp)
         else:
             return self.Maxwellian_PS(vel_para, vel_perp)
+
 
 
     def Maxwellian_PS(self, vel_para, vel_perp): # returns the maxwellian distribution for a given temperature, density and particle velocity

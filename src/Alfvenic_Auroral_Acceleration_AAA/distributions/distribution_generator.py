@@ -15,6 +15,7 @@ from timebudget import timebudget
 from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_classes import DistributionClasses
 from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
 from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_classes import WaveFieldsClasses
+from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_classes import SimClasses
 from itertools import product
 import multiprocessing as mp
 
@@ -65,13 +66,10 @@ def louisville_mapping(tmeIdx):
         ####################################################
         # --- UPDATE DISTRIBUTION GRID AT simulation END ---
         ####################################################
-        Distribution[tmeIdx][ptchIdx][engyIdx] = DistributionClasses().Maxwellian(vel_perp=deepcopy(mapped_v_perp[-1]),
-                                                                                  vel_para=deepcopy(particle_vel_Mu[-1]))
-
-
-
-
-
+        Distribution[tmeIdx][ptchIdx][engyIdx] = DistributionClasses().mapped_distribution(mu=particle_mu[-1],
+                                                                                           chi=particle_chi[-1],
+                                                                                           vel_perp=deepcopy(mapped_v_perp[-1]),
+                                                                                           vel_para=deepcopy(-1 * particle_vel_Mu[-1]))
 
 
 
@@ -109,7 +107,7 @@ def distribution_generator():
     data_dict_output = {
         'time': [np.array(DistributionToggles.obs_times), {'UNITS': 's', 'LABLAXIS': 'Time', 'VAR_TYPE': 'data'}],
         'time_waves': [np.array(DistributionToggles.obs_waves_times), {'UNITS': 's', 'LABLAXIS': 'Time', 'VAR_TYPE': 'data'}],
-        'Distribution': [np.array(Distribution), {'DEPEND_0': 'time', 'DEPEND_1': 'Pitch_Angle', 'DEPEND_2': 'Energy', 'UNITS': 'm!A-6!Ns!A-3!N', 'LABLAXIS': 'Distribution Function', 'VAR_TYPE': 'data'}],
+        'Distribution_Function': [np.array(Distribution), {'DEPEND_0': 'time', 'DEPEND_1': 'Pitch_Angle', 'DEPEND_2': 'Energy', 'UNITS': 'm!A-6!Ns!A-3!N', 'LABLAXIS': 'Distribution Function', 'VAR_TYPE': 'data'}],
         'Energy': [np.array(DistributionToggles.energy_range), {'UNITS': 'eV', 'LABLAXIS': 'Energy'}],
         'Pitch_Angle': [np.array(DistributionToggles.pitch_range), {'UNITS': 'deg', 'LABLAXIS': 'Pitch Angle'}],
         'B_perp_obs': [B_perp_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'nT', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],

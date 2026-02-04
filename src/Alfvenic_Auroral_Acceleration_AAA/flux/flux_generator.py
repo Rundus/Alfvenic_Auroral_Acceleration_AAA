@@ -19,13 +19,13 @@ def flux_generator():
     #####################################
     # --- CALCULATE DIFFERENTIAL FLUX ---
     #####################################
-    JE = np.zeros_like(data_dict_distribution['Distribution'][0]) # In S.I units
-    JN = np.zeros_like(data_dict_distribution['Distribution'][0])  # In S.I units
+    JE = np.zeros_like(data_dict_distribution['Distribution_Function'][0]) # In S.I units
+    JN = np.zeros_like(data_dict_distribution['Distribution_Function'][0])  # In S.I units
 
-    sizes = [len(data_dict_distribution['Distribution'][0]), len(data_dict_distribution['Pitch_Angle'][0]), len(data_dict_distribution['Energy'][0])]
+    sizes = [len(data_dict_distribution['Distribution_Function'][0]), len(data_dict_distribution['Pitch_Angle'][0]), len(data_dict_distribution['Energy'][0])]
     for tmeIdx, ptchIdx, engyIdx in product(*[range(thing) for thing in sizes]):
         Energy_val = data_dict_distribution['Energy'][0][engyIdx]*stl.q0 # convert from eV to Joules (for now)
-        JE[tmeIdx][ptchIdx][engyIdx] = (2*np.square(Energy_val)/np.square(stl.m_e))*(data_dict_distribution['Distribution'][0][tmeIdx][ptchIdx][engyIdx])
+        JE[tmeIdx][ptchIdx][engyIdx] = (2*np.square(Energy_val)/np.square(stl.m_e))*(data_dict_distribution['Distribution_Function'][0][tmeIdx][ptchIdx][engyIdx])
 
     # convert from SI to eV-s^-1-cm^-2-eV^-1
     JE = JE * (1/np.square(stl.cm_to_m))

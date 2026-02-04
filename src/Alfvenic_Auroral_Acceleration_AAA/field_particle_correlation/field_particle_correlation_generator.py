@@ -46,7 +46,7 @@ def field_particle_correlation_generator():
     for tmeIdx in tqdm(range(sizes[0])):
         xData = perp_velocity_grid[tmeIdx].flatten()
         yData = parallel_velocity_grid[tmeIdx].flatten()
-        zData = np.array(deepcopy(data_dict_distribution['Distribution'][0][tmeIdx])).flatten()
+        zData = np.array(deepcopy(data_dict_distribution['Distribution_Function'][0][tmeIdx])).flatten()
         interp = LinearNDInterpolator(list(zip(xData,yData)), zData)
         Distribution_interp[tmeIdx] = interp(X,Y).T
 
@@ -63,7 +63,7 @@ def field_particle_correlation_generator():
 
     for idx1, vperpVal in enumerate(FPCToggles.v_perp_space):
         for idx2, vparaVal in enumerate(FPCToggles.v_para_space):
-            f0[0][idx1][idx2] = DistributionClasses().Maxwellian(vperpVal, vparaVal)
+            f0[0][idx1][idx2] = DistributionClasses().mapped_distribution(DistributionToggles.u0_obs,DistributionToggles.chi0_obs, vperpVal, vparaVal)
 
     # calculate the gradient in f0
     f0_df_dvE = np.zeros_like(f0)
@@ -144,7 +144,7 @@ def field_particle_correlation_generator():
         'FPC_residual': [np.array(FPC_residual), {'DEPEND_0': 'v_perp', 'DEPEND_1': 'v_para', 'VAR_TYPE': 'data'}],
         'FPC_total_residual': [np.array([FPC_total_residual]), {'VAR_TYPE': 'data'}],
 
-        'Distribution_Function' :[np.array(Distribution_interp),deepcopy(data_dict_distribution['Distribution'][1])],
+        'Distribution_Function' :[np.array(Distribution_interp),deepcopy(data_dict_distribution['Distribution_Function'][1])],
         'df_dvpara' : [np.array(df_dvE), {'DEPEND_0':'time','DEPEND_1':'v_perp','DEPEND_2':'v_para','LABALAXIS':'df/dv_para','UNITS':'m^-3s^-6/m/s','VAR_TYPE':'data'}],
         'v_para': [FPCToggles.v_para_space,{'UNITS': 'm/s', 'LABLAXIS': 'v_para'}],
         'v_perp': [FPCToggles.v_perp_space, {'UNITS': 'm/s', 'LABLAXIS': 'v_perp'}],

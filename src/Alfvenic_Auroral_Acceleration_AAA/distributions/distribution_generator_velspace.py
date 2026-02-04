@@ -18,6 +18,8 @@ from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_classes im
 from itertools import product
 import multiprocessing as mp
 
+from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_classes import SimClasses
+
 #################################################
 # --- IMPORT THE PLASMA ENVIRONMENT FUNCTIONS ---
 #################################################
@@ -25,6 +27,7 @@ envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
 B_dipole = envDict['B_dipole']
 
 # --- PREPARE PARALLELIZED OUTPUTS ---
+# Ndeltas = len(DistributionToggles.time)
 Ntimes = len(DistributionToggles.obs_times)
 Nvperps = len(DistributionToggles.v_perp_space)
 Nvparas = len(DistributionToggles.v_para_space)
@@ -35,6 +38,13 @@ arr_1 = np.frombuffer(mp_array_1.get_obj())
 Distribution = arr_1.reshape((Ntimes, Nvperps, Nvparas))
 
 # Particle Trajectories
+mp_array_2 = mp.Array('d',Ntimes*Nvperps*Nvparas)
+arr_2 = np.frombuffer(mp_array_2.get_obj())
+particle_mus = arr_2.reshape((Ntimes, Nvperps, Nvparas))
+
+mp_array_3 = mp.Array('d',Ntimes*Nvperps*Nvparas)
+arr_3 = np.frombuffer(mp_array_3.get_obj())
+particle_chis = arr_2.reshape((Ntimes, Nvperps, Nvparas))
 
 
 def louisville_mapping(tmeIdx):
@@ -66,7 +76,11 @@ def louisville_mapping(tmeIdx):
         ####################################################
         # --- UPDATE DISTRIBUTION GRID AT simulation END ---
         ####################################################
-        Distribution[tmeIdx][perpIdx][paraIdx] = DistributionClasses().mapped_distribution(mu=particle_mu[-1], chi=particle_chi[-1], vel_perp=deepcopy(mapped_v_perp[-1]), vel_para=deepcopy(-1*particle_vel_Mu[-1]))
+        print(stl.Re  * (SimClasses.r_muChi(particle_mu[-1], particle_chi[-1]) - 1))
+        Distribution[tmeIdx][perpIdx][paraIdx] = DistributionClasses().mapped_distribution(mu=particle_mu[-1],
+                                                                                           chi=particle_chi[-1],
+                                                                                           vel_perp=deepcopy(mapped_v_perp[-1]),
+                                                                                           vel_para=deepcopy(-1*particle_vel_Mu[-1]))
 
 # Parallelize the Code
 @timebudget
@@ -102,9 +116,12 @@ def distribution_generator():
     data_dict_output = {
         'time': [np.array(DistributionToggles.obs_times), {'UNITS': 's', 'LABLAXIS': 'Time', 'VAR_TYPE': 'data'}],
         'time_waves': [np.array(DistributionToggles.obs_waves_times), {'UNITS': 's', 'LABLAXIS': 'Time', 'VAR_TYPE': 'data'}],
+        # 'time_particles':[np.array(time_particles),{'UNITS': 's', 'LABLAXIS': 'Time', 'VAR_TYPE': 'data'}],
         'Distribution_Function': [np.array(Distribution), {'DEPEND_0': 'time', 'DEPEND_1': 'vperp', 'DEPEND_2': 'vpara', 'UNITS': 'm!A-6!Ns!A-3!N', 'LABLAXIS': 'Distribution Function', 'VAR_TYPE': 'data'}],
         'vperp' : [np.array(DistributionToggles.v_perp_space), {'VAR_TYPE': 'data', 'LABLAXIS':'vperp','UNITS':'m/s'}],
         'vpara': [np.array(DistributionToggles.v_para_space), {'VAR_TYPE': 'data', 'LABLAXIS':'vpara','UNITS':'m/s'}],
+        'particle_mu':[np.array(particle_mus), {'VAR_TYPE': 'data', 'LABLAXIS':None,'UNITS':None,'DEPEND_0':'deltaT','DEPEND_1':'time','DEPEND_2':'vperp','DEPEND_3':'vpara'}],
+        'deltaT' : [np.array(DistributionToggles.obs_times[tmeIdx]),{}],
         # 'Energy': [np.array(DistributionToggles.energy_range), {'UNITS': 'eV', 'LABLAXIS': 'Energy'}],
         # 'Pitch_Angle': [np.array(DistributionToggles.pitch_range), {'UNITS': 'deg', 'LABLAXIS': 'Pitch Angle'}],
         'B_perp_obs': [B_perp_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'nT', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],

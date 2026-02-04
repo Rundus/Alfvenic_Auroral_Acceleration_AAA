@@ -44,7 +44,7 @@ def field_particle_correlation_generator():
     f0 = np.zeros(shape=(len(data_dict_flux['time'][0]), Nvperps, Nvparas))
     for idx1, vperpVal in enumerate(DistributionToggles.v_perp_space):
         for idx2, vparaVal in enumerate(DistributionToggles.v_para_space):
-            f0[0][idx1][idx2] = DistributionClasses().Maxwellian(vperpVal, vparaVal)
+            f0[0][idx1][idx2] = DistributionClasses().mapped_distribution(DistributionToggles.u0_obs,DistributionToggles.chi0_obs, vperpVal, vparaVal)
 
     # calculate the gradient in f0
     f0_df_dvE = np.zeros_like(f0)
