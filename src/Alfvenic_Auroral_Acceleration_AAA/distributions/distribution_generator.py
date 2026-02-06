@@ -1,6 +1,8 @@
 # ignore warings
 import warnings
 
+import matplotlib.pyplot as plt
+
 warnings.filterwarnings("ignore")
 
 # --- general imports ---
@@ -42,9 +44,12 @@ def louisville_mapping(tmeIdx):
     B0 = B_dipole(DistributionToggles.u0_obs, DistributionToggles.chi0_obs)
 
     for ptchIdx, engyIdx in product(*[range(Nptchs), range(Nengy)]):
+
         # get the initial state vector
-        v_perp0 = np.sqrt(2 * stl.q0 * DistributionToggles.energy_range[engyIdx] / stl.m_e) * np.sin(np.radians(DistributionToggles.pitch_range[ptchIdx]))
-        v_para0 = np.sqrt(2 * stl.q0 * DistributionToggles.energy_range[engyIdx] / stl.m_e) * np.cos(np.radians(DistributionToggles.pitch_range[ptchIdx]))
+        engyVal = DistributionToggles.energy_range[engyIdx]
+        ptchVal = np.radians(DistributionToggles.pitch_range[ptchIdx])
+        v_perp0 = np.sqrt(2 * stl.q0 * engyVal / stl.m_e) * np.sin(ptchVal)
+        v_para0 = np.sqrt(2 * stl.q0 * engyVal / stl.m_e) * np.cos(ptchVal)
         v_mu0 = -1 * v_para0
 
         s0 = [DistributionToggles.u0_obs, DistributionToggles.chi0_obs, v_mu0, v_perp0]
@@ -54,7 +59,7 @@ def louisville_mapping(tmeIdx):
         uB = (0.5 * stl.m_e * np.square(v_perp0)) / B0
 
         # Perform the RK45 Solver
-        [T, particle_mu, particle_chi, particle_vel_Mu, particle_vel_chi] = DistributionClasses().louivilleMapper(DistributionToggles.RK45_tspan, s0, deltaT, uB)
+        [T, particle_mu, particle_chi, particle_vel_Mu, particle_vel_chi] = DistributionClasses().louivilleMapper([0,-deltaT], s0, deltaT, uB)
 
         ################################
         # --- PERPENDICULAR DYNAMICS ---
@@ -66,10 +71,51 @@ def louisville_mapping(tmeIdx):
         ####################################################
         # --- UPDATE DISTRIBUTION GRID AT simulation END ---
         ####################################################
+
+        # if deltaT == 4:
+        #     # print(f'Energy: {engyVal} ', f' Pitch: {np.degrees(ptchVal)} ',list(particle_mu), list(particle_vel_Mu))
+        #     fig, ax =plt.subplots(6, sharex=True)
+        #     fig.suptitle(f'T={deltaT} s, Energy: {engyVal} eV, Pitch: {np.degrees(ptchVal)} deg')
+        #     particle_alt = stl.Re * (SimClasses.r_muChi(particle_mu, particle_chi) - 1)
+        #     ax[0].plot(T+deltaT,particle_alt )
+        #     ax[0].set_ylabel('Alt [km]')
+        #
+        #     ax[1].plot(T+deltaT,particle_vel_Mu/stl.m_to_km)
+        #     ax[1].set_ylabel('$v_{\mu}$ [km/s]')
+        #
+        #     ax[2].plot(T+deltaT, np.degrees(np.arctan2(mapped_v_perp,-1*particle_vel_Mu)) )
+        #     ax[2].set_ylabel(r'$\alpha$ [deg]')
+        #     ax[2].axhline(y=90,color='tab:red',alpha=0.5,linestyle='--')
+        #
+        #     ax[3].plot(T+deltaT,0.5*(stl.m_e/stl.q0)*(np.square(particle_vel_Mu) + np.square(mapped_v_perp)))
+        #     ax[3].set_ylabel('Energy [eV]')
+        #     ax[3].set_xlabel('Time (t) [s]')
+        #
+        #     particle_pos = np.array([particle_mu,particle_chi,[RayEquationToggles.phi0_w for i in range(len(T))]]).T
+        #     E_mu_particle = np.array([WaveFieldsClasses().field_generator(deltaT+tme, pos, type='emu') for tme,pos in zip(T,particle_pos)])
+        #     ax[4].plot(T+deltaT, E_mu_particle)
+        #     ax[4].set_xlabel('Time (t) [s]')
+        #
+        #     wave_value = np.zeros(shape=(len(T),len(WaveFieldsToggles.mu_grid)))
+        #     eval_pos = [[WaveFieldsToggles.mu_grid[idx], RayEquationToggles.chi0_w, RayEquationToggles.phi0_w] for idx in range(len(WaveFieldsToggles.mu_grid))]
+        #     for idx,tmeVal in enumerate(T):
+        #         wave_value[idx] = np.array([WaveFieldsClasses().field_generator(deltaT+tmeVal, pos, type='emu') for pos in eval_pos])
+        #
+        #     alts = np.array([stl.Re*(SimClasses.r_muChi(mu,RayEquationToggles.chi0_w)-1) for mu in WaveFieldsToggles.mu_grid])
+        #     ax[5].pcolormesh(deltaT+T, alts, wave_value.T, cmap='bwr')
+        #     ax[5].set_xlabel('time')
+        #     ax[5].set_ylabel('alt')
+        #     ax[5].plot(deltaT + T, particle_alt, 'ro')
+        #
+        #
+        #     for i in range(6):
+        #         ax[i].invert_xaxis()
+        #     plt.show()
+
         Distribution[tmeIdx][ptchIdx][engyIdx] = DistributionClasses().mapped_distribution(mu=particle_mu[-1],
                                                                                            chi=particle_chi[-1],
-                                                                                           vel_perp=deepcopy(mapped_v_perp[-1]),
-                                                                                           vel_para=deepcopy(-1 * particle_vel_Mu[-1]))
+                                                                                           vel_perp=mapped_v_perp[-1],
+                                                                                           vel_para=-1 * particle_vel_Mu[-1])
 
 
 

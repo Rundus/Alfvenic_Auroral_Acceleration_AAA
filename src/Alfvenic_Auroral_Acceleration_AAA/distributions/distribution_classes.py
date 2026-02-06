@@ -40,7 +40,8 @@ class DistributionClasses:
         # DvmuDt_inV = (stl.q0/stl.m_e)*ElectrostaticPotentialClasses().invertedVEField([S[0],S[1],S[2]])
 
         # Wave Field Effects
-        DvmuDt_Alfven =  - (stl.q0 / stl.m_e) * WaveFieldsClasses().field_generator(time=t + deltaT,
+        # print(f'DeltaT={deltaT}',f'T={t+deltaT}\n')
+        DvmuDt_Alfven =  - (stl.q0 / stl.m_e) * WaveFieldsClasses().field_generator(time=deltaT + t,
                                                                                     eval_pos=[S[0],S[1]],
                                                                                     type='eMu')
         # Combine all the parallel effects together
@@ -84,7 +85,7 @@ class DistributionClasses:
                          method=DistributionToggles.RK45_method,
                          rtol=DistributionToggles.RK45_rtol,
                          atol=DistributionToggles.RK45_atol,
-                         events=[self.escaped_lower, self.escaped_upper],
+                         # events=[self.escaped_lower, self.escaped_upper],
                          args=tuple([deltaT, uB])
                          )
         T = soln.t
@@ -116,14 +117,12 @@ class DistributionClasses:
         # Determine if particle triggered a termination event
         particle_alt = stl.Re  * (SimClasses.r_muChi(mu, chi) - 1)
 
-        if particle_alt <= DistributionToggles.lower_termination_altitude+DistributionToggles.deltaTerm: # if trajectory was forbidden due to ionospheric collisional loss
-            return 0
-        # if particle_alt >= DistributionToggles.upper_termination_altitude: # if trajectory made the particle come from the plasma sheet
-        #     return self.Maxwellian_PS(vel_para, vel_perp)
-        else:
-            return self.Maxwellian_PS(vel_para, vel_perp)
-
-
+        # if particle_alt <= DistributionToggles.lower_termination_altitude: # if trajectory was forbidden due to ionospheric collisional loss
+        #     return 0
+        # # if particle_alt >= DistributionToggles.upper_termination_altitude: # if trajectory made the particle come from the plasma sheet
+        # #     return self.Maxwellian_PS(vel_para, vel_perp)
+        # else:
+        return self.Maxwellian_PS(vel_para, vel_perp)
 
     def Maxwellian_PS(self, vel_para, vel_perp): # returns the maxwellian distribution for a given temperature, density and particle velocity
         """

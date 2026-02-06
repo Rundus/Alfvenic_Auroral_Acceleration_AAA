@@ -26,8 +26,7 @@ class WaveFieldsClasses: # for parallel and perp only
         self.V_A = envDict['V_A']
 
     def field_generator(self, time, eval_pos, **kwargs):
-
-        if (time < 0) or (time>np.max(data_dict_ray_eqns['time'][0])): # always return a zero value if you try to evaluate beyond where the wave is
+        if (time < 0) or (time>data_dict_ray_eqns['time'][0][-1]): # always return a zero value if you try to evaluate beyond where the wave is
             return 0
         else:
             which = kwargs.get('type')
@@ -74,8 +73,8 @@ class WaveFieldsClasses: # for parallel and perp only
         Eperp_val  = -1*(k[1]*WaveFieldsToggles.Phi_0 / (2*np.pi)) * (np.sin(k[0] * h[0] * (eval_pos[0]-wave_pos[0])))
         eval_z = (SimClasses.r_muChi(eval_pos[0],eval_pos[1])-1)*stl.Re
         weight = 0.5*(np.tanh((eval_z - 500)/1000) - np.tanh((eval_z - 12000)/1000))
-        return Eperp_val*weight
-        # return weight
+        # return Eperp_val*weight
+        return Eperp_val
 
     def BField_perp(self, inputs):
         eval_pos, wave_pos, k, h = inputs

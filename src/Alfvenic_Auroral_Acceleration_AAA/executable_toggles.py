@@ -7,5 +7,5 @@ dict_executable = {
     'regen_wave_fields': 1,
     'regen_particle_distributions':1,
     'regen_flux_calculation':1,
-    'regen_field_particle_correlation': 1
+    'regen_field_particle_correlation': 0
 }
