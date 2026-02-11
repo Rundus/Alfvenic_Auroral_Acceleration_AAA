@@ -71,8 +71,6 @@ class WaveFieldsClasses: # for parallel and perp only
     def EField_perp(self, inputs):
         eval_pos, wave_pos, k, h= inputs
         Eperp_val  = -1*(k[1]*WaveFieldsToggles.Phi_0 / (2*np.pi)) * (np.sin(k[0] * h[0] * (eval_pos[0]-wave_pos[0])))
-        eval_z = (SimClasses.r_muChi(eval_pos[0],eval_pos[1])-1)*stl.Re
-        weight = 0.5*(np.tanh((eval_z - 500)/1000) - np.tanh((eval_z - 12000)/1000))
         # return Eperp_val*weight
         return Eperp_val
 
@@ -85,7 +83,10 @@ class WaveFieldsClasses: # for parallel and perp only
         eval_pos, wave_pos, k, h = inputs
         E_perp = self.EField_perp(inputs)
         k_perp = k[1]
-        return (k[0]*k_perp*np.square(self.lmb_e(wave_pos[0],wave_pos[1])))*E_perp/(1 + np.square(self.lmb_e(wave_pos[0],wave_pos[1])*k_perp))
+        E_mu =(k[0]*k_perp*np.square(self.lmb_e(wave_pos[0],wave_pos[1])))*E_perp/(1 + np.square(self.lmb_e(wave_pos[0],wave_pos[1])*k_perp))
+        eval_z = (SimClasses.r_muChi(eval_pos[0], eval_pos[1]) - 1) * stl.Re
+        weight = 0.5 * (np.tanh((eval_z - 0) / 1000) - np.tanh((eval_z - 10000) / 1000))
+        return E_mu*weight
 
     def InWaveChecker(self, inputs):
         eval_pos, wave_pos, k, h = inputs

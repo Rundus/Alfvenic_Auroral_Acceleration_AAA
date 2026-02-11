@@ -72,10 +72,12 @@ def louisville_mapping(tmeIdx):
         # --- UPDATE DISTRIBUTION GRID AT simulation END ---
         ####################################################
 
-        # if deltaT == 4:
+        # if deltaT == 4.16:
         #     # print(f'Energy: {engyVal} ', f' Pitch: {np.degrees(ptchVal)} ',list(particle_mu), list(particle_vel_Mu))
         #     fig, ax =plt.subplots(6, sharex=True)
-        #     fig.suptitle(f'T={deltaT} s, Energy: {engyVal} eV, Pitch: {np.degrees(ptchVal)} deg')
+        #     fig.set_figwidth(8)
+        #     fig.set_figheight(12)
+        #     fig.suptitle('$z_{obs}$=' + f'{DistributionToggles.z0_obs} km'+f'\nT(obs)={deltaT} s, Energy (obs): {round(engyVal)} eV, Pitch (obs): {np.degrees(ptchVal)} deg')
         #     particle_alt = stl.Re * (SimClasses.r_muChi(particle_mu, particle_chi) - 1)
         #     ax[0].plot(T+deltaT,particle_alt )
         #     ax[0].set_ylabel('Alt [km]')
@@ -89,12 +91,11 @@ def louisville_mapping(tmeIdx):
         #
         #     ax[3].plot(T+deltaT,0.5*(stl.m_e/stl.q0)*(np.square(particle_vel_Mu) + np.square(mapped_v_perp)))
         #     ax[3].set_ylabel('Energy [eV]')
-        #     ax[3].set_xlabel('Time (t) [s]')
         #
         #     particle_pos = np.array([particle_mu,particle_chi,[RayEquationToggles.phi0_w for i in range(len(T))]]).T
         #     E_mu_particle = np.array([WaveFieldsClasses().field_generator(deltaT+tme, pos, type='emu') for tme,pos in zip(T,particle_pos)])
         #     ax[4].plot(T+deltaT, E_mu_particle)
-        #     ax[4].set_xlabel('Time (t) [s]')
+        #     ax[4].set_ylabel('$E_{\mu}$ particle')
         #
         #     wave_value = np.zeros(shape=(len(T),len(WaveFieldsToggles.mu_grid)))
         #     eval_pos = [[WaveFieldsToggles.mu_grid[idx], RayEquationToggles.chi0_w, RayEquationToggles.phi0_w] for idx in range(len(WaveFieldsToggles.mu_grid))]
@@ -102,15 +103,18 @@ def louisville_mapping(tmeIdx):
         #         wave_value[idx] = np.array([WaveFieldsClasses().field_generator(deltaT+tmeVal, pos, type='emu') for pos in eval_pos])
         #
         #     alts = np.array([stl.Re*(SimClasses.r_muChi(mu,RayEquationToggles.chi0_w)-1) for mu in WaveFieldsToggles.mu_grid])
-        #     ax[5].pcolormesh(deltaT+T, alts, wave_value.T, cmap='bwr')
-        #     ax[5].set_xlabel('time')
-        #     ax[5].set_ylabel('alt')
+        #     ax[5].pcolormesh(deltaT+T, alts, wave_value.T, cmap='bwr',vmin=-1E-5,vmax=1E-5)
+        #     ax[5].set_xlabel('Time [s]')
+        #     ax[5].set_ylabel('alt [km]')
         #     ax[5].plot(deltaT + T, particle_alt, 'ro')
         #
-        #
         #     for i in range(6):
+        #         ax[i].grid(True)
         #         ax[i].invert_xaxis()
-        #     plt.show()
+        #
+        #     fig.tight_layout()
+        #     fig.savefig(f'/home/connor/Data/physicsModels/alfvenic_auroral_acceleration_AAA/flux/plots/particle_trajects/traject_T{tmeIdx}_ptch{ptchIdx}_engy{engyIdx}.png')
+        #     # plt.show()
 
         Distribution[tmeIdx][ptchIdx][engyIdx] = DistributionClasses().mapped_distribution(mu=particle_mu[-1],
                                                                                            chi=particle_chi[-1],

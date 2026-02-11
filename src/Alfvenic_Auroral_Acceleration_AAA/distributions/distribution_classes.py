@@ -85,7 +85,7 @@ class DistributionClasses:
                          method=DistributionToggles.RK45_method,
                          rtol=DistributionToggles.RK45_rtol,
                          atol=DistributionToggles.RK45_atol,
-                         # events=[self.escaped_lower, self.escaped_upper],
+                         events=[self.escaped_lower, self.escaped_upper],
                          args=tuple([deltaT, uB])
                          )
         T = soln.t
@@ -95,23 +95,6 @@ class DistributionClasses:
         vel_chi = soln.y[3, :]
         return [T, particle_mu, particle_chi, vel_Mu, vel_chi]
 
-    def Maxwellian_iono(self, vel_para, vel_perp):
-        """
-                :param vel_para: Particle Velocity parallel to the background geomagnetic field in [m/s]
-                :type vel_para: float
-
-                :param vel_perp: Particle Velocity parallel to the background geomagnetic field in [m/s]
-                :type vel_perp: float
-
-                :return: Plasma Distribution Function in [m^-6 s^-3] evaluated at vel_para, vel_perp
-                """
-        if 0.5 * (stl.m_e / stl.q0) * (np.square(vel_para) + np.square(vel_perp)) > DistributionToggles.Emax_iono:  # check if energy is above the specific level the distribution
-            return 0
-        elif 0.5 * (stl.m_e / stl.q0) * (np.square(vel_para) + np.square(vel_perp)) < DistributionToggles.Emin_iono:  # check if energy is below the specific level the distribution:
-            return 0
-        else:
-            return DistributionToggles.n_iono * np.sqrt(np.power(stl.m_e / (2 * np.pi * DistributionToggles.Te_iono * stl.q0), 3)) * np.exp(-0.5 * stl.m_e * (np.square(vel_perp) + np.square(vel_para)) / (stl.q0 * DistributionToggles.Te_iono))
-
     def mapped_distribution(self, mu, chi,vel_para, vel_perp):
 
         # Determine if particle triggered a termination event
@@ -119,8 +102,6 @@ class DistributionClasses:
 
         # if particle_alt <= DistributionToggles.lower_termination_altitude: # if trajectory was forbidden due to ionospheric collisional loss
         #     return 0
-        # # if particle_alt >= DistributionToggles.upper_termination_altitude: # if trajectory made the particle come from the plasma sheet
-        # #     return self.Maxwellian_PS(vel_para, vel_perp)
         # else:
         return self.Maxwellian_PS(vel_para, vel_perp)
 
@@ -142,6 +123,23 @@ class DistributionClasses:
         return DistributionToggles.n_PS*np.sqrt(np.power(stl.m_e/(2*np.pi*DistributionToggles.Te_PS*stl.q0),3)) * np.exp(-0.5*stl.m_e*(np.square(vel_perp) + np.square(vel_para))/(stl.q0*DistributionToggles.Te_PS))
 
 
+
+    def Maxwellian_iono(self, vel_para, vel_perp):
+        """
+                :param vel_para: Particle Velocity parallel to the background geomagnetic field in [m/s]
+                :type vel_para: float
+
+                :param vel_perp: Particle Velocity parallel to the background geomagnetic field in [m/s]
+                :type vel_perp: float
+
+                :return: Plasma Distribution Function in [m^-6 s^-3] evaluated at vel_para, vel_perp
+                """
+        if 0.5 * (stl.m_e / stl.q0) * (np.square(vel_para) + np.square(vel_perp)) > DistributionToggles.Emax_iono:  # check if energy is above the specific level the distribution
+            return 0
+        elif 0.5 * (stl.m_e / stl.q0) * (np.square(vel_para) + np.square(vel_perp)) < DistributionToggles.Emin_iono:  # check if energy is below the specific level the distribution:
+            return 0
+        else:
+            return DistributionToggles.n_iono * np.sqrt(np.power(stl.m_e / (2 * np.pi * DistributionToggles.Te_iono * stl.q0), 3)) * np.exp(-0.5 * stl.m_e * (np.square(vel_perp) + np.square(vel_para)) / (stl.q0 * DistributionToggles.Te_iono))
 
 
 

@@ -22,12 +22,12 @@ class RayEquationToggles:
 
     # --- Ray Equation Simulation Boundaries ---
     lower_boundary = 100 # in kilometers
-    upper_boundary = 25000  # in kilometers
+    upper_boundary = 20000  # in kilometers
 
     # --- WAVE INITIAL CONDITIONS ---
     # Initial Wave Frequency
     f_0 = 5
-    omega0 = 2 * np.pi * f_0  # in Hz
+    omega0 = 4 * np.pi * f_0  # in Hz
 
     # Initial Wave Position
     z0_w = 500  # in kilometers
