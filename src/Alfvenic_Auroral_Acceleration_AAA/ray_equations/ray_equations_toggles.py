@@ -26,8 +26,8 @@ class RayEquationToggles:
 
     # --- WAVE INITIAL CONDITIONS ---
     # Initial Wave Frequency
-    f_0 = 5
-    omega0 = 4 * np.pi * f_0  # in Hz
+    f_0 = 8
+    omega0 = 2 * np.pi * f_0  # in Hz
 
     # Initial Wave Position
     z0_w = 500  # in kilometers
@@ -41,7 +41,7 @@ class RayEquationToggles:
     phi0_w = np.radians(phi0_w)
 
     # Wavelength in the ionosphere
-    Lambda_perp0 = 4 * 1000  # perpendicular wavelength (in meters) AT THE IONOSPHERE
+    Lambda_perp0 = 2 * 1000  # perpendicular wavelength (in meters) AT THE IONOSPHERE
     perp_ratio = 1.1  # what % of the initial lambda_perp is lambda_phi
 
     # --- File I/O ---
