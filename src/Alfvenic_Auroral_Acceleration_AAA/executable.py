@@ -12,6 +12,7 @@ from src.Alfvenic_Auroral_Acceleration_AAA.executable_toggles import dict_execut
 from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_toggles import DistributionToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
 import numpy as np
+from src.Alfvenic_Auroral_Acceleration_AAA.executable_classes import ExecutableClasses
 warnings.filterwarnings("ignore")
 start_time = time.time()
 
@@ -20,6 +21,10 @@ start_time = time.time()
 # --- ENVIRONMENT GENERATORS ---
 # --- --- --- --- --- --- --- --
 ################################
+
+# Generate the Configuration File for this run
+ExecutableClasses().generate_run_JSON()
+
 # Run the Code for Each observation altitude
 for altitude_val in DistributionToggles.Observation_altitudes:
 
@@ -29,6 +34,8 @@ for altitude_val in DistributionToggles.Observation_altitudes:
     DistributionToggles.Theta0_obs = RayEquationToggles.Theta0_w
     DistributionToggles.u0_obs = -1 * np.sqrt(np.cos(np.radians(90 - DistributionToggles.Theta0_obs))) / DistributionToggles.r_obs
     DistributionToggles.chi0_obs = np.power(np.sin(np.radians(90 - DistributionToggles.Theta0_obs)), 2) / DistributionToggles.r_obs
+
+    ExecutableClasses().check_obs_altitude()
 
     print('-----------------------')
     print(stl.color.RED + f'--- Altitude {DistributionToggles.z0_obs} km ---' + stl.color.END)
@@ -43,6 +50,9 @@ for altitude_val in DistributionToggles.Observation_altitudes:
         print('\n--- Regenerating Ray Equation Expressions ---',end='\n')
         from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_generator import environment_expressions_generator
         environment_expressions_generator()
+
+    # Verify the density model used is the same as those in the pickle files
+    ExecutableClasses().check_density_model()
 
     if dict_executable['regen_ray_equations']==1:
         print('\n--- Solving Ray Equation IVP for scale Length ---',end='\n')

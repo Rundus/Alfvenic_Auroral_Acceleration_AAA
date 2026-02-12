@@ -7,7 +7,7 @@ class EnvironmentExpressionsClasses:
         from glob import glob
         import dill
 
-        pickle_files = glob(rf'{SimToggles.sim_root_path}/environment_expressions/pickled_expressions/*')
+        pickle_files = glob(rf'{SimToggles.sim_root_path}/environment_expressions/pickled_expressions/*.pkl')
 
         for file_nam in pickle_files:
             func = dill.load(open(file_nam, 'rb'))
