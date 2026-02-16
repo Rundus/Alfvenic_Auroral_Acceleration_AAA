@@ -3,7 +3,7 @@ from src.Alfvenic_Auroral_Acceleration_AAA.simulation.my_imports import *
 from timebudget import timebudget
 
 @timebudget
-def field_particle_correlation_generator():
+def field_particle_correlation_generator_vel():
 
     # --- general imports ---
     import spaceToolsLib as stl
@@ -19,9 +19,7 @@ def field_particle_correlation_generator():
     import itertools
 
     # --- Load the simulation data ---
-    data_dict_flux = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/results/{DistributionToggles.z0_obs}km/flux_{DistributionToggles.z0_obs}km.cdf')[0])
-    data_dict_distribution = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/results/{DistributionToggles.z0_obs}km/distributions_{DistributionToggles.z0_obs}km.cdf')[0])
-    # data_dict_distribution = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/distributions/distributions.cdf')[0])
+    data_dict_distribution = stl.loadDictFromFile(glob(rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/distributions_velSpace_{DistributionToggles.z0_obs}km.cdf')[0])
 
     ################################
     # --- CALCULATE CORRELATION ----
@@ -29,8 +27,8 @@ def field_particle_correlation_generator():
 
     # --- calculate the velocity grid ---
     Ntimes = len(DistributionToggles.obs_times)
-    Nvperps = len(DistributionToggles.v_perp_space)
-    Nvparas = len(DistributionToggles.v_para_space)
+    Nvperps = len(DistributionToggles.v_perp_space_obs)
+    Nvparas = len(DistributionToggles.v_para_space_obs)
     sizes = [Ntimes, Nvperps, Nvparas]
 
     # --- calculate the distribution function velocity space gradient ---
@@ -38,21 +36,21 @@ def field_particle_correlation_generator():
     df_dvE = np.zeros_like(Distribution)
     # print(f'\n {sizes[0]*Nvperps} Number of Iterations')
     for tmeIdx, perpIdx in tqdm(itertools.product(*[range(sizes[0]),range(Nvperps)])):
-        df_dvE[tmeIdx, perpIdx] = (stl.q0*np.square(DistributionToggles.v_para_space)/2)*np.gradient(Distribution[tmeIdx, perpIdx], DistributionToggles.v_para_space)
+        df_dvE[tmeIdx, perpIdx] = (stl.q0*np.square(DistributionToggles.v_para_space_obs)/2)*np.gradient(Distribution[tmeIdx, perpIdx], DistributionToggles.v_para_space_obs)
 
     # Calculate the un-perturbed distribution function in velocity space
-    f0 = np.zeros(shape=(len(data_dict_flux['time'][0]), Nvperps, Nvparas))
-    for idx1, vperpVal in enumerate(DistributionToggles.v_perp_space):
-        for idx2, vparaVal in enumerate(DistributionToggles.v_para_space):
+    f0 = np.zeros(shape=(len(data_dict_distribution['time'][0]), Nvperps, Nvparas))
+    for idx1, vperpVal in enumerate(DistributionToggles.v_perp_space_obs):
+        for idx2, vparaVal in enumerate(DistributionToggles.v_para_space_obs):
             f0[0][idx1][idx2] = DistributionClasses().mapped_distribution(DistributionToggles.u0_obs,DistributionToggles.chi0_obs, vperpVal, vparaVal)
 
     # calculate the gradient in f0
     f0_df_dvE = np.zeros_like(f0)
     for perpIdx in range(Nvperps):
-        f0_df_dvE[0, perpIdx] = (stl.q0*np.square(DistributionToggles.v_para_space)/2)*np.gradient(f0[0][perpIdx], DistributionToggles.v_para_space)
+        f0_df_dvE[0, perpIdx] = (stl.q0*np.square(DistributionToggles.v_para_space_obs)/2)*np.gradient(f0[0][perpIdx], DistributionToggles.v_para_space_obs)
 
     # Fill in the rest of the times with the f0
-    for tme in range(1, len(data_dict_flux['time'][0])):
+    for tme in range(1, len(data_dict_distribution['time'][0])):
         f0[tme] = f0[0]
         f0_df_dvE[tme] = f0_df_dvE[0]
 
@@ -64,9 +62,9 @@ def field_particle_correlation_generator():
     FPC_residual = np.zeros(shape=(Nvperps,Nvparas))
 
     # 1 interpolate the E-Field data onto the particle data timebase
-    E_mu_corr = np.interp(deepcopy(data_dict_distribution['time'][0]), data_dict_flux['time_waves'][0], data_dict_flux['E_mu_obs'][0])
-    B_perp_corr = np.interp(deepcopy(data_dict_distribution['time'][0]), data_dict_flux['time_waves'][0], data_dict_flux['B_perp_obs'][0])
-    E_perp_corr = np.interp(deepcopy(data_dict_distribution['time'][0]), data_dict_flux['time_waves'][0], data_dict_flux['E_perp_obs'][0])
+    E_mu_corr = np.interp(deepcopy(data_dict_distribution['time'][0]), data_dict_distribution['time_waves'][0], data_dict_distribution['E_mu_obs'][0])
+    B_perp_corr = np.interp(deepcopy(data_dict_distribution['time'][0]), data_dict_distribution['time_waves'][0], data_dict_distribution['B_perp_obs'][0])
+    E_perp_corr = np.interp(deepcopy(data_dict_distribution['time'][0]), data_dict_distribution['time_waves'][0], data_dict_distribution['E_perp_obs'][0])
 
     # 2 Determine the period of the wave in the data
     grad = np.gradient(E_mu_corr)
@@ -98,14 +96,14 @@ def field_particle_correlation_generator():
     FPC_vpara_int_residual = np.zeros(shape=(Nvparas))
 
     for idx in range(Nvparas):
-        FPC_vpara_int[idx] = simpson(FPC[:,idx], DistributionToggles.v_perp_space)
-        FPC_vpara_int_f0[idx] = simpson(FPC_f0[:, idx], DistributionToggles.v_perp_space)
-        FPC_vpara_int_residual[idx] = simpson(FPC_residual[:, idx], DistributionToggles.v_perp_space)
+        FPC_vpara_int[idx] = simpson(FPC[:,idx], DistributionToggles.v_perp_space_obs)
+        FPC_vpara_int_f0[idx] = simpson(FPC_f0[:, idx], DistributionToggles.v_perp_space_obs)
+        FPC_vpara_int_residual[idx] = simpson(FPC_residual[:, idx], DistributionToggles.v_perp_space_obs)
 
     # Integrate over v_perp to get the total FPC and add 2pi to cover all other v_perp directions (assuming gyrotropy)
-    FPC_total = 2*np.pi*simpson(FPC_vpara_int,DistributionToggles.v_para_space)
-    FPC_total_f0 = 2*np.pi*simpson(FPC_vpara_int_f0, DistributionToggles.v_para_space)
-    FPC_total_residual = 2*np.pi*simpson(FPC_vpara_int_residual, DistributionToggles.v_para_space)
+    FPC_total = 2*np.pi*simpson(FPC_vpara_int,DistributionToggles.v_para_space_obs)
+    FPC_total_f0 = 2*np.pi*simpson(FPC_vpara_int_f0, DistributionToggles.v_para_space_obs)
+    FPC_total_residual = 2*np.pi*simpson(FPC_vpara_int_residual, DistributionToggles.v_para_space_obs)
 
     ################
     # --- OUTPUT ---
@@ -125,8 +123,8 @@ def field_particle_correlation_generator():
         'FPC_residual': [np.array(FPC_residual), {'DEPEND_0': 'v_perp', 'DEPEND_1': 'v_para', 'VAR_TYPE': 'data'}],
         'FPC_total_residual': [np.array([FPC_total_residual]), {'VAR_TYPE': 'data'}],
         'df_dvpara' : [np.array(df_dvE), {'DEPEND_0':'time','DEPEND_1':'v_perp','DEPEND_2':'v_para','LABALAXIS':'df/dv_para','UNITS':'m^-3s^-6/m/s','VAR_TYPE':'data'}],
-        'v_para': [DistributionToggles.v_para_space,{'UNITS': 'm/s', 'LABLAXIS': 'v_para'}],
-        'v_perp': [DistributionToggles.v_perp_space, {'UNITS': 'm/s', 'LABLAXIS': 'v_perp'}],
+        'v_para': [DistributionToggles.v_para_space_obs,{'UNITS': 'm/s', 'LABLAXIS': 'v_para'}],
+        'v_perp': [DistributionToggles.v_perp_space_obs, {'UNITS': 'm/s', 'LABLAXIS': 'v_perp'}],
         'E_mu_corr':[np.array(E_mu_corr),deepcopy(data_dict_distribution['E_mu_obs'][1])],
         'B_perp_corr': [np.array(B_perp_corr),deepcopy(data_dict_distribution['B_perp_obs'][1])],
         'E_perp_corr': [np.array(E_perp_corr),deepcopy(data_dict_distribution['E_perp_obs'][1])],
@@ -138,10 +136,10 @@ def field_particle_correlation_generator():
     data_dict_output['E_mu_corr'][1]['DEPEND_0'] = 'time'
 
     # Save the base run
-    outputPath = rf'{FPCToggles.outputFolder}/FPC.cdf'
+    outputPath = rf'{FPCToggles.outputFolder}/FPC_velSpace.cdf'
     stl.outputDataDict(outputPath, data_dict_output)
 
     if SimToggles.store_output:
         # save the results
-        outputPath = rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/FPC_{DistributionToggles.z0_obs}km.cdf'
+        outputPath = rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/FPC_velSpace_{DistributionToggles.z0_obs}km.cdf'
         stl.outputDataDict(outputPath, data_dict_output)

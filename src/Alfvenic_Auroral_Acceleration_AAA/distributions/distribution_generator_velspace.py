@@ -29,8 +29,8 @@ B_dipole = envDict['B_dipole']
 # --- PREPARE PARALLELIZED OUTPUTS ---
 # Ndeltas = len(DistributionToggles.time)
 Ntimes = len(DistributionToggles.obs_times)
-Nvperps = len(DistributionToggles.v_perp_space)
-Nvparas = len(DistributionToggles.v_para_space)
+Nvperps = len(DistributionToggles.v_perp_space_obs)
+Nvparas = len(DistributionToggles.v_para_space_obs)
 
 # distribution
 mp_array_1 = mp.Array('d', Ntimes * Nvperps * Nvparas)
@@ -54,8 +54,8 @@ def louisville_mapping(tmeIdx):
     for perpIdx, paraIdx in product(*[range(Nvperps), range(Nvparas)]):
 
         # get the initial state vector
-        v_perp0 = DistributionToggles.v_perp_space[perpIdx]
-        v_para0 = DistributionToggles.v_para_space[paraIdx]
+        v_perp0 = DistributionToggles.v_perp_space_obs[perpIdx]
+        v_para0 = DistributionToggles.v_para_space_obs[paraIdx]
         v_mu0 = -1 * v_para0
         s0 = [DistributionToggles.u0_obs, DistributionToggles.chi0_obs, v_mu0, v_perp0]
 
@@ -76,7 +76,6 @@ def louisville_mapping(tmeIdx):
         ####################################################
         # --- UPDATE DISTRIBUTION GRID AT simulation END ---
         ####################################################
-        print(stl.Re  * (SimClasses.r_muChi(particle_mu[-1], particle_chi[-1]) - 1))
         Distribution[tmeIdx][perpIdx][paraIdx] = DistributionClasses().mapped_distribution(mu=particle_mu[-1],
                                                                                            chi=particle_chi[-1],
                                                                                            vel_perp=deepcopy(mapped_v_perp[-1]),
@@ -84,7 +83,7 @@ def louisville_mapping(tmeIdx):
 
 # Parallelize the Code
 @timebudget
-def distribution_generator():
+def distribution_generator_vel():
     # Execute the Louiville Mapping (Parallel Processing)
     processes_count = 32  # Number of CPU cores to commit to this operation
     pool_object = mp.Pool(processes_count)
@@ -116,26 +115,22 @@ def distribution_generator():
     data_dict_output = {
         'time': [np.array(DistributionToggles.obs_times), {'UNITS': 's', 'LABLAXIS': 'Time', 'VAR_TYPE': 'data'}],
         'time_waves': [np.array(DistributionToggles.obs_waves_times), {'UNITS': 's', 'LABLAXIS': 'Time', 'VAR_TYPE': 'data'}],
-        # 'time_particles':[np.array(time_particles),{'UNITS': 's', 'LABLAXIS': 'Time', 'VAR_TYPE': 'data'}],
         'Distribution_Function': [np.array(Distribution), {'DEPEND_0': 'time', 'DEPEND_1': 'vperp', 'DEPEND_2': 'vpara', 'UNITS': 'm!A-6!Ns!A-3!N', 'LABLAXIS': 'Distribution Function', 'VAR_TYPE': 'data'}],
-        'vperp' : [np.array(DistributionToggles.v_perp_space), {'VAR_TYPE': 'data', 'LABLAXIS':'vperp','UNITS':'m/s'}],
-        'vpara': [np.array(DistributionToggles.v_para_space), {'VAR_TYPE': 'data', 'LABLAXIS':'vpara','UNITS':'m/s'}],
+        'vperp' : [np.array(DistributionToggles.v_perp_space_obs), {'VAR_TYPE': 'data', 'LABLAXIS':'vperp','UNITS':'m/s'}],
+        'vpara': [np.array(DistributionToggles.v_para_space_obs), {'VAR_TYPE': 'data', 'LABLAXIS':'vpara','UNITS':'m/s'}],
         'particle_mu':[np.array(particle_mus), {'VAR_TYPE': 'data', 'LABLAXIS':None,'UNITS':None,'DEPEND_0':'deltaT','DEPEND_1':'time','DEPEND_2':'vperp','DEPEND_3':'vpara'}],
-        'deltaT' : [np.array(DistributionToggles.obs_times[tmeIdx]),{}],
-        # 'Energy': [np.array(DistributionToggles.energy_range), {'UNITS': 'eV', 'LABLAXIS': 'Energy'}],
-        # 'Pitch_Angle': [np.array(DistributionToggles.pitch_range), {'UNITS': 'deg', 'LABLAXIS': 'Pitch Angle'}],
         'B_perp_obs': [B_perp_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'nT', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],
         'E_perp_obs': [E_perp_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&perp;!N', 'VAR_TYPE': 'data'}],
         'E_mu_obs': [E_mu_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&mu;!N', 'VAR_TYPE': 'data'}]
     }
 
     # Save the base run
-    outputPath = rf'{DistributionToggles.outputFolder}/distributions.cdf'
+    outputPath = rf'{DistributionToggles.outputFolder}/distributions_velSpace.cdf'
     stl.outputDataDict(outputPath, data_dict_output)
 
     if SimToggles.store_output:
         # save the results
-        outputPath = rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/distributions_{DistributionToggles.z0_obs}km.cdf'
+        outputPath = rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/distributions_velSpace_{DistributionToggles.z0_obs}km.cdf'
         stl.outputDataDict(outputPath, data_dict_output)
 
 

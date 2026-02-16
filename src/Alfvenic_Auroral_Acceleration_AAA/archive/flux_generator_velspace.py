@@ -27,14 +27,14 @@ def flux_generator():
     ###########################################################
     # --- interpolate distribution function onto velocity space ---
     sizes = [len(data_dict_distribution['time'][0]), len(DistributionToggles.pitch_range), len(DistributionToggles.energy_range)]
-    vel_sizes = [range(len(DistributionToggles.v_perp_space)),range(len(DistributionToggles.v_para_space))]
+    vel_sizes = [range(len(DistributionToggles.v_perp_space_obs)),range(len(DistributionToggles.v_para_space_obs))]
     Distribution_interp = np.zeros(shape=tuple(sizes))
     X, Y = np.meshgrid(DistributionToggles.pitch_range, DistributionToggles.energy_range)
     for tmeIdx in tqdm(range(sizes[0])):
 
         zData = np.array([data_dict_distribution['Distribution_Function'][0][tmeIdx][vperpIdx][vparaIdx] for vperpIdx, vparaIdx in product(*vel_sizes)])
-        engy_points = np.array([0.5*(stl.m_e/stl.q0)*(np.square(DistributionToggles.v_perp_space[vperpIdx]) + np.square(DistributionToggles.v_para_space[vparaIdx])) for vperpIdx, vparaIdx in product(*vel_sizes)])
-        ptch_points = np.array([np.degrees(np.arctan2(DistributionToggles.v_perp_space[vperpIdx],DistributionToggles.v_para_space[vparaIdx])) for vperpIdx, vparaIdx in product(*vel_sizes)])
+        engy_points = np.array([0.5*(stl.m_e/stl.q0)*(np.square(DistributionToggles.v_perp_space_obs[vperpIdx]) + np.square(DistributionToggles.v_para_space_obs[vparaIdx])) for vperpIdx, vparaIdx in product(*vel_sizes)])
+        ptch_points = np.array([np.degrees(np.arctan2(DistributionToggles.v_perp_space_obs[vperpIdx],DistributionToggles.v_para_space_obs[vparaIdx])) for vperpIdx, vparaIdx in product(*vel_sizes)])
 
         interp = LinearNDInterpolator(list(zip(ptch_points, engy_points)), zData)
         # print('\n',tmeIdx, engy_points, ptch_points, zData)

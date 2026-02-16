@@ -14,7 +14,7 @@ def flux_generator():
     from itertools import product
 
     # --- Load the wave simulation data ---
-    data_dict_distribution = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/results/{DistributionToggles.z0_obs}km/distributions_{DistributionToggles.z0_obs}km.cdf')[0])
+    data_dict_distribution = stl.loadDictFromFile(glob(rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/distributions_{DistributionToggles.z0_obs}km.cdf')[0])
 
     #####################################
     # --- CALCULATE DIFFERENTIAL FLUX ---

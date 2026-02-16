@@ -29,8 +29,8 @@ B_dipole = envDict['B_dipole']
 
 # --- PREPARE PARALLELIZED OUTPUTS ---
 Ntimes = len(DistributionToggles.obs_times)
-Nptchs = len(DistributionToggles.pitch_range)
-Nengy = len(DistributionToggles.energy_range)
+Nptchs = len(DistributionToggles.pitch_range_obs)
+Nengy = len(DistributionToggles.energy_range_obs)
 sizes = [Ntimes, Nptchs, Nengy]
 
 # distribution
@@ -46,8 +46,8 @@ def louisville_mapping(tmeIdx):
     for ptchIdx, engyIdx in product(*[range(Nptchs), range(Nengy)]):
 
         # get the initial state vector
-        engyVal = DistributionToggles.energy_range[engyIdx]
-        ptchVal = np.radians(DistributionToggles.pitch_range[ptchIdx])
+        engyVal = DistributionToggles.energy_range_obs[engyIdx]
+        ptchVal = np.radians(DistributionToggles.pitch_range_obs[ptchIdx])
         v_perp0 = np.sqrt(2 * stl.q0 * engyVal / stl.m_e) * np.sin(ptchVal)
         v_para0 = np.sqrt(2 * stl.q0 * engyVal / stl.m_e) * np.cos(ptchVal)
         v_mu0 = -1 * v_para0
@@ -158,8 +158,8 @@ def distribution_generator():
         'time': [np.array(DistributionToggles.obs_times), {'UNITS': 's', 'LABLAXIS': 'Time', 'VAR_TYPE': 'data'}],
         'time_waves': [np.array(DistributionToggles.obs_waves_times), {'UNITS': 's', 'LABLAXIS': 'Time', 'VAR_TYPE': 'data'}],
         'Distribution_Function': [np.array(Distribution), {'DEPEND_0': 'time', 'DEPEND_1': 'Pitch_Angle', 'DEPEND_2': 'Energy', 'UNITS': 'm!A-6!Ns!A-3!N', 'LABLAXIS': 'Distribution Function', 'VAR_TYPE': 'data'}],
-        'Energy': [np.array(DistributionToggles.energy_range), {'UNITS': 'eV', 'LABLAXIS': 'Energy'}],
-        'Pitch_Angle': [np.array(DistributionToggles.pitch_range), {'UNITS': 'deg', 'LABLAXIS': 'Pitch Angle'}],
+        'Energy': [np.array(DistributionToggles.energy_range_obs), {'UNITS': 'eV', 'LABLAXIS': 'Energy'}],
+        'Pitch_Angle': [np.array(DistributionToggles.pitch_range_obs), {'UNITS': 'deg', 'LABLAXIS': 'Pitch Angle'}],
         'B_perp_obs': [B_perp_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'nT', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],
         'E_perp_obs': [E_perp_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&perp;!N', 'VAR_TYPE': 'data'}],
         'E_mu_obs': [E_mu_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&mu;!N', 'VAR_TYPE': 'data'}]

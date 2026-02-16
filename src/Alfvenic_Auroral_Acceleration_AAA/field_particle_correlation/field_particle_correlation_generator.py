@@ -20,8 +20,8 @@ def field_particle_correlation_generator():
     import itertools
 
     # --- Load the simulation data ---
-    data_dict_flux = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/results/{DistributionToggles.z0_obs}km/flux_{DistributionToggles.z0_obs}km.cdf')[0])
-    data_dict_distribution = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/results/{DistributionToggles.z0_obs}km/distributions_{DistributionToggles.z0_obs}km.cdf')[0])
+    data_dict_flux = stl.loadDictFromFile(glob(rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/flux_{DistributionToggles.z0_obs}km.cdf')[0])
+    data_dict_distribution = stl.loadDictFromFile(glob(rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/distributions_{DistributionToggles.z0_obs}km.cdf')[0])
 
     ################################
     # --- CALCULATE CORRELATION ----
@@ -29,14 +29,14 @@ def field_particle_correlation_generator():
 
     # --- calculate the velocity grid ---
     Ntimes = len(DistributionToggles.obs_times)
-    Nptchs = len(DistributionToggles.pitch_range)
-    Nengy = len(DistributionToggles.energy_range)
+    Nptchs = len(DistributionToggles.pitch_range_obs)
+    Nengy = len(DistributionToggles.energy_range_obs)
     sizes = [Ntimes, Nptchs, Nengy]
     parallel_velocity_grid = np.zeros_like(data_dict_flux['Differential_Energy_Flux'][0])
     perp_velocity_grid = np.zeros_like(data_dict_flux['Differential_Energy_Flux'][0])
     for tmeIdx, ptchIdx, engyIdx in itertools.product(*[range(item) for item in sizes]):
-        parallel_velocity_grid[tmeIdx][ptchIdx][engyIdx] = np.sqrt(2*stl.q0*DistributionToggles.energy_range[engyIdx]/stl.m_e)*np.cos(np.radians(DistributionToggles.pitch_range[ptchIdx]))
-        perp_velocity_grid[tmeIdx][ptchIdx][engyIdx] = np.sqrt(2 * stl.q0 * DistributionToggles.energy_range[engyIdx] / stl.m_e) * np.sin(np.radians(DistributionToggles.pitch_range[ptchIdx]))
+        parallel_velocity_grid[tmeIdx][ptchIdx][engyIdx] = np.sqrt(2*stl.q0*DistributionToggles.energy_range_obs[engyIdx]/stl.m_e)*np.cos(np.radians(DistributionToggles.pitch_range_obs[ptchIdx]))
+        perp_velocity_grid[tmeIdx][ptchIdx][engyIdx] = np.sqrt(2 * stl.q0 * DistributionToggles.energy_range_obs[engyIdx] / stl.m_e) * np.sin(np.radians(DistributionToggles.pitch_range_obs[ptchIdx]))
 
     # --- interpolate distribution function onto velocity space ---
     sizes_vspace = [len(FPCToggles.v_perp_space), len(FPCToggles.v_para_space)]

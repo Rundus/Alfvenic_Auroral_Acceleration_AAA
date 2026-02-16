@@ -35,8 +35,8 @@ class ExecutableClasses:
                                 'time_obs_start':DistributionToggles.time_obs_start,
                                'time_obs_end': DistributionToggles.time_obs_end,
                                'time_rez_waves':DistributionToggles.time_rez_waves,
-                               'E_max(log)':DistributionToggles.E_max,
-                               'E_min(log)':DistributionToggles.E_min,
+                               'E_max_obs(log)':DistributionToggles.E_max_obs,
+                               'E_min_obs(log)':DistributionToggles.E_min_obs,
                                'N_energy_space_points':DistributionToggles.N_energy_space_points
                                # 'Pitch_Range':list(DistributionToggles.pitch_range),
                                # 'Energy_Range':list(DistributionToggles.energy_range)

@@ -21,19 +21,25 @@ class DistributionToggles:
     # --- OBSERVATION TOGGLES ---
     #############################
 
-    # Observation Spatial Coordinate
-    # Observation_altitudes = [400, 1000,2000,2500,3000,4000,5000,6000,7000,7500,8000,9000,10000,11000,12000,12500,13000,14000,15000, 17500, 20000]
-    Observation_altitudes = [500]
-    # Observation_altitudes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000,9000,10000,11000,12000,13000,14000,15000]
-    z0_obs = 3000  # in kilometers
+    # ENERGY/PITCH COORDINATES
+    N_energy_space_points = 50
+    E_max_obs = 4  # the POWER of 10^E_max for the maximum energy
+    E_min_obs = 1  # the POWER of 10^E_min for the minimum energy
+    pitch_range_obs = np.linspace(0, 180, 19)
+    # pitch_range_obs = [0,90]
+    energy_range_obs = np.logspace(E_min_obs, E_max_obs, N_energy_space_points)
 
-    # Calculate the initial observation position in dipole coordinates
-    Theta0_obs = RayEquationToggles.Theta0_w
-    phi0_obs = RayEquationToggles.phi0_w
-    r_obs = 1 + z0_obs / stl.Re
-    chi0_obs = np.square(np.sin(np.radians(phi0_obs)))/1 # get the Chi0 point at the Earth's surface. Don't change Chi at all, only mu.
-    u0_obs = (1- chi0_obs*r_obs)**(1/4) / r_obs # Solve for mu at the new altitude, given a constant Chi0
-    phi0_obs = np.radians(phi0_obs)
+    # VELOCITY SPACE COORDINATES
+    N_vel_space = 35
+    para_space_temp = np.linspace(SimClasses().to_Vel(10**(E_min_obs)), SimClasses().to_Vel(10**(3.48)), N_vel_space)
+    v_para_space_obs = np.append(-1 * para_space_temp[::-1], para_space_temp[1:])
+    v_perp_space_obs = np.linspace(0, para_space_temp[-1], N_vel_space)
+
+    # Observation Altitude
+    Observation_altitudes = [500, 1000,2000,3000,4000,5000,6000,7000,8000,9000,10000,12500,15000, 17500, 20000]
+    # Observation_altitudes = [1500, 2500, 3500, 4500, 5500, 6500, 7500, 8500, 9500]
+    # Observation_altitudes = [9500]
+    z0_obs = 3000  # Doesn't matter what this is set to, it will be overwritten
 
     # ESA particle sampling
     time_rez = 0.05 # in seconds
@@ -46,6 +52,14 @@ class DistributionToggles:
     time_rez_waves = 0.001 # in seconds
     N_obs_wave_points = int(time_obs_end/time_rez_waves)
     obs_waves_times = np.linspace(0,time_obs_end,N_obs_wave_points)
+
+    ###########################
+    # --- SIMULATION EXTENT ---
+    ###########################
+
+    # altitude to terminate simulation
+    upper_termination_altitude = 50000  # [in km] use the maximum height of the wave reaches as an upper boundary for particles.
+    lower_termination_altitude = 300
 
     #################################
     # --- PLASMA SHEET PARAMETERS ---
@@ -65,31 +79,17 @@ class DistributionToggles:
     Emin_iono = 0  # in [eV]. maximum energy in the plasma sheet distribution
     # alpha_min = 2.5  # minimum pitch angle of particles in source distribution
 
-    #####################################
-    # --- PLASMA DISTRIBUTION TOGGLES ---
-    #####################################
-    N_energy_space_points = 50
-
-    # ENERGY/PITCH
-    E_max = 4  # the POWER of 10^E_max for the maximum energy
-    E_min = 1  # the POWER of 10^E_min for the minimum energy
-    pitch_range = np.linspace(0,180,19)
-    # pitch_range = np.array([0, 110, 130, 180])
-    energy_range = np.logspace(E_min, E_max, N_energy_space_points)
-
-    # VELOCITY SPACE
-    # N_vel_space = 25
-    # para_space_temp = np.linspace(SimClasses().to_Vel(10**(Emin_PS)), SimClasses().to_Vel(10**(Emax_PS)), N_vel_space)
-    # v_para_space = np.append(-1 * para_space_temp[::-1], para_space_temp[1:])
-    # v_perp_space = np.linspace(0, para_space_temp[-1], N_vel_space)
-
     ###########################
-    # --- SIMULATION EXTENT ---
+    # --- SOME CALCULATIONS ---
     ###########################
 
-    # altitude to terminate simulation
-    upper_termination_altitude = 60000  # [in km] use the maximum height of the wave reaches as an upper boundary for particles.
-    lower_termination_altitude = 300
+    # Calculate the initial observation position in dipole coordinates
+    Theta0_obs = RayEquationToggles.Theta0_w
+    phi0_obs = RayEquationToggles.phi0_w
+    r_obs = 1 + z0_obs / stl.Re
+    chi0_obs = np.square(np.sin(np.radians(phi0_obs))) / 1  # get the Chi0 point at the Earth's surface. Don't change Chi at all, only mu.
+    u0_obs = (1 - chi0_obs * r_obs) ** (1 / 4) / r_obs  # Solve for mu at the new altitude, given a constant Chi0
+    phi0_obs = np.radians(phi0_obs)
 
     # --- File I/O ---
     from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_toggles import SimToggles

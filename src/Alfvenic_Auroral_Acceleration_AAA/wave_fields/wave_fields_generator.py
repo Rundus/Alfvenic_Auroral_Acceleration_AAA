@@ -13,7 +13,7 @@ from scipy.integrate import simpson
 import multiprocessing as mp
 
 # --- Load the needed data ---
-data_dict_ray_eqns = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/results/{DistributionToggles.z0_obs}km/ray_equations_{DistributionToggles.z0_obs}km.cdf')[0])
+data_dict_ray_eqns = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/ray_equations/ray_equations.cdf')[0])
 
 
 # --- PREPARE PARALLELIZED OUTUTS ---
