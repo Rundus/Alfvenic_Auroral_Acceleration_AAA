@@ -93,7 +93,8 @@ def wave_fields_generator():
         'resonance_low': [[],{'DEPEND_0': 'z', 'UNITS': 'eV', 'LABLAXIS': 'Resonance Low', 'VAR_TYPE': 'data'}],
         'resonance_high': [[], {'DEPEND_0': 'z',  'UNITS': 'eV', 'LABLAXIS': 'Resonance High', 'VAR_TYPE': 'data'}],
         'DAW_velocity_eV':[[],{'DEPEND_0': 'z',  'UNITS': 'eV', 'LABLAXIS': 'DAW Velocity', 'VAR_TYPE': 'data'}],
-        'DAW_velocity': [[], {'DEPEND_0': 'z', 'UNITS': 'm/s', 'LABLAXIS': 'DAW Velocity', 'VAR_TYPE': 'data'}]
+        'DAW_velocity': [[], {'DEPEND_0': 'z', 'UNITS': 'm/s', 'LABLAXIS': 'DAW Velocity', 'VAR_TYPE': 'data'}],
+        'mu_ponyting_flux': [np.array(Eperp)*np.array(Bperp)/stl.u0,{'DEPEND_0': 'z', 'UNITS': 'W/m!A2!N', 'LABLAXIS': 'Poynting Flux', 'VAR_TYPE': 'data'}]
     }
 
     # Calculate the resonance window

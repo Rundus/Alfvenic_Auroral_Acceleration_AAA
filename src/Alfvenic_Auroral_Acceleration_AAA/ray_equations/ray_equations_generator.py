@@ -37,6 +37,8 @@ def ray_equations_RK45_generator():
                         'lambda_phi_0': [np.array([]), {'DEPEND_0': 'time', 'UNITS': 'km', 'LABLAXIS': 'Initial &lambda;!B&phi;', 'VAR_TYPE': 'data'}],
                         'omega':[np.array([]), {'DEPEND_0': 'time', 'UNITS': 'rad/s', 'LABLAXIS': '&omega;', 'VAR_TYPE': 'data'}],
                         'omega_calc': [np.array([]), {'DEPEND_0': 'time', 'UNITS': 'rad/s', 'LABLAXIS': '&omega;', 'VAR_TYPE': 'data'}],
+                        'v_group_mu':[np.array([]), {'DEPEND_0': 'time', 'UNITS': '1/s', 'LABLAXIS': 'v!Bg,&mu;!N', 'VAR_TYPE': 'data'}],
+                        'v_group_chi': [np.array([]), {'DEPEND_0': 'time', 'UNITS': '1/s', 'LABLAXIS': 'v!Bg,&chi;!N', 'VAR_TYPE': 'data'}]
                         }
 
     #################################################
@@ -105,6 +107,10 @@ def ray_equations_RK45_generator():
     data_dict_output['z'][0] = (deepcopy(data_dict_output['r'][0])-1)*stl.Re
     data_dict_output['omega'][0] = np.array(Omega)
     data_dict_output['omega_calc'][0] = data_dict_output['k_mu'][0] * V_A(Mu,Chi)/np.sqrt(1 + np.square(data_dict_output['k_perp'][0]*lmb_e(Mu,Chi)))
+
+
+    # calculate the parallel group velocity
+    data_dict_output['']
 
     # add the parallel/perp wavelength
     data_dict_output = {**data_dict_output,
