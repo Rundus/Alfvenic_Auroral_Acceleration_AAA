@@ -15,6 +15,9 @@ class WaveFieldsToggles:
     # Initial Electric Wave Field Strength - At the initial position
     Phi_0 = 250  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The
 
+    # Initial Magnetic Field B_perp at Z0
+    B_perp_0 = 3E-9 # in Tesla
+
     # --- Inverted-V potential ---
     inV_Volts = 5000 # in Volts
     inV_Zmin = 5000  # in km

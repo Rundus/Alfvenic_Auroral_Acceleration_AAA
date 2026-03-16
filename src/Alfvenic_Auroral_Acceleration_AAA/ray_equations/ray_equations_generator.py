@@ -37,8 +37,8 @@ def ray_equations_RK45_generator():
                         'lambda_phi_0': [np.array([]), {'DEPEND_0': 'time', 'UNITS': 'km', 'LABLAXIS': 'Initial &lambda;!B&phi;', 'VAR_TYPE': 'data'}],
                         'omega':[np.array([]), {'DEPEND_0': 'time', 'UNITS': 'rad/s', 'LABLAXIS': '&omega;', 'VAR_TYPE': 'data'}],
                         'omega_calc': [np.array([]), {'DEPEND_0': 'time', 'UNITS': 'rad/s', 'LABLAXIS': '&omega;', 'VAR_TYPE': 'data'}],
-                        'v_group_mu':[np.array([]), {'DEPEND_0': 'time', 'UNITS': '1/s', 'LABLAXIS': 'v!Bg,&mu;!N', 'VAR_TYPE': 'data'}],
-                        'v_group_chi': [np.array([]), {'DEPEND_0': 'time', 'UNITS': '1/s', 'LABLAXIS': 'v!Bg,&chi;!N', 'VAR_TYPE': 'data'}]
+                        'v_group_mu':[np.array([]), {'DEPEND_0': 'time', 'UNITS': 'm/s', 'LABLAXIS': 'v!Bg,&mu;!N', 'VAR_TYPE': 'data'}],
+                        'v_group_chi': [np.array([]), {'DEPEND_0': 'time', 'UNITS': 'm/s', 'LABLAXIS': 'v!Bg,&chi;!N', 'VAR_TYPE': 'data'}]
                         }
 
     #################################################
@@ -69,8 +69,17 @@ def ray_equations_RK45_generator():
 
     # Format: [T, K_mu, K_chi, K_phi, Mu, Chi, Phi, Omega]
     Solution = [[] for i in range(8)]
-    UpSolution = RayEquationsClasses().ray_equation_RK45_solver(t_span=RayEquationToggles.RK45_tspan_up[0:2], s0=s0, k_perp_0=k_perp_0)
-    DownSolution = RayEquationsClasses().ray_equation_RK45_solver(t_span=RayEquationToggles.RK45_tspan_down[0:2], s0=s0, k_perp_0=k_perp_0)
+    UpSolution = RayEquationsClasses().ray_equation_RK45_solver(t_span=RayEquationToggles.RK45_tspan_up[0:2],
+                                                                s0=s0,
+                                                                k_perp_0=k_perp_0,
+                                                                t_eval=RayEquationToggles.RK45_Teval_up,
+                                                                )
+
+    DownSolution = RayEquationsClasses().ray_equation_RK45_solver(t_span=RayEquationToggles.RK45_tspan_down[0:2],
+                                                                  s0=s0,
+                                                                  k_perp_0=k_perp_0,
+                                                                  t_eval=RayEquationToggles.RK45_Teval_down,
+                                                                  )
 
     # Combine the two solutions into one
     for i in range(len(Solution)):
@@ -108,9 +117,9 @@ def ray_equations_RK45_generator():
     data_dict_output['omega'][0] = np.array(Omega)
     data_dict_output['omega_calc'][0] = data_dict_output['k_mu'][0] * V_A(Mu,Chi)/np.sqrt(1 + np.square(data_dict_output['k_perp'][0]*lmb_e(Mu,Chi)))
 
-
     # calculate the parallel group velocity
-    data_dict_output['']
+    data_dict_output['v_group_mu'][0] = (data_dict_output['omega'][0]/data_dict_output['k_mu'][0])
+    data_dict_output['v_group_chi'][0] = (data_dict_output['omega'][0]/data_dict_output['k_chi'][0])
 
     # add the parallel/perp wavelength
     data_dict_output = {**data_dict_output,

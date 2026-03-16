@@ -12,7 +12,7 @@ class RayEquationToggles:
 
     # --- Up the Field Line ---
     RK45_N_eval_points_up = 500
-    RK45_tspan_up = [0, 100, RK45_N_eval_points_up]  # time range (in seconds)
+    RK45_tspan_up = [0, 4, RK45_N_eval_points_up]  # time range (in seconds)
     RK45_Teval_up = np.linspace(*RK45_tspan_up)
 
     # --- Down the Field Line ---
@@ -26,7 +26,7 @@ class RayEquationToggles:
 
     # --- WAVE INITIAL CONDITIONS ---
     # Initial Wave Frequency
-    f_0 = 8
+    f_0 = 4
     omega0 = 2 * np.pi * f_0  # in Hz
 
     # Initial Wave Position
@@ -41,7 +41,7 @@ class RayEquationToggles:
     phi0_w = np.radians(phi0_w)
 
     # Wavelength in the ionosphere
-    Lambda_perp0 = 2.5 * 1000  # perpendicular wavelength (in meters) AT THE IONOSPHERE
+    Lambda_perp0 = 4 * 1000  # perpendicular wavelength (in meters) AT THE IONOSPHERE
     perp_ratio = 1.1  # what % of the initial lambda_perp is lambda_phi
 
     # --- File I/O ---

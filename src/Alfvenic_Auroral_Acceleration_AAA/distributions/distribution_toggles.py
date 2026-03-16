@@ -36,9 +36,9 @@ class DistributionToggles:
     v_perp_space_obs = np.linspace(0, para_space_temp[-1], N_vel_space)
 
     # Observation Altitude
-    Observation_altitudes = [500, 1000,2000,3000,4000,5000,6000,7000,8000,9000,10000,12500,15000, 17500, 20000]
+    # Observation_altitudes = [500, 1000,2000,3000,4000,5000,6000,7000,8000,9000,10000,12500,15000, 17500, 20000]
     # Observation_altitudes = [1500, 2500, 3500, 4500, 5500, 6500, 7500, 8500, 9500]
-    # Observation_altitudes = [9500]
+    Observation_altitudes = [500]
     z0_obs = 3000  # Doesn't matter what this is set to, it will be overwritten
 
     # ESA particle sampling
