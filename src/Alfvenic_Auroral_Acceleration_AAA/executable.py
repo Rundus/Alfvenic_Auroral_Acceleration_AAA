@@ -1,6 +1,6 @@
 # --- executable.py ---
 # --- Author: C. Feltman ---
-# DESCRIPTION: regenerate the IONOSPHERE plasma environment toggles
+# DESCRIPTION: execute the AAA code
 
 #################
 # --- IMPORTS ---
