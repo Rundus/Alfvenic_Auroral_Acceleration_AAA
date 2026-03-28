@@ -37,10 +37,6 @@ for altitude_val in DistributionToggles.Observation_altitudes:
 
     ExecutableClasses().check_obs_altitude()
 
-    print('-----------------------')
-    print(stl.color.RED + f'--- Altitude {DistributionToggles.z0_obs} km ---' + stl.color.END)
-    print('-----------------------')
-
     # re-run everything
     if dict_executable['regen_EVERYTHING']==1:
         for key in dict_executable.keys():
@@ -66,8 +62,18 @@ for altitude_val in DistributionToggles.Observation_altitudes:
 
     if dict_executable['regen_wave_fields']==1:
         print('\n--- Calculating Wave Fields ---',end='\n')
-        from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_generator import wave_fields_generator
+        # from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_generator import wave_fields_generator
+        # wave_fields_generator()
+
+        from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_generator_new import wave_fields_generator
         wave_fields_generator()
+
+
+    if np.any([dict_executable['regen_particle_distributions'],dict_executable['regen_flux_calculation'],dict_executable['regen_field_particle_correlation'],dict_executable['regen_field_particle_correlation']]):
+        print('-----------------------')
+        print(stl.color.RED + f'--- Altitude {DistributionToggles.z0_obs} km ---' + stl.color.END)
+        print('-----------------------')
+
 
     if dict_executable['regen_particle_distributions'] == 1:
         print('\n--- Calculating Liouville Mapping ---',end='\n')

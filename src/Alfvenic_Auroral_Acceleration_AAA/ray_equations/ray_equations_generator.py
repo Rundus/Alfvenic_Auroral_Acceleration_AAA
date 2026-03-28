@@ -110,6 +110,7 @@ def ray_equations_RK45_generator():
     data_dict_output['phi_w_deg'][0] = np.array(np.degrees(deepcopy(Solution[6])))
     Mu, Chi, Omega = Solution[4], Solution[5], Solution[7]
     data_dict_output['k_perp'][0] = np.array([RayEquationsClasses().calc_k_perp(Mu[i],Chi[i], k_perp_0) for i in range(len(Mu))])
+    # data_dict_output['k_perp'][0] = np.array([RayEquationsClasses().calc_k_perp(Mu[i], Chi[i], [k_perp_0 for i in range(len(Mu))], Solution[1][i], Omega[i]) for i in range(len(Mu))])
     data_dict_output['colat'][0] = SimClasses.theta_muChi(Mu,Chi)
     data_dict_output['lat'][0] = 90 - deepcopy(data_dict_output['colat'][0])
     data_dict_output['r'][0] = SimClasses.r_muChi(Mu,Chi)

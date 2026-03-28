@@ -1,4 +1,6 @@
 import numpy as np
+
+from Alfvenic_Auroral_Acceleration_AAA.ray_equations.practice.sympy.constructing_big_functions import lmb_e
 from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
 from scipy.integrate import solve_ivp
 from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_classes import SimClasses
@@ -21,8 +23,10 @@ class RayEquationsClasses:
         self.B_dipole = envDict['B_dipole']
         self.B0 = self.B_dipole(RayEquationToggles.u0_w, RayEquationToggles.chi0_w)
 
+    # def calc_k_perp(self, mu, chi, k_perp_0, k_mu, omega):
     def calc_k_perp(self, mu, chi, k_perp_0):
         return np.sqrt((self.B_dipole(mu,chi)/self.B0))*k_perp_0
+        return (1/self.lmb_e(mu,chi)) * np.sqrt((self.V_A(mu,chi)*k_mu / (omega)) - 1)
 
     def ray_equations_ODE(self, t, S, k_perp_0):
 
@@ -30,7 +34,7 @@ class RayEquationsClasses:
         k_mu, k_chi, k_phi, mu, chi, phi, omega = S[0], S[1], S[2], S[3], S[4], S[5], S[6]
 
         # Calculate the current k_perp
-        k_perp = self.calc_k_perp(mu, chi, k_perp_0)
+        k_perp = self.calc_k_perp(mu,chi, k_perp_0)
 
         ########################
         # --- Ray equation 1 ---
@@ -77,8 +81,18 @@ class RayEquationsClasses:
 
     # --- Upper Boundary on Solution ---
     def wave_upper_boundry(self, t, S, k_perp_0):
-        alt = stl.Re * (SimClasses.r_muChi(S[3], RayEquationToggles.chi0_w) - 1)
-        return alt - RayEquationToggles.upper_boundary
+        k_mu, k_chi, k_phi, mu, chi, phi, omega = S[0], S[1], S[2], S[3], S[4], S[5], S[6]
+        alt = stl.Re * (SimClasses.r_muChi(mu, chi) - 1)
+
+        alt_thresh = alt - RayEquationToggles.upper_boundary
+        eikonel_thresh = np.degrees(k_mu*alt*stl.m_to_km - 0*omega)%180
+
+        return alt_thresh
+
+        # if alt_thresh >= 0 and eikonel_thresh == 0:
+        #     return 0
+        # else:
+        #     return 1
     wave_upper_boundry.terminal = True
 
     # --- Run the Solver and Plot it ---
@@ -105,4 +119,5 @@ class RayEquationsClasses:
         Chi = soln.y[4, :]
         Phi = soln.y[5,:]
         Omega = soln.y[6,:]
+        print(soln.message)
         return [T, K_mu, K_chi, K_phi, Mu, Chi, Phi, Omega]

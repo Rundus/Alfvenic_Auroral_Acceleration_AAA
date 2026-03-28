@@ -7,17 +7,17 @@ class RayEquationToggles:
     # --- RK45 solver toggles ---
     RK45_method = 'RK45'
     # RK45_method = 'LSODA'
-    RK45_rtol = 1E-10  # controls the relative accuracy. If rtol
+    RK45_rtol = 1E-10  # controls the relative accuracy.
     RK45_atol = 1E-15  # controls the absolute accuracy
 
     # --- Up the Field Line ---
-    RK45_N_eval_points_up = 500
-    RK45_tspan_up = [0, 4, RK45_N_eval_points_up]  # time range (in seconds)
+    RK45_N_eval_points_up = 3000
+    RK45_tspan_up = [0, 3, RK45_N_eval_points_up]  # time range (in seconds)
     RK45_Teval_up = np.linspace(*RK45_tspan_up)
 
     # --- Down the Field Line ---
-    RK45_N_eval_points_down = 200
-    RK45_tspan_down = [0, -0.5, RK45_N_eval_points_down]  # time range (in seconds)
+    RK45_N_eval_points_down = 1000
+    RK45_tspan_down = [0, -3.5, RK45_N_eval_points_down]  # time range (in seconds)
     RK45_Teval_down = np.linspace(*RK45_tspan_down)
 
     # --- Ray Equation Simulation Boundaries ---

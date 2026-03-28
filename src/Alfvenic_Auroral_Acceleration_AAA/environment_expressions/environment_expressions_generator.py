@@ -38,14 +38,14 @@ def environment_expressions_generator():
     ########################################
 
     # PLASMA NUMBER DENSITY
-    if EnvironmentExpressionsToggles.environment_expression_dict['chaston2006']:
+    if EnvironmentExpressionsToggles().environment_expression_dict['chaston2006']:
         n_Hp_density = (stl.cm_to_m**3)*(0.1 + 10*sp.sqrt(stl.Re/(400*z)) + 100*(z)*sp.exp(-z/280)) # for z in km
         n_Op_density = (stl.cm_to_m**3)*(400*stl.Re*z*sp.exp(-z/175)) # for z in km
-    elif EnvironmentExpressionsToggles.environment_expression_dict['shroeder2021']:
+    elif EnvironmentExpressionsToggles().environment_expression_dict['shroeder2021']:
         n_e = (stl.cm_to_m**3)*((6E4)*sp.exp(-(z-318)/383) + (1.34E7)*(z**(-1.55)))
         n_Op_density = n_e*0.5*(1 - sp.tanh((z-2370)/1800))
         n_Hp_density = n_e - n_Op_density
-    elif EnvironmentExpressionsToggles.environment_expression_dict['chaston2003_nightside']:
+    elif EnvironmentExpressionsToggles().environment_expression_dict['chaston2003_nightside']:
 
         # parameters for [Oxygen+, H+]
         nM = [0, 1]
@@ -69,7 +69,7 @@ def environment_expressions_generator():
         n_E = nE[i] * sp.exp(-1 * (z - Ealt[i]) ** 2 / (wE[i] ** 2))
         n_F = nF[i] * (z - F0[i]) * sp.exp(-1 * ((z - F0[i]) / alpha_[i]) ** (eta[i]))
         n_Hp_density = (stl.cm_to_m ** 3) * (n_mag + n_E + n_F)
-    elif EnvironmentExpressionsToggles.environment_expression_dict['chaston2003_cusp']:
+    elif EnvironmentExpressionsToggles().environment_expression_dict['chaston2003_cusp']:
         # parameters for [Oxygen+, H+]
         nM = [0, 1]
         gamma_ = [0, 0.5]
@@ -270,7 +270,7 @@ def environment_expressions_generator():
     # --- INDICATE WHICH MODEL WAS USED ---
     #######################################
     # create a JSON file that specifies which density model was used to generate the pickle files
-    which_density_model = [key for key in EnvironmentExpressionsToggles.environment_expression_dict.keys() if EnvironmentExpressionsToggles.environment_expression_dict[key]][0]
+    which_density_model = [key for key in EnvironmentExpressionsToggles().environment_expression_dict.keys() if EnvironmentExpressionsToggles().environment_expression_dict[key]][0]
     config_dict = {'density_model':which_density_model}
     folder_path = f'{SimToggles.sim_root_path}/environment_expressions/pickled_expressions/'
     outpath = f'{folder_path}/model_config.json'

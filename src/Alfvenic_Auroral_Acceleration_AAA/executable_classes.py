@@ -83,6 +83,3 @@ class ExecutableClasses:
             json.dump(config_dict, outfile, indent=3)
 
         return
-
-
-ExecutableClasses().check_density_model()
