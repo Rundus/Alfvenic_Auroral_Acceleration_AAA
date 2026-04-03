@@ -216,6 +216,13 @@ def environment_expressions_generator():
     for key, item in expression_dict.items():
         n_total_function = n_total_function.subs({item[0]:item[1]})
 
+    # gradient in density along mu-direction
+    diff_n_total_mu = sp.diff(n_total_function, mu)
+
+
+    # gradient in VA along mu-direction
+    diff_VA_mu = sp.diff(V_A, mu)
+
     # weighted ion mass
     rho_function = m_Op*n_Op_function + m_Hp*n_Hp_function
     m_eff_function = rho_function/(m_Op + m_Hp)
@@ -239,6 +246,8 @@ def environment_expressions_generator():
     func_h_mu = lambdify([mu, chi], h_mu, modules="numpy")
     func_h_chi = lambdify([mu, chi], h_chi, modules="numpy")
     func_h_phi = lambdify([mu, chi], h_phi, modules="numpy")
+    func_pDD_n_density_mu = lambdify([mu,chi], diff_n_total_mu,modules="numpy")
+    func_pDD_V_A_mu = lambdify([mu, chi], diff_VA_mu, modules="numpy")
     funcs = {'lmb_e': func_lmb_e,
              'pDD_lmb_e_mu': func_pDD_mu_lmb_e,
              'pDD_lmb_e_chi': func_pDD_chi_lmb_e,
@@ -254,7 +263,10 @@ def environment_expressions_generator():
              'n_density':func_n_density,
              'meff':func_meff,
              'rho':func_rho,
-             'dB_dipole_dmu':func_pDD_mu_Bgeo}
+             'dB_dipole_dmu':func_pDD_mu_Bgeo,
+             'pDD_n_density_mu':func_pDD_n_density_mu,
+             'pDD_V_A_mu':func_pDD_V_A_mu,
+             }
 
     ###################
     # PICKLE EVERYTHING

@@ -19,6 +19,36 @@ def wave_fields_generator():
     data_dict_ray_eqns = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/ray_equations/ray_equations.cdf')[0])
     data_dict_plasEvrn = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/plasma_environment/plasma_environment.cdf')[0])
 
+    # prepare the output
+    data_dict_output = {
+        'time': [np.array(deepcopy(data_dict_ray_eqns['time'][0])),deepcopy(data_dict_ray_eqns['time'][1])],
+        'mu_w': deepcopy(data_dict_ray_eqns['mu_w']),
+        'chi_w': deepcopy(data_dict_ray_eqns['chi_w']),
+        'z': deepcopy(data_dict_ray_eqns['z']),
+        'eikonel' : [[], {'DEPEND_0': 'time','DEPEND_1':'z', 'UNITS': 'rad', 'LABLAXIS': 'eikonel', 'VAR_TYPE': 'data'}],
+        'eikonel_deg': [[],{'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': 'rad', 'LABLAXIS': 'eikonel', 'VAR_TYPE': 'data'}],
+        'modFunc': [[], {'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': None, 'LABLAXIS': 'modFunc', 'VAR_TYPE': 'data'}],
+        'cos_eikonel': [[], {'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': None, 'LABLAXIS': 'cos(eikonel)', 'VAR_TYPE': 'data'}],
+        'E_perp_waveform': [[], {'DEPEND_0': 'time','DEPEND_1':'z', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&perp;!N', 'VAR_TYPE': 'data'}],
+        'E_mu_waveform': [[],{'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&mu;!N', 'VAR_TYPE': 'data'}],
+        'B_perp_waveform': [[],{'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': 'nT', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],
+        'E_perp_amplitude': [[], {'DEPEND_0': 'time', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&perp;!N', 'VAR_TYPE': 'data'}],
+        'B_perp_amplitude': [[], {'DEPEND_0': 'time', 'UNITS': 'nT', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],
+        'E_mu_amplitude': [[], {'DEPEND_0': 'time', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&mu;!N', 'VAR_TYPE': 'data'}],
+        'resonance_low': [[],{'DEPEND_0': 'z', 'UNITS': 'eV', 'LABLAXIS': 'Resonance Low', 'VAR_TYPE': 'data'}],
+        'resonance_high': [[], {'DEPEND_0': 'z',  'UNITS': 'eV', 'LABLAXIS': 'Resonance High', 'VAR_TYPE': 'data'}],
+        'DAW_velocity_eV':[[],{'DEPEND_0': 'z',  'UNITS': 'eV', 'LABLAXIS': 'DAW Velocity', 'VAR_TYPE': 'data'}],
+        'DAW_velocity': [[], {'DEPEND_0': 'z', 'UNITS': 'm/s', 'LABLAXIS': 'DAW Velocity', 'VAR_TYPE': 'data'}],
+    }
+
+    # Calculate the resonance window
+    # potential_para_max = np.array([np.max(np.abs(data_dict_output['potential_mu'][0][i])) for i in range(len(data_dict_output['potential_mu'][0]))])
+    DAW_vel = data_dict_ray_eqns['omega'][0]/deepcopy(data_dict_ray_eqns['k_mu'][0])
+    # data_dict_output['resonance_high'][0] = 0.5*(stl.m_e/stl.q0)*np.square(DAW_vel + np.sqrt(2*stl.q0*potential_para_max/stl.m_e))
+    # data_dict_output['resonance_low'][0] = 0.5*(stl.m_e/stl.q0)*np.square((DAW_vel - np.sqrt(2 * stl.q0 * potential_para_max / stl.m_e)))
+    data_dict_output['DAW_velocity_eV'][0] = 0.5*(stl.m_e/stl.q0)*np.square(DAW_vel)
+    data_dict_output['DAW_velocity'][0] = DAW_vel
+
     # Calculate the Field amplitudes
     alt_idx = np.abs(data_dict_ray_eqns['z'][0] - 500).argmin() # find the index of where Z0 occurs in altitude
 
@@ -53,14 +83,15 @@ def wave_fields_generator():
     #     print('lead idx',lead_idx)
     #
     #     # update the altitude threshold by the amount travelled by the wave in the n+1 step
+    #     phase_speed = data_dict_output['DAW_velocity'][0][alt_idx]
     #     if tmeIdx == 0:
-    #         alt_thresh = data_dict_ray_eqns['z'][0][lead_idx] - data_dict_ray_eqns['v_group_mu'][0][lead_idx] * data_dict_ray_eqns['time'][0][tmeIdx]/stl.m_to_km
+    #         alt_thresh = data_dict_ray_eqns['z'][0][lead_idx] - phase_speed * data_dict_ray_eqns['time'][0][tmeIdx]/stl.m_to_km
     #     elif tmeIdx == len(data_dict_ray_eqns['time'][0])-1:
     #         deltaT = data_dict_ray_eqns['time'][0][tmeIdx] - data_dict_ray_eqns['time'][0][tmeIdx-1]
-    #         alt_thresh -= deltaT * data_dict_ray_eqns['v_group_mu'][0][lead_idx]/stl.m_to_km
+    #         alt_thresh -= deltaT * phase_speed/stl.m_to_km
     #     else:
     #         deltaT = data_dict_ray_eqns['time'][0][tmeIdx+1] - data_dict_ray_eqns['time'][0][tmeIdx]
-    #         alt_thresh -= deltaT*data_dict_ray_eqns['v_group_mu'][0][lead_idx]/stl.m_to_km
+    #         alt_thresh -= deltaT*phase_speed/stl.m_to_km
     #     print('alt thresh',alt_thresh)
     #
     #     # --- BACK OF WAVE ---
@@ -72,45 +103,16 @@ def wave_fields_generator():
     #     print('follow idx',follow_idx)
     #
     #     modFunc[tmeIdx,follow_idx+1:lead_idx] = 1
-    #
-    # E_perp_waveform = modFunc*E_perp_waveform
-    # E_mu_waveform = modFunc*E_mu_waveform
-    # B_perp_waveform = modFunc*B_perp_waveform
 
-
-
-    # prepare the output
-    data_dict_output = {
-        'time': [np.array(deepcopy(data_dict_ray_eqns['time'][0])),deepcopy(data_dict_ray_eqns['time'][1])],
-        'mu_w': deepcopy(data_dict_ray_eqns['mu_w']),
-        'chi_w': deepcopy(data_dict_ray_eqns['chi_w']),
-        'z': deepcopy(data_dict_ray_eqns['z']),
-        'eikonel' : [np.array(eikonel), {'DEPEND_0': 'time','DEPEND_1':'z', 'UNITS': 'rad', 'LABLAXIS': 'eikonel', 'VAR_TYPE': 'data'}],
-        'eikonel_deg': [(180/np.pi)*np.array(eikonel)%360,{'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': 'rad', 'LABLAXIS': 'eikonel', 'VAR_TYPE': 'data'}],
-        'modFunc': [np.array(modFunc), {'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': None, 'LABLAXIS': 'modFunc', 'VAR_TYPE': 'data'}],
-        'cos_eikonel': [np.array(np.cos(eikonel)), {'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': None, 'LABLAXIS': 'cos(eikonel)', 'VAR_TYPE': 'data'}],
-        'E_perp_waveform': [np.array(E_perp_waveform), {'DEPEND_0': 'time','DEPEND_1':'z', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&perp;!N', 'VAR_TYPE': 'data'}],
-        'E_mu_waveform': [np.array(E_mu_waveform),{'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&mu;!N', 'VAR_TYPE': 'data'}],
-        'B_perp_waveform': [np.array(B_perp_waveform)/1E-9,{'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': 'nT', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],
-        'E_perp_amplitude': [np.array(E_perp_amplitude), {'DEPEND_0': 'time', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&perp;!N', 'VAR_TYPE': 'data'}],
-        'B_perp_amplitude': [np.array(B_perp_amplitude)/(1E-9), {'DEPEND_0': 'time', 'UNITS': 'nT', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],
-        'E_mu_amplitude': [np.array(E_mu_amplitude), {'DEPEND_0': 'time', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&mu;!N', 'VAR_TYPE': 'data'}],
-        # 'potential_perp': [np.array(PotentialPerp), {'DEPEND_0': 'time','DEPEND_1':'alt_grid', 'UNITS': 'V', 'LABLAXIS': 'Perpendicular Potential', 'VAR_TYPE': 'data'}],
-        # 'potential_mu': [np.array(PotentialPara), {'DEPEND_0': 'time', 'DEPEND_1': 'alt_grid', 'UNITS': 'V', 'LABLAXIS': 'Parallel Potential', 'VAR_TYPE': 'data'}],
-        'resonance_low': [[],{'DEPEND_0': 'z', 'UNITS': 'eV', 'LABLAXIS': 'Resonance Low', 'VAR_TYPE': 'data'}],
-        'resonance_high': [[], {'DEPEND_0': 'z',  'UNITS': 'eV', 'LABLAXIS': 'Resonance High', 'VAR_TYPE': 'data'}],
-        'DAW_velocity_eV':[[],{'DEPEND_0': 'z',  'UNITS': 'eV', 'LABLAXIS': 'DAW Velocity', 'VAR_TYPE': 'data'}],
-        'DAW_velocity': [[], {'DEPEND_0': 'z', 'UNITS': 'm/s', 'LABLAXIS': 'DAW Velocity', 'VAR_TYPE': 'data'}],
-        # 'mu_ponyting_flux': [np.array(Eperp)*np.array(Bperp)/stl.u0,{'DEPEND_0': 'z', 'UNITS': 'W/m!A2!N', 'LABLAXIS': 'Poynting Flux', 'VAR_TYPE': 'data'}]
-    }
-
-    # Calculate the resonance window
-    # potential_para_max = np.array([np.max(np.abs(data_dict_output['potential_mu'][0][i])) for i in range(len(data_dict_output['potential_mu'][0]))])
-    # DAW_vel = data_dict_ray_eqns['omega'][0]/deepcopy(data_dict_ray_eqns['k_mu'][0])
-    # data_dict_output['resonance_high'][0] = 0.5*(stl.m_e/stl.q0)*np.square(DAW_vel + np.sqrt(2*stl.q0*potential_para_max/stl.m_e))
-    # data_dict_output['resonance_low'][0] = 0.5*(stl.m_e/stl.q0)*np.square((DAW_vel - np.sqrt(2 * stl.q0 * potential_para_max / stl.m_e)))
-    # data_dict_output['DAW_velocity_eV'][0] = 0.5*(stl.m_e/stl.q0)*np.square(DAW_vel)
-    # data_dict_output['DAW_velocity'][0] = DAW_vel
+    data_dict_output['eikonel'][0] = eikonel
+    data_dict_output['cos_eikonel'][0] = np.cos(eikonel)
+    # data_dict_output['E_perp_waveform'][0] = E_perp_waveform*modFunc
+    data_dict_output['E_perp_waveform'][0] = E_perp_waveform
+    # data_dict_output['E_mu_waveform'][0] = E_mu_waveform * modFunc
+    data_dict_output['E_mu_waveform'][0] = E_mu_waveform
+    # data_dict_output['B_perp_waveform'][0] = B_perp_waveform * modFunc
+    data_dict_output['B_perp_waveform'][0] = B_perp_waveform
+    data_dict_output['modFunc'][0] = modFunc
 
     ################
     # --- OUTPUT ---

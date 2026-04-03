@@ -1,7 +1,7 @@
 
 dict_executable = {
     'regen_EVERYTHING': 0,
-    'regen_environment_expressions':1,
+    'regen_environment_expressions':0,
     'regen_ray_equations': 1,
     'regen_plasma_environment':1,
     'regen_wave_fields': 1,
