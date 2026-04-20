@@ -26,7 +26,7 @@ class RayEquationToggles:
 
     # --- WAVE INITIAL CONDITIONS ---
     # Initial Wave Frequency
-    f_0 = 1
+    f_0 = 5
     omega0 = 2 * np.pi * f_0  # in Hz
 
     # Initial Wave Position

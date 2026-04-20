@@ -22,7 +22,6 @@ def plasma_environment_generator():
     from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_toggles import SimToggles
     data_dict_ray_eqns = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/ray_equations/*.cdf*')[0])
 
-
     # prepare the output
     data_dict_output = {
                         'time': deepcopy(data_dict_ray_eqns['time']),
@@ -39,6 +38,7 @@ def plasma_environment_generator():
                         'pDD_lambda_e_chi': [[], {'DEPEND_0': 'time', 'UNITS': 'm', 'LABLAXIS': 'd&lambda;!Be!N/d&chi;', 'VAR_TYPE': 'data'}],
 
                         'pDD_V_A_mu': [[], {'DEPEND_0': 'time', 'UNITS': 'm/s', 'LABLAXIS': 'dV_A/d&mu;', 'VAR_TYPE': 'data'}],
+                        'pDD_V_A_z': [[], {'DEPEND_0': 'time', 'UNITS': 'm/s/m', 'LABLAXIS': 'dV_A/d&z;', 'VAR_TYPE': 'data'}],
                         'pDD_V_A_chi': [[], {'DEPEND_0': 'time', 'UNITS': 'm/s', 'LABLAXIS': 'dV_A/d&chi;', 'VAR_TYPE': 'data'}],
 
                         'dB_dipole_dmu' : [[], {'DEPEND_0': 'time','UNITS': 'T','LABLAXIS':'dB_dipole_dmu', 'VAR_TYPE':'data'}],
@@ -50,6 +50,10 @@ def plasma_environment_generator():
                         'B_dipole':[[],{}],
                         'meff': [[], {}],
                         'n_density': [[], {}],
+                        'pDD_n_density_mu': [[], {}],
+                        'pDD_n_density_z': [[], {'DEPEND_0': 'time','UNITS': 'm^-3 / m','LABLAXIS':'dn/dz', 'VAR_TYPE':'data'}],
+                        'WKB_density_scale_length' : [[],{'DEPEND_0': 'z','UNITS': 'm','LABLAXIS':'n/ (dn/dz)', 'VAR_TYPE':'data'}],
+                        'WKB_VA_scale_length': [[], {'DEPEND_0': 'z', 'UNITS': 'm', 'LABLAXIS': 'V!BA!N/ (dV!BA!N/dz)', 'VAR_TYPE': 'data'}],
                         'n_Op': [[], {}],
                         'n_Hp': [[], {}],
                         'rho': [[], {}],
@@ -83,6 +87,13 @@ def plasma_environment_generator():
         data_dict_output = {**data_dict_output, **{f'grid_{key}': [func(PlasmaEnvironmentToggles.mu_grid, PlasmaEnvironmentToggles.chi_grid), {'DEPEND_0':'mu', 'DEPEND_1':'chi'}]}}
 
 
+    ##########################################
+    # CONSTRUCT THE WKB EVALUATION VARIABLES #
+    ##########################################
+    data_dict_output['pDD_n_density_z'][0] = np.gradient(deepcopy(data_dict_output['n_density'][0]),stl.m_to_km*deepcopy(data_dict_output['z'][0]))
+    data_dict_output['WKB_density_scale_length'][0] = data_dict_output['n_density'][0] / data_dict_output['pDD_n_density_z'][0]
+    data_dict_output['pDD_V_A_z'][0] = np.gradient(deepcopy(data_dict_output['V_A'][0]), stl.m_to_km*deepcopy(data_dict_output['z'][0]))
+    data_dict_output['WKB_VA_scale_length'][0] = data_dict_output['V_A'][0] / data_dict_output['pDD_V_A_z'][0]
 
     ################
     # --- OUTPUT ---

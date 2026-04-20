@@ -45,8 +45,6 @@ class EnvironmentExpressionsClasses:
                 dB_dipole_dmu = func
             elif 'pDD_n_density_mu' in file_nam:
                 pDD_n_density_mu = func
-            elif 'pDD_V_A_mu' in file_nam:
-                pDD_V_A_mu = func
 
         funcs = {'lambda_e': lmb_e,
                  'pDD_lambda_e_mu': pDD_mu_lmb_e,
@@ -65,7 +63,6 @@ class EnvironmentExpressionsClasses:
                  'rho': rho,
                  'dB_dipole_dmu':dB_dipole_dmu,
                  'pDD_n_density_mu': pDD_n_density_mu,
-                 'pDD_V_A_mu': pDD_V_A_mu,
                  }
 
         return funcs
