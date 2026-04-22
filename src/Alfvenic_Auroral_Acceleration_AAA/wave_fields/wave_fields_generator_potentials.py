@@ -29,7 +29,7 @@ def wave_fields_generator():
         'E_perp': [[], {'DEPEND_0': 'time','DEPEND_1':'z', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&perp;!N', 'VAR_TYPE': 'data'}],
         'E_mu': [[],{'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&mu;!N', 'VAR_TYPE': 'data'}],
         'B_perp': [[],{'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': 'nT', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],
-        'Az': [[], {'DEPEND_0': 'time','DEPEND_1':'z', 'UNITS': 'Wb/m', 'LABLAXIS': 'E!B&perp;!N', 'VAR_TYPE': 'data'}],
+        'Az': [[], {'DEPEND_0': 'time','DEPEND_1':'z', 'UNITS': 'Wb/m', 'LABLAXIS': 'A!Bz;!N', 'VAR_TYPE': 'data'}],
         'Phi': [[], {'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': 'V', 'LABLAXIS': '&Phi;', 'VAR_TYPE': 'data'}],
         'resonance_low': [[],{'DEPEND_0': 'z', 'UNITS': 'eV', 'LABLAXIS': 'Resonance Low', 'VAR_TYPE': 'data'}],
         'resonance_high': [[], {'DEPEND_0': 'z',  'UNITS': 'eV', 'LABLAXIS': 'Resonance High', 'VAR_TYPE': 'data'}],
@@ -65,7 +65,7 @@ def wave_fields_generator():
     simDeltaT = np.linspace(0,sim_length,N_points_time)
 
     # --- form the solution arrays ---
-    Az = np.zeros(shape=(N_points_time,N_alt))
+    Az = np.zeros(shape=(N_points_time, N_alt))
     Phi = np.zeros(shape=(N_points_time, N_alt))
 
     # --- Form the boundary condition values ---
@@ -112,14 +112,14 @@ def wave_fields_generator():
     # ==================================================
     # 3. BOUNDARY PARAMETERS (ORIGINAL PROBLEM)
     # ==================================================
-    Sigma_P = 0
-    Sigma_A = 0
+    Sigma_P = 1
+    Sigma_A = 1
 
     sigma_P = 4 * np.pi * Sigma_P / stl.lightSpeed
     sigma_A = 4 * np.pi * Sigma_A / stl.lightSpeed
 
     def Phi0(t):
-        if t > (1 / freq_driver):
+        if t >= (1 / freq_driver):
             return 0
         else:
             return Phi0_driver*np.sin(2 * np.pi * freq_driver * t)  # sinusoidal driver
@@ -167,23 +167,14 @@ def wave_fields_generator():
         # ==================================================
         # LEFT BOUNDARY (A + sigma_P Phi = 0)
         # ==================================================
-        wp[0] = (
-                        -wm[0] * (1 / np.sqrt(alpha[0]) + sigma_P / np.sqrt(beta[0]))
-                ) / (
-                        1 / np.sqrt(alpha[0]) - sigma_P / np.sqrt(beta[0])
-                )
+        wp[0] = (-wm[0] * (1 / np.sqrt(alpha[0]) + sigma_P / np.sqrt(beta[0]))) / (1 / np.sqrt(alpha[0]) - sigma_P / np.sqrt(beta[0]))
 
         # ==================================================
         # RIGHT BOUNDARY (impedance + sinusoidal drive)
         # ==================================================
 
         # impedance-consistent outgoing solution
-        wm_imp = (
-                         - wp[-1] * (1 / np.sqrt(alpha[-1]) - sigma_A / np.sqrt(beta[-1]))
-                         - 2 * sigma_A * 0.0
-                 ) / (
-                         1 / np.sqrt(alpha[-1]) + sigma_A / np.sqrt(beta[-1])
-                 )
+        wm_imp = (- wp[-1] * (1 / np.sqrt(alpha[-1]) - sigma_A / np.sqrt(beta[-1]))- 2 * sigma_A * 0.0) / (1 / np.sqrt(alpha[-1]) + sigma_A / np.sqrt(beta[-1]))
 
         # add controlled sinusoidal injection
         eta = 1
@@ -200,7 +191,7 @@ def wave_fields_generator():
     # ==================================================
     # 7. TIME INTEGRATION
     # ==================================================
-    t0, t1 = 0.0, 14.0
+    t0, t1 = 0.0, 3
 
     frames = 200
     t_eval = np.linspace(t0, t1, frames)
@@ -223,42 +214,40 @@ def wave_fields_generator():
 
     A = (wp + wm) / (2 * np.sqrt(alpha[:, None]))
     Phi = (wp - wm) / (2 * np.sqrt(beta[:, None]))
-
-    for thing in list(Phi):
-        print(thing)
-    print(np.shape(Phi))
-
-    # # ==================================================
-    # # 9. ANIMATION
-    # # ==================================================
-    # fig, ax = plt.subplots()
-    #
-    # line1, = ax.plot([], [], label="A")
-    # line2, = ax.plot([], [], label="Phi")
-    #
-    # ax.set_xlim(simAlts[0], simAlts[-1])
-    # ax.set_ylim(-5000, 5000)
-    # ax.legend()
-    #
-    # title = ax.set_title("")
-    #
-    # def update(i):
-    #     line1.set_data(z, A[:, i])
-    #     line2.set_data(z, Phi[:, i])
-    #     title.set_text(f"t = {sol.t[i]:.3f}")
-    #     return line1, line2, title
-    #
-    # anim = FuncAnimation(fig, update, frames=frames)
-    #
-    # anim.save("/home/connor/Desktop/final_characteristic_solver.gif",
-    #           writer=PillowWriter(fps=20))
-    #
-    # print("Saved: final_characteristic_solver.gif")
-
     data_dict_output['Az'][0] = A.T
     data_dict_output['Phi'][0] = Phi.T
     data_dict_output['z'][0] = z
     data_dict_output['time'][0] = sol.t
+    data_dict_output['E_mu'][0] = np.array([np.diff(vals, append=vals[-1]) / dz_fwd for vals in Phi.T])
+    data_dict_output['E_perp'][0] = k_perp * Phi.T
+    data_dict_output['B_perp'][0] = k_perp * A.T
+
+    # ==================================================
+    # 9. ANIMATION
+    # ==================================================
+    fig, ax = plt.subplots()
+
+    line1, = ax.plot([], [], label="A")
+    line2, = ax.plot([], [], label="Phi")
+
+    ax.set_xlim(simAlts[0], simAlts[-1])
+    ax.set_ylim(-5000, 5000)
+    ax.legend()
+
+    title = ax.set_title("")
+
+    def update(i):
+        line1.set_data(z, A[:, i])
+        line2.set_data(z, Phi[:, i])
+        title.set_text(f"t = {sol.t[i]:.3f}")
+        return line1, line2, title
+
+    anim = FuncAnimation(fig, update, frames=frames)
+
+    anim.save("/home/connor/Desktop/final_characteristic_solver.gif",
+              writer=PillowWriter(fps=20))
+
+    print("Saved: final_characteristic_solver.gif")
 
     # ==================================================
     # 10. OUTPUT DATA

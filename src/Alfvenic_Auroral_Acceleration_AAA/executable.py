@@ -64,7 +64,7 @@ for altitude_val in DistributionToggles.Observation_altitudes:
         print('\n--- Calculating Wave Fields ---',end='\n')
         # from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_generator import wave_fields_generator
         # from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_generator_eikonel import wave_fields_generator
-        from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_generator_leapfrog import wave_fields_generator
+        from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_generator_potentials import wave_fields_generator
 
         wave_fields_generator()
 
