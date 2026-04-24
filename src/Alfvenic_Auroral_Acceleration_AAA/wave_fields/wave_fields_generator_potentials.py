@@ -128,7 +128,7 @@ def wave_fields_generator():
         # ==================================================
         # LEFT BOUNDARY (A + sigma_P Phi = 0)
         # ==================================================
-        wp[0] = (-wm[0] * (1 / np.sqrt(alpha[0]) - (stl.u0*SIGMA_P) / np.sqrt(beta[0]))) / (1 / np.sqrt(alpha[0]) + (stl.u0*SIGMA_P) / np.sqrt(beta[0]))
+        # wp[0] = (-wm[0] * (1 / np.sqrt(alpha[0]) - (stl.u0*SIGMA_P) / np.sqrt(beta[0]))) / (1 / np.sqrt(alpha[0]) + (stl.u0*SIGMA_P) / np.sqrt(beta[0]))
 
         # ==================================================
         # RIGHT BOUNDARY (A - sigma_A*Phi = -sigma_A Phi(t))
@@ -173,9 +173,11 @@ def wave_fields_generator():
     data_dict_output['Phi'][0] = Phi.T
     data_dict_output['z'][0] = z
     data_dict_output['time'][0] = sol.t
-    data_dict_output['E_mu'][0] = np.array([-1*np.diff(vals, prepend=vals[0]) / dz_bwd for vals in Phi.T])/(1E-3)
+    data_dict_output['E_mu'][0] = np.array([-1*np.diff(vals, prepend=vals[0]) / dz_fwd for vals in Phi.T])/(1E-3)
     data_dict_output['E_perp'][0] = (k_perp * Phi.T)/(1E-3)
     data_dict_output['B_perp'][0] = (k_perp * A.T)/(1E-9)
+
+    # Calculate the total wave energy
 
     # ==================================================
     # 10. OUTPUT DATA

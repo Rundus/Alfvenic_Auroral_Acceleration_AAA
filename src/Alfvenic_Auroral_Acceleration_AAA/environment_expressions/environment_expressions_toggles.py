@@ -6,8 +6,8 @@ class EnvironmentExpressionsToggles:
     def __init__(self):
         self.environment_expression_dict ={
                 'chaston2006':False,
-                'shroeder2021':False,
-                'chaston2003_nightside':True,
+                'shroeder2021':True,
+                'chaston2003_nightside':False,
                 'chaston2003_cusp': False
             }
 
