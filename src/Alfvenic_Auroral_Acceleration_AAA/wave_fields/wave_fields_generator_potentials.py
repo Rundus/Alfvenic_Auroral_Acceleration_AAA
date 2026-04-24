@@ -12,22 +12,21 @@ def wave_fields_generator():
     from glob import glob
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_fields.wave_fields_classes import WaveFieldsClasses as WaveFieldsClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_classes import SimClasses
-    from tqdm import tqdm
-    from scipy.integrate import simpson
-    import multiprocessing as mp
+    from scipy.integrate import solve_ivp
+    import matplotlib.pyplot as plt
+    from matplotlib.animation import FuncAnimation, PillowWriter
 
     # --- Load the needed data ---
     data_dict_ray_eqns = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/ray_equations/ray_equations.cdf')[0])
-    data_dict_plasEvrn = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/plasma_environment/plasma_environment.cdf')[0])
 
     # prepare the output
     data_dict_output = {
         'time': [np.array(deepcopy(data_dict_ray_eqns['time'][0])),deepcopy(data_dict_ray_eqns['time'][1])],
         'mu_w': deepcopy(data_dict_ray_eqns['mu_w']),
         'chi_w': deepcopy(data_dict_ray_eqns['chi_w']),
-        'z': deepcopy(data_dict_ray_eqns['z']),
-        'E_perp': [[], {'DEPEND_0': 'time','DEPEND_1':'z', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&perp;!N', 'VAR_TYPE': 'data'}],
-        'E_mu': [[],{'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&mu;!N', 'VAR_TYPE': 'data'}],
+        'z': [[],{'DEPEND_0': None, 'UNITS': 'm', 'LABLAXIS': 'Alt', 'VAR_TYPE': 'data'}],
+        'E_perp': [[], {'DEPEND_0': 'time','DEPEND_1':'z', 'UNITS': 'mV/m', 'LABLAXIS': 'E!B&perp;!N', 'VAR_TYPE': 'data'}],
+        'E_mu': [[],{'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': 'mV/m', 'LABLAXIS': 'E!B&mu;!N', 'VAR_TYPE': 'data'}],
         'B_perp': [[],{'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': 'nT', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],
         'Az': [[], {'DEPEND_0': 'time','DEPEND_1':'z', 'UNITS': 'Wb/m', 'LABLAXIS': 'A!Bz;!N', 'VAR_TYPE': 'data'}],
         'Phi': [[], {'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': 'V', 'LABLAXIS': '&Phi;', 'VAR_TYPE': 'data'}],
@@ -41,63 +40,25 @@ def wave_fields_generator():
     from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
     envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
 
-    # --- Form the spatial simulation grid ---
-    N_alt = 1000
-    Rf = (1 + RayEquationToggles.upper_boundary/stl.Re)
-    Theta_at_zf = np.arcsin(np.sqrt(RayEquationToggles.chi0_w * Rf))
-    muF = -np.sqrt(np.cos(Theta_at_zf))/Rf
-
-    simMUs = np.linspace(RayEquationToggles.u0_w,muF, N_alt)
-    simChis = np.array([RayEquationToggles.chi0_w for i in range(N_alt)])
-    simAlts = (SimClasses.r_muChi(simMUs, simChis)-1)*stl.Re
-
-    # --- Form the temporal simulation grid ---
-    alpha = np.square(envDict['V_A'](simMUs, simChis)) / (1 + np.square(envDict['V_A'](simMUs, simChis)/stl.lightSpeed ))
-    lambda_e = envDict['lambda_e'](simMUs,simChis)
-    k_perp = (2*np.pi/RayEquationToggles.Lambda_perp0)* np.sqrt(envDict['B_dipole'](simMUs, simChis)/envDict['B_dipole'](RayEquationToggles.u0_w, RayEquationToggles.chi0_w))
-    beta = 1/(1 + np.square(k_perp*lambda_e))
-
-    s = np.sqrt(alpha*beta)
-    sim_length = 1 # in seconds
-    deltaTs = 0.89*np.diff(simAlts*stl.m_to_km)/np.max(s) # the CFL stability criteria requires deltaT <= deltaZ/max(s)
-    deltaT_stable = min(deltaTs)
-    N_points_time = int(sim_length/deltaT_stable)
-    simDeltaT = np.linspace(0,sim_length,N_points_time)
-
-    # --- form the solution arrays ---
-    Az = np.zeros(shape=(N_points_time, N_alt))
-    Phi = np.zeros(shape=(N_points_time, N_alt))
-
-    # --- Form the boundary condition values ---
-    SIGMA_P = 1 # in mhos
-    SIGMA_A = 1/(stl.u0*np.sqrt(alpha)) # Alfven conductance throughout entire simulation region
-    sigmaP = stl.u0*SIGMA_P
-    sigmaA = stl.u0*SIGMA_A[-1] # at the magnetosphere
-
-    # --- Create the driving Electrostatic Potential function ---
-
-    # sinusoid
-    Phi0_driver= 3600 # in eV
-    k_perp_driver = k_perp[-1]
-    freq_driver = 4 # in Hz
-    def driver_func(t, z, Phi0_driver, k_perp_driver,freq_driver):
-        if t >= 1/freq_driver:
-            return 0
-        else:
-            return (Phi0_driver)*np.sin(t*2*np.pi*freq_driver)
-
-
-    ###############################
-    # --- RK45 SOLVE THE SYSTEM ---
-    ###############################
-    import numpy as np
-    from scipy.integrate import solve_ivp
-    import matplotlib.pyplot as plt
-    from matplotlib.animation import FuncAnimation, PillowWriter
-
     # ==================================================
     # 1. NON-UNIFORM GRID
     # ==================================================
+    # --- Form the spatial simulation grid ---
+    N_alt = 1000
+    Rf = (1 + RayEquationToggles.upper_boundary / stl.Re)
+    Theta_at_zf = np.arcsin(np.sqrt(RayEquationToggles.chi0_w * Rf))
+    muF = -np.sqrt(np.cos(Theta_at_zf)) / Rf
+
+    simMUs = np.linspace(RayEquationToggles.u0_w, muF, N_alt)
+    simChis = np.array([RayEquationToggles.chi0_w for i in range(N_alt)])
+    simAlts = (SimClasses.r_muChi(simMUs, simChis) - 1) * stl.Re
+
+    # --- Form the temporal simulation grid ---
+    alpha = np.square(envDict['V_A'](simMUs, simChis)) / (1 + np.square(envDict['V_A'](simMUs, simChis) / stl.lightSpeed))
+    lambda_e = envDict['lambda_e'](simMUs, simChis)
+    k_perp = (2 * np.pi / RayEquationToggles.Lambda_perp0) * np.sqrt(envDict['B_dipole'](simMUs, simChis) / envDict['B_dipole'](RayEquationToggles.u0_w, RayEquationToggles.chi0_w))
+    beta = 1 / (1 + np.square(k_perp * lambda_e))
+
     z = simAlts*stl.m_to_km
 
     # precompute grid spacing
@@ -108,27 +69,31 @@ def wave_fields_generator():
     # 2. PHYSICAL PARAMETERS
     # ==================================================
     s = np.sqrt(alpha * beta)
+    # sim_length = 1  # in seconds
+    # deltaTs = 0.89 * np.diff(simAlts * stl.m_to_km) / np.max(s)  # the CFL stability criteria requires deltaT <= deltaZ/max(s)
+    # deltaT_stable = min(deltaTs)
+    # N_points_time = int(sim_length / deltaT_stable)
 
     # ==================================================
     # 3. BOUNDARY PARAMETERS (ORIGINAL PROBLEM)
     # ==================================================
-    Sigma_P = 1
-    Sigma_A = 1
+    SIGMA_P = 1
+    SIGMA_A = 1
 
-    sigma_P = 4 * np.pi * Sigma_P / stl.lightSpeed
-    sigma_A = 4 * np.pi * Sigma_A / stl.lightSpeed
+    Phi0_driver = 1000  # in eV
+    freq_driver = 4  # in Hz
 
     def Phi0(t):
         if t >= (1 / freq_driver):
             return 0
         else:
-            return Phi0_driver*np.sin(2 * np.pi * freq_driver * t)  # sinusoidal driver
+            return Phi0_driver*np.sin(2*np.pi * freq_driver * t/2)  # sinusoidal/single pulse driver. The 1/2 uses just the single pulse
 
     # ==================================================
     # 4. INITIAL CONDITIONS
     # ==================================================
     A0 = np.zeros_like(z)
-    Phi0_init = np.exp(-80 * (z - 0.5) ** 2)
+    Phi0_init = np.zeros_like(z)
 
     wp = np.sqrt(alpha) * A0 + np.sqrt(beta) * Phi0_init
     wm = np.sqrt(alpha) * A0 - np.sqrt(beta) * Phi0_init
@@ -160,25 +125,17 @@ def wave_fields_generator():
         wp = U[:N_alt].copy()
         wm = U[N_alt:].copy()
 
-        # reconstruct physical variables
-        A = (wp + wm) / (2 * np.sqrt(alpha))
-        Phi = (wp - wm) / (2 * np.sqrt(beta))
-
         # ==================================================
         # LEFT BOUNDARY (A + sigma_P Phi = 0)
         # ==================================================
-        wp[0] = (-wm[0] * (1 / np.sqrt(alpha[0]) + sigma_P / np.sqrt(beta[0]))) / (1 / np.sqrt(alpha[0]) - sigma_P / np.sqrt(beta[0]))
+        wp[0] = (-wm[0] * (1 / np.sqrt(alpha[0]) - (stl.u0*SIGMA_P) / np.sqrt(beta[0]))) / (1 / np.sqrt(alpha[0]) + (stl.u0*SIGMA_P) / np.sqrt(beta[0]))
 
         # ==================================================
-        # RIGHT BOUNDARY (impedance + sinusoidal drive)
+        # RIGHT BOUNDARY (A - sigma_A*Phi = -sigma_A Phi(t))
         # ==================================================
 
         # impedance-consistent outgoing solution
-        wm_imp = (- wp[-1] * (1 / np.sqrt(alpha[-1]) - sigma_A / np.sqrt(beta[-1]))- 2 * sigma_A * 0.0) / (1 / np.sqrt(alpha[-1]) + sigma_A / np.sqrt(beta[-1]))
-
-        # add controlled sinusoidal injection
-        eta = 1
-        wm[-1] = wm_imp + eta * Phi0(t)
+        wm[-1] = (-2*stl.u0*SIGMA_A*Phi0(t)  - wp[-1] * (1 / np.sqrt(alpha[-1]) - (stl.u0*SIGMA_A) / np.sqrt(beta[-1]))) / (1 / np.sqrt(alpha[-1]) + (stl.u0*SIGMA_A) / np.sqrt(beta[-1]))
 
         # ==================================================
         # CHARACTERISTIC EVOLUTION
@@ -191,10 +148,8 @@ def wave_fields_generator():
     # ==================================================
     # 7. TIME INTEGRATION
     # ==================================================
-    t0, t1 = 0.0, 3
-
-    frames = 200
-    t_eval = np.linspace(t0, t1, frames)
+    t0, t1 = 0.0, 1.5
+    # t_eval = np.linspace(t0, t1, frames)
 
     sol = solve_ivp(
         rhs,
@@ -202,8 +157,8 @@ def wave_fields_generator():
         U0,
         method='RK45',
         # t_eval=t_eval,
-        rtol=1e-8,
-        atol=1e-10
+        rtol=1e-10,
+        atol=1e-15
     )
 
     # ==================================================
@@ -218,46 +173,19 @@ def wave_fields_generator():
     data_dict_output['Phi'][0] = Phi.T
     data_dict_output['z'][0] = z
     data_dict_output['time'][0] = sol.t
-    data_dict_output['E_mu'][0] = np.array([np.diff(vals, append=vals[-1]) / dz_fwd for vals in Phi.T])
-    data_dict_output['E_perp'][0] = k_perp * Phi.T
-    data_dict_output['B_perp'][0] = k_perp * A.T
-
-    # ==================================================
-    # 9. ANIMATION
-    # ==================================================
-    fig, ax = plt.subplots()
-
-    line1, = ax.plot([], [], label="A")
-    line2, = ax.plot([], [], label="Phi")
-
-    ax.set_xlim(simAlts[0], simAlts[-1])
-    ax.set_ylim(-5000, 5000)
-    ax.legend()
-
-    title = ax.set_title("")
-
-    def update(i):
-        line1.set_data(z, A[:, i])
-        line2.set_data(z, Phi[:, i])
-        title.set_text(f"t = {sol.t[i]:.3f}")
-        return line1, line2, title
-
-    anim = FuncAnimation(fig, update, frames=frames)
-
-    anim.save("/home/connor/Desktop/final_characteristic_solver.gif",
-              writer=PillowWriter(fps=20))
-
-    print("Saved: final_characteristic_solver.gif")
+    data_dict_output['E_mu'][0] = np.array([-1*np.diff(vals, prepend=vals[0]) / dz_bwd for vals in Phi.T])/(1E-3)
+    data_dict_output['E_perp'][0] = (k_perp * Phi.T)/(1E-3)
+    data_dict_output['B_perp'][0] = (k_perp * A.T)/(1E-9)
 
     # ==================================================
     # 10. OUTPUT DATA
     # ==================================================
-    outputPath = rf'{WaveFieldsToggles.outputFolder}/wave_fields_rk45.cdf'
+    outputPath = rf'{WaveFieldsToggles.outputFolder}/wave_fields_characteristics.cdf'
     stl.outputDataDict(outputPath, data_dict_output)
 
     if SimToggles.store_output:
         # save the results
-        outputPath = rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/wave_fields_{DistributionToggles.z0_obs}km_rk45.cdf'
+        outputPath = rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/wave_fields_{DistributionToggles.z0_obs}km_characteristics.cdf'
         stl.outputDataDict(outputPath, data_dict_output)
 
 

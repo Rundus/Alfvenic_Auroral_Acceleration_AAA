@@ -41,7 +41,7 @@ class RayEquationToggles:
     phi0_w = np.radians(phi0_w)
 
     # Wavelength in the ionosphere
-    Lambda_perp0 = 4 * 1000  # perpendicular wavelength (in meters) AT THE IONOSPHERE
+    Lambda_perp0 = 4 * stl.m_to_km  # perpendicular wavelength (in meters) AT THE IONOSPHERE
     perp_ratio = 1.1  # what % of the initial lambda_perp is lambda_phi
 
     # --- File I/O ---
