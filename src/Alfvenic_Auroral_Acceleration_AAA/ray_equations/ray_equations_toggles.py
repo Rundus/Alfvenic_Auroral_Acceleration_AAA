@@ -30,7 +30,7 @@ class RayEquationToggles:
     omega0 = 2 * np.pi * f_0  # in Hz
 
     # Initial Wave Position
-    z0_w = 500  # in kilometers
+    z0_w = 100  # in kilometers
     Theta0_w = 70  # in geomagnetic latitude
     phi0_w = 0  # in geomagnetic longitude
 
@@ -41,7 +41,7 @@ class RayEquationToggles:
     phi0_w = np.radians(phi0_w)
 
     # Wavelength in the ionosphere
-    Lambda_perp0 = 4 * stl.m_to_km  # perpendicular wavelength (in meters) AT THE IONOSPHERE
+    Lambda_perp0 = 5 * stl.m_to_km  # perpendicular wavelength (in meters) AT THE IONOSPHERE
     perp_ratio = 1.1  # what % of the initial lambda_perp is lambda_phi
 
     # --- File I/O ---

@@ -15,6 +15,7 @@ def wave_fields_generator():
     from scipy.integrate import solve_ivp
     import matplotlib.pyplot as plt
     from matplotlib.animation import FuncAnimation, PillowWriter
+    from scipy.integrate import simpson
 
     # --- Load the needed data ---
     data_dict_ray_eqns = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/ray_equations/ray_equations.cdf')[0])
@@ -23,17 +24,22 @@ def wave_fields_generator():
     data_dict_output = {
         'time': [np.array(deepcopy(data_dict_ray_eqns['time'][0])),deepcopy(data_dict_ray_eqns['time'][1])],
         'mu_w': deepcopy(data_dict_ray_eqns['mu_w']),
+        'alpha':[[],{'DEPEND_0': None}],
+        'beta': [[], {'DEPEND_0': None}],
         'chi_w': deepcopy(data_dict_ray_eqns['chi_w']),
         'z': [[],{'DEPEND_0': None, 'UNITS': 'm', 'LABLAXIS': 'Alt', 'VAR_TYPE': 'data'}],
         'E_perp': [[], {'DEPEND_0': 'time','DEPEND_1':'z', 'UNITS': 'mV/m', 'LABLAXIS': 'E!B&perp;!N', 'VAR_TYPE': 'data'}],
         'E_mu': [[],{'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': 'mV/m', 'LABLAXIS': 'E!B&mu;!N', 'VAR_TYPE': 'data'}],
         'B_perp': [[],{'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': 'nT', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],
+        'B_mu': [[], {'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': 'nT', 'LABLAXIS': 'B!B&mu;!N', 'VAR_TYPE': 'data'}],
         'Az': [[], {'DEPEND_0': 'time','DEPEND_1':'z', 'UNITS': 'Wb/m', 'LABLAXIS': 'A!Bz;!N', 'VAR_TYPE': 'data'}],
         'Phi': [[], {'DEPEND_0': 'time', 'DEPEND_1': 'z', 'UNITS': 'V', 'LABLAXIS': '&Phi;', 'VAR_TYPE': 'data'}],
         'resonance_low': [[],{'DEPEND_0': 'z', 'UNITS': 'eV', 'LABLAXIS': 'Resonance Low', 'VAR_TYPE': 'data'}],
         'resonance_high': [[], {'DEPEND_0': 'z',  'UNITS': 'eV', 'LABLAXIS': 'Resonance High', 'VAR_TYPE': 'data'}],
         'DAW_velocity_eV':[[],{'DEPEND_0': 'z',  'UNITS': 'eV', 'LABLAXIS': 'DAW Velocity', 'VAR_TYPE': 'data'}],
         'DAW_velocity': [[], {'DEPEND_0': 'z', 'UNITS': 'm/s', 'LABLAXIS': 'DAW Velocity', 'VAR_TYPE': 'data'}],
+        'System_Energy':[[],{'DEPEND_0':'time','UNITS':'eV','LABLAXIS':'Total Energy','VAR_TYPE':'data'}],
+        'k_perp':[[],{'DEPEND_0':'z','UNITS':'m!A-1!N','LABLAXIS':'k!B&perp;!N','VAR_TYPE':'data'}]
     }
 
     # --- load the environment variables ---
@@ -44,22 +50,34 @@ def wave_fields_generator():
     # 1. NON-UNIFORM GRID
     # ==================================================
     # --- Form the spatial simulation grid ---
-    N_alt = 1000
+    N_alt = 5000
     Rf = (1 + RayEquationToggles.upper_boundary / stl.Re)
     Theta_at_zf = np.arcsin(np.sqrt(RayEquationToggles.chi0_w * Rf))
     muF = -np.sqrt(np.cos(Theta_at_zf)) / Rf
 
-    simMUs = np.linspace(RayEquationToggles.u0_w, muF, N_alt)
+    # Linear Alt Grid
+    simAlts = np.linspace(100,40000,N_alt)
     simChis = np.array([RayEquationToggles.chi0_w for i in range(N_alt)])
-    simAlts = (SimClasses.r_muChi(simMUs, simChis) - 1) * stl.Re
+    R = 1+ (simAlts/(stl.Re))
+    Theta = np.arcsin(np.sqrt(simChis*R))
+    simMUs = -np.sqrt(Theta)/R
+
+    # Linear MU gid
+    # simMUs = np.linspace(RayEquationToggles.u0_w, muF, N_alt)
+    # simChis = np.array([RayEquationToggles.chi0_w for i in range(N_alt)])
+    # simAlts = (SimClasses.r_muChi(simMUs, simChis) - 1) * stl.Re
 
     # --- Form the temporal simulation grid ---
     alpha = np.square(envDict['V_A'](simMUs, simChis)) / (1 + np.square(envDict['V_A'](simMUs, simChis) / stl.lightSpeed))
     lambda_e = envDict['lambda_e'](simMUs, simChis)
     k_perp = (2 * np.pi / RayEquationToggles.Lambda_perp0) * np.sqrt(envDict['B_dipole'](simMUs, simChis) / envDict['B_dipole'](RayEquationToggles.u0_w, RayEquationToggles.chi0_w))
+    data_dict_output['k_perp'][0] = np.array(k_perp)
     beta = 1 / (1 + np.square(k_perp * lambda_e))
 
-    z = simAlts*stl.m_to_km
+    data_dict_output['beta'][0] = beta
+    data_dict_output['alpha'][0] = alpha
+
+    z = simAlts * stl.m_to_km
 
     # precompute grid spacing
     dz_fwd = np.diff(z, append=z[-1])
@@ -78,16 +96,17 @@ def wave_fields_generator():
     # 3. BOUNDARY PARAMETERS (ORIGINAL PROBLEM)
     # ==================================================
     SIGMA_P = 1
-    SIGMA_A = 1
+    SIGMA_A = 1 # CAN'T BE == 0
 
-    Phi0_driver = 1000  # in eV
+    Phi0_driver = 100  # in eV
     freq_driver = 4  # in Hz
+    omega = 2*np.pi*freq_driver
 
     def Phi0(t):
         if t >= (1 / freq_driver):
             return 0
         else:
-            return Phi0_driver*np.sin(2*np.pi * freq_driver * t/2)  # sinusoidal/single pulse driver. The 1/2 uses just the single pulse
+            return Phi0_driver*np.sin(omega * t/2)  # sinusoidal/single pulse driver. The 1/2 uses just the single pulse
 
     # ==================================================
     # 4. INITIAL CONDITIONS
@@ -128,7 +147,7 @@ def wave_fields_generator():
         # ==================================================
         # LEFT BOUNDARY (A + sigma_P Phi = 0)
         # ==================================================
-        # wp[0] = (-wm[0] * (1 / np.sqrt(alpha[0]) - (stl.u0*SIGMA_P) / np.sqrt(beta[0]))) / (1 / np.sqrt(alpha[0]) + (stl.u0*SIGMA_P) / np.sqrt(beta[0]))
+        wp[0] = (-wm[0] * (1 / np.sqrt(alpha[0]) - (stl.u0*SIGMA_P) / np.sqrt(beta[0]))) / (1 / np.sqrt(alpha[0]) + (stl.u0*SIGMA_P) / np.sqrt(beta[0]))
 
         # ==================================================
         # RIGHT BOUNDARY (A - sigma_A*Phi = -sigma_A Phi(t))
@@ -148,7 +167,7 @@ def wave_fields_generator():
     # ==================================================
     # 7. TIME INTEGRATION
     # ==================================================
-    t0, t1 = 0.0, 1.5
+    t0, t1 = 0.0, 1.46
     # t_eval = np.linspace(t0, t1, frames)
 
     sol = solve_ivp(
@@ -176,11 +195,10 @@ def wave_fields_generator():
     data_dict_output['E_mu'][0] = np.array([-1*np.diff(vals, prepend=vals[0]) / dz_fwd for vals in Phi.T])/(1E-3)
     data_dict_output['E_perp'][0] = (k_perp * Phi.T)/(1E-3)
     data_dict_output['B_perp'][0] = (k_perp * A.T)/(1E-9)
-
-    # Calculate the total wave energy
+    data_dict_output['B_mu'][0] = np.zeros_like(A.T)
 
     # ==================================================
-    # 10. OUTPUT DATA
+    # 9. OUTPUT DATA
     # ==================================================
     outputPath = rf'{WaveFieldsToggles.outputFolder}/wave_fields_characteristics.cdf'
     stl.outputDataDict(outputPath, data_dict_output)
