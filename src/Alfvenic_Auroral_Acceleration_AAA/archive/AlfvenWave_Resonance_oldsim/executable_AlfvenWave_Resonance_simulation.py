@@ -98,7 +98,7 @@ def testParticle_Sim():
     fps = GenToggles.fps
 
     # --- GET SLICE IN PARALLEL E-FIELD ---
-    # description: Take the center slice of the Epara E-Field for the simulation
+    # description: Take the center slice of the Epara E-Field for the runners
     centerLine = int(EToggles.lambdaPerp_Rez/2)
     E_Field = data_dict_Epara['Epara'][0][:, :, centerLine] if EToggles.flipEField else -1*data_dict_Epara['Epara'][0][:, :, centerLine]
 

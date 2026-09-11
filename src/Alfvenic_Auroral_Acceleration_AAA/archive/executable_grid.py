@@ -9,7 +9,7 @@
 import time
 import spaceToolsLib as stl
 import warnings
-from src.Alfvenic_Auroral_Acceleration_AAA.executable_toggles import dict_executable
+from Alfvenic_Auroral_Acceleration_AAA.runners.executable_toggles import dict_executable
 warnings.filterwarnings("ignore")
 start_time = time.time()
 

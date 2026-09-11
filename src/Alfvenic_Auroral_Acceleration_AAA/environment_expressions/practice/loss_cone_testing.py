@@ -1,6 +1,6 @@
 from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
 import spaceToolsLib as stl
-from src.Alfvenic_Auroral_Acceleration_AAA.ray_equations.ray_equations_toggles import RayEquationToggles
+from Alfvenic_Auroral_Acceleration_AAA.archive.ray_equations.ray_equations_toggles import RayEquationToggles
 import numpy as np
 
 # --- get the environment varibles ---

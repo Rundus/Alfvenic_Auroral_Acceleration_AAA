@@ -1,4 +1,4 @@
-from src.Alfvenic_Auroral_Acceleration_AAA.simulation.my_imports import *
+from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
 
 
 class EnvironmentExpressionsClasses:
@@ -7,7 +7,7 @@ class EnvironmentExpressionsClasses:
         from glob import glob
         import dill
 
-        pickle_files = glob(rf'{SimToggles.sim_root_path}/environment_expressions/pickled_expressions/*.pkl')
+        pickle_files = glob(rf'{RunToggles.sim_root_path}/environment_expressions/pickled_expressions/*.pkl')
 
         for file_nam in pickle_files:
             func = dill.load(open(file_nam, 'rb'))

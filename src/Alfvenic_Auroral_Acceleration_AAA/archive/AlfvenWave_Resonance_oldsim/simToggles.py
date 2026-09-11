@@ -36,7 +36,7 @@ class GenToggles:
 
     # extra
     fps = 10
-    simColors = ['tab:purple', 'tab:orange', 'tab:red', 'tab:blue', 'tab:green', 'tab:brown', 'tab:pink']  # the color choices available for the simulation to use
+    simColors = ['tab:purple', 'tab:orange', 'tab:red', 'tab:blue', 'tab:green', 'tab:brown', 'tab:pink']  # the color choices available for the runners to use
     simFolderPath = r'C:\Users\cfelt\PycharmProjects\UIOWA_CDF_operator\ACESII_code\Science\AlfvenSingatureAnalysis\Simulations\TestParticle'
     simOutputPath = r'C:\Data\ACESII\science\simulations\TestParticle'
 

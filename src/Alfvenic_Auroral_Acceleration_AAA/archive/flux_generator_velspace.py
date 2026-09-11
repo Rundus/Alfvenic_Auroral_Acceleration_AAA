@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
-from src.Alfvenic_Auroral_Acceleration_AAA.simulation.my_imports import *
-from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_classes import *
+from src.Alfvenic_Auroral_Acceleration_AAA.runners.my_imports import *
+from src.Alfvenic_Auroral_Acceleration_AAA.runners.sim_classes import *
 from timebudget import timebudget
 
 
@@ -18,9 +18,9 @@ def flux_generator():
     from glob import glob
     from itertools import product
 
-    # --- Load the wave simulation data ---
+    # --- Load the wave runners data ---
     data_dict_distribution = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/results/{DistributionToggles.z0_obs}km/distributions_{DistributionToggles.z0_obs}km.cdf')[0])
-    # data_dict_distribution = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/distributions/*.cdf')[0])
+    # data_dict_distribution = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/liouville_mapping/*.cdf')[0])
 
     ###########################################################
     # --- INTERPOLATE DISTRIBUTIONS ONTO PITCH/ENERGY SPACE ---

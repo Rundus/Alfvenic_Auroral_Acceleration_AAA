@@ -1,5 +1,5 @@
 import numpy as np
-from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_toggles import DistributionToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_toggles import DistributionToggles
 import spaceToolsLib as stl
 
 class FPCToggles:
@@ -12,5 +12,5 @@ class FPCToggles:
     v_perp_space = np.linspace(0, np.sqrt(2 * stl.q0 * np.power(10,DistributionToggles.E_max_obs) / stl.m_e), N_vel_space)
 
     # --- File I/O ---
-    from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_toggles import SimToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.runners.sim_toggles import SimToggles
     outputFolder = f'{SimToggles.sim_data_output_path}/field_particle_correlation'

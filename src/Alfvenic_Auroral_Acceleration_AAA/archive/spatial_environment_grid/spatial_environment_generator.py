@@ -29,7 +29,7 @@ def generate_spatial_environment():
     # --- Calculate lat/long/alt from dipole coordinates ---
     ########################################################
 
-    # establish a simulation grid
+    # establish a runners grid
     chi_grid, mu_grid = np.meshgrid(data_dict_output['chi'][0],data_dict_output['mu'][0])
 
     # calculate the zeta, gamma, c1, c2 and w terms

@@ -1,5 +1,5 @@
 
-from src.Alfvenic_Auroral_Acceleration_AAA.simulation.my_imports import *
+from src.Alfvenic_Auroral_Acceleration_AAA.runners.my_imports import *
 from timebudget import timebudget
 
 @timebudget
@@ -16,10 +16,10 @@ def field_particle_correlation_generator():
     from scipy.interpolate import LinearNDInterpolator
     from tqdm import tqdm
     from scipy.integrate import simpson
-    from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_classes import DistributionClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_classes import DistributionClasses
     import itertools
 
-    # --- Load the simulation data ---
+    # --- Load the runners data ---
     data_dict_flux = stl.loadDictFromFile(glob(rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/flux_{DistributionToggles.z0_obs}km.cdf')[0])
     data_dict_distribution = stl.loadDictFromFile(glob(rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/distributions_{DistributionToggles.z0_obs}km.cdf')[0])
 

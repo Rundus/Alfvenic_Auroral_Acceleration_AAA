@@ -3,7 +3,7 @@
 class FluxToggles:
 
     # --- File I/O ---
-    from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_toggles import SimToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.runners.sim_toggles import SimToggles
     outputFolder = f'{SimToggles.sim_data_output_path}/flux'
 
 

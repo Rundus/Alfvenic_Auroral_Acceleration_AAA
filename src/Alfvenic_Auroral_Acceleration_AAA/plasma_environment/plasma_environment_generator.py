@@ -1,5 +1,5 @@
 from timebudget import timebudget
-from src.Alfvenic_Auroral_Acceleration_AAA.simulation.my_imports import *
+
 
 @timebudget
 def plasma_environment_generator():
@@ -7,56 +7,41 @@ def plasma_environment_generator():
     # --- general imports ---
     import spaceToolsLib as stl
     import numpy as np
-    import time
-    from copy import deepcopy
 
     # --- File-specific imports ---
     from glob import glob
     from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_toggles import PlasmaEnvironmentToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
 
-
-    start_time = time.time()
-
-
-    # --- Load the wave simulation data ---
-    from src.Alfvenic_Auroral_Acceleration_AAA.simulation.sim_toggles import SimToggles
-    data_dict_ray_eqns = stl.loadDictFromFile(glob(rf'{SimToggles.sim_data_output_path}/ray_equations/*.cdf*')[0])
+    # --- Load the wave runners data ---
+    data_dict_spatial = stl.loadDictFromFile(glob(rf'{RunToggles.sim_data_output_path}//spatial_grid/*.cdf*')[0])
 
     # prepare the output
     data_dict_output = {
-                        'time': deepcopy(data_dict_ray_eqns['time']),
-                        'mu_w': deepcopy(data_dict_ray_eqns['mu_w']),
-                        'chi_w': deepcopy(data_dict_ray_eqns['chi_w']),
-                        'omega': deepcopy(data_dict_ray_eqns['omega']),
-                        'z':deepcopy(data_dict_ray_eqns['z']),
-                        'V_A':[[],{'DEPEND_0': 'time', 'UNITS': 'm/s', 'LABLAXIS': 'Alfven Speed (MHD)', 'VAR_TYPE': 'data'}],
-                        'n': [[], {'DEPEND_0': 'time', 'UNITS': 'm!A-3', 'LABLAXIS': 'Plasma Density', 'VAR_TYPE': 'data'}],
-                        'm_i': [[], {'DEPEND_0': 'time', 'UNITS': 'kg', 'LABLAXIS': 'Alfven Speed (MHD)', 'VAR_TYPE': 'data'}],
-                        'lambda_e': [[], {'DEPEND_0': 'time', 'UNITS': 'm', 'LABLAXIS': 'Electron Skin Depth', 'VAR_TYPE': 'data'}],
-
-                        'pDD_lambda_e_mu': [[], {'DEPEND_0': 'time', 'UNITS': 'm', 'LABLAXIS': 'd&lambda;!Be!N/d&mu;', 'VAR_TYPE': 'data'}],
-                        'pDD_lambda_e_chi': [[], {'DEPEND_0': 'time', 'UNITS': 'm', 'LABLAXIS': 'd&lambda;!Be!N/d&chi;', 'VAR_TYPE': 'data'}],
-
-                        'pDD_V_A_mu': [[], {'DEPEND_0': 'time', 'UNITS': 'm/s', 'LABLAXIS': 'dV_A/d&mu;', 'VAR_TYPE': 'data'}],
-                        'pDD_V_A_z': [[], {'DEPEND_0': 'time', 'UNITS': 'm/s/m', 'LABLAXIS': 'dV_A/d&z;', 'VAR_TYPE': 'data'}],
-                        'pDD_V_A_chi': [[], {'DEPEND_0': 'time', 'UNITS': 'm/s', 'LABLAXIS': 'dV_A/d&chi;', 'VAR_TYPE': 'data'}],
-
-                        'dB_dipole_dmu' : [[], {'DEPEND_0': 'time','UNITS': 'T','LABLAXIS':'dB_dipole_dmu', 'VAR_TYPE':'data'}],
-
-                        'h_mu': [[], {'DEPEND_0': 'time', 'UNITS': 'm', 'LABLAXIS': 'h!B&mu;!N', 'VAR_TYPE': 'data'}],
-                        'h_chi': [[], {'DEPEND_0': 'time', 'UNITS': 'm', 'LABLAXIS': 'h!B&chi;!N', 'VAR_TYPE': 'data'}],
-                        'h_phi': [[], {'DEPEND_0': 'time', 'UNITS': 'm', 'LABLAXIS': 'h!B&phi;!N', 'VAR_TYPE': 'data'}],
-                        'inertial_term': [[], {'DEPEND_0': 'time', 'UNITS': None, 'LABLAXIS': '(1+(k!B&perp;!N &lambda;!Be!N)!A2!N)!A1/2!N', 'VAR_TYPE': 'data'}],
-                        'B_dipole':[[],{}],
-                        'meff': [[], {}],
-                        'n_density': [[], {}],
-                        'pDD_n_density_mu': [[], {}],
-                        'pDD_n_density_z': [[], {'DEPEND_0': 'time','UNITS': 'm^-3 / m','LABLAXIS':'dn/dz', 'VAR_TYPE':'data'}],
-                        'WKB_density_scale_length' : [[],{'DEPEND_0': 'z','UNITS': 'm','LABLAXIS':'n/ (dn/dz)', 'VAR_TYPE':'data'}],
-                        'WKB_VA_scale_length': [[], {'DEPEND_0': 'z', 'UNITS': 'm', 'LABLAXIS': 'V!BA!N/ (dV!BA!N/dz)', 'VAR_TYPE': 'data'}],
-                        'n_Op': [[], {}],
-                        'n_Hp': [[], {}],
-                        'rho': [[], {}],
+                        'V_A':[[],{'DEPEND_0': 'alt', 'UNITS': 'm/s', 'LABLAXIS': 'Alfven Speed (MHD)', 'VAR_TYPE': 'data'}],
+                        'n_density': [[], {'DEPEND_0': 'alt', 'UNITS': 'm!A-3', 'LABLAXIS': 'Plasma Density', 'VAR_TYPE': 'data'}],
+                        'm_i': [[], {'DEPEND_0': 'alt', 'UNITS': 'kg', 'LABLAXIS': 'Alfven Speed (MHD)', 'VAR_TYPE': 'data'}],
+                        'lambda_e': [[], {'DEPEND_0': 'alt', 'UNITS': 'm', 'LABLAXIS': 'Electron Skin Depth', 'VAR_TYPE': 'data'}],
+                        'pDD_lambda_e_mu': [[], {'DEPEND_0': 'alt', 'UNITS': 'm', 'LABLAXIS': 'd&lambda;!Be!N/d&mu;', 'VAR_TYPE': 'data'}],
+                        'pDD_lambda_e_chi': [[], {'DEPEND_0': 'alt', 'UNITS': 'm', 'LABLAXIS': 'd&lambda;!Be!N/d&chi;', 'VAR_TYPE': 'data'}],
+                        'pDD_V_A_mu': [[], {'DEPEND_0': 'alt', 'UNITS': 'm/s', 'LABLAXIS': 'dV_A/d&mu;', 'VAR_TYPE': 'data'}],
+                        'pDD_V_A_alt': [[], {'DEPEND_0': 'alt', 'UNITS': 'm/s/m', 'LABLAXIS': 'dV_A/d&z;', 'VAR_TYPE': 'data'}],
+                        'pDD_V_A_chi': [[], {'DEPEND_0': 'alt', 'UNITS': 'm/s', 'LABLAXIS': 'dV_A/d&chi;', 'VAR_TYPE': 'data'}],
+                        'dB_dipole_dmu' : [[], {'DEPEND_0': 'alt','UNITS': 'T','LABLAXIS':'dB_dipole_dmu', 'VAR_TYPE':'data'}],
+                        'h_mu': [[], {'DEPEND_0': 'alt', 'UNITS': 'm', 'LABLAXIS': 'h!B&mu;!N', 'VAR_TYPE': 'data'}],
+                        'h_chi': [[], {'DEPEND_0': 'alt', 'UNITS': 'm', 'LABLAXIS': 'h!B&chi;!N', 'VAR_TYPE': 'data'}],
+                        'h_phi': [[], {'DEPEND_0': 'alt', 'UNITS': 'm', 'LABLAXIS': 'h!B&phi;!N', 'VAR_TYPE': 'data'}],
+                        'B_dipole':[[],{'DEPEND_0': 'alt', 'UNITS': 'nT', 'LABLAXIS': '|B|', 'VAR_TYPE': 'data'}],
+                        'meff': [[], {'DEPEND_0': 'alt', 'UNITS': 'kg', 'LABLAXIS': 'mass (avg)', 'VAR_TYPE': 'data'}],
+                        'pDD_n_density_mu': [[], {'DEPEND_0': 'alt', 'UNITS': 'm!A-3', 'LABLAXIS': '(dn/d&mu;)', 'VAR_TYPE': 'data'}],
+                        'pDD_n_density_alt': [[], {'DEPEND_0': 'alt','UNITS': 'm^-3 / m','LABLAXIS':'dn/dz', 'VAR_TYPE':'data'}],
+                        'WKB_density_scale_length' : [[],{'DEPEND_0': 'alt','UNITS': 'm','LABLAXIS':'n/ (dn/dz)', 'VAR_TYPE':'data'}],
+                        'WKB_VA_scale_length': [[], {'DEPEND_0': 'alt', 'UNITS': 'm', 'LABLAXIS': 'V!BA!N/ (dV!BA!N/dz)', 'VAR_TYPE': 'data'}],
+                        'n_Op': [[], {'DEPEND_0': 'alt', 'UNITS': 'm!A-3', 'LABLAXIS': 'O+ Density', 'VAR_TYPE': 'data'}],
+                        'n_Hp': [[], {'DEPEND_0': 'alt', 'UNITS': 'm!A-3', 'LABLAXIS': 'H+ Density', 'VAR_TYPE': 'data'}],
+                        'rho': [[], {'DEPEND_0': 'alt', 'UNITS': 'kg m!A-3', 'LABLAXIS': 'Avg. Mass Density', 'VAR_TYPE': 'data'}],
+                        'alt':data_dict_spatial['alt'].copy(),
                         }
 
     #################################################
@@ -68,39 +53,20 @@ def plasma_environment_generator():
     # --- EVALUATE FUNCTIONS ON SIMULATION SPACE ---
     ################################################
     for key, func in envDict.items():
-        data_dict_output[key][0] = func(data_dict_output['mu_w'][0], data_dict_output['chi_w'][0])
-
-    ###################################
-    # --- EVALUATE OTHER PARAMETERS ---
-    ###################################
-    data_dict_output['inertial_term'][0] = np.sqrt(1 + np.square(data_dict_ray_eqns['k_perp'][0]*data_dict_output['lambda_e'][0]))
-
-    ########################################
-    # CONSTRUCT THE GRIDDED SIMULATION SPACE
-    ########################################
-    data_dict_output = {**data_dict_output,
-                        **{'mu': [PlasmaEnvironmentToggles.mu_range, {'LABLAXIS':'&mu;'}],
-                           'chi': [PlasmaEnvironmentToggles.chi_range, {'LABLAXIS':'&chi;'}],}
-                        }
-
-    for key, func in envDict.items():
-        data_dict_output = {**data_dict_output, **{f'grid_{key}': [func(PlasmaEnvironmentToggles.mu_grid, PlasmaEnvironmentToggles.chi_grid), {'DEPEND_0':'mu', 'DEPEND_1':'chi'}]}}
-
+        data_dict_output[key][0] = func(data_dict_spatial['mu'][0], data_dict_spatial['chi'][0])
 
     ##########################################
     # CONSTRUCT THE WKB EVALUATION VARIABLES #
     ##########################################
-    data_dict_output['pDD_n_density_z'][0] = np.gradient(deepcopy(data_dict_output['n_density'][0]),stl.m_to_km*deepcopy(data_dict_output['z'][0]))
-    data_dict_output['WKB_density_scale_length'][0] = data_dict_output['n_density'][0] / data_dict_output['pDD_n_density_z'][0]
-    data_dict_output['pDD_V_A_z'][0] = np.gradient(deepcopy(data_dict_output['V_A'][0]), stl.m_to_km*deepcopy(data_dict_output['z'][0]))
-    data_dict_output['WKB_VA_scale_length'][0] = data_dict_output['V_A'][0] / data_dict_output['pDD_V_A_z'][0]
+    data_dict_output['pDD_n_density_alt'][0] = np.gradient(data_dict_output['n_density'][0].copy(),stl.m_to_km*data_dict_spatial['alt'][0].copy())
+    data_dict_output['WKB_density_scale_length'][0] = data_dict_output['n_density'][0] / data_dict_output['pDD_n_density_alt'][0]
+    data_dict_output['pDD_V_A_alt'][0] = np.gradient(data_dict_output['V_A'][0].copy(), stl.m_to_km*data_dict_spatial['alt'][0].copy())
+    data_dict_output['WKB_VA_scale_length'][0] = data_dict_output['V_A'][0] / data_dict_output['pDD_V_A_alt'][0]
 
     ################
     # --- OUTPUT ---
     ################
-    outputPath = rf'{PlasmaEnvironmentToggles.outputFolder}/plasma_environment.cdf'
-    stl.outputDataDict(outputPath, data_dict_output)
 
-    if SimToggles.store_output:
-        outputPath = rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/plasma_environment_{DistributionToggles.z0_obs}km.cdf'
+    if RunToggles.store_output:
+        outputPath = rf'{RunToggles.sim_data_output_path}/plasma_environment/plasma_environment.cdf'
         stl.outputDataDict(outputPath, data_dict_output)

@@ -11,9 +11,9 @@ from glob import glob
 
 from sympy.printing.pretty.pretty_symbology import line_width
 
-from src.Alfvenic_Auroral_Acceleration_AAA.simulation.my_imports import *
+from src.Alfvenic_Auroral_Acceleration_AAA.runners.my_imports import *
 from src.Alfvenic_Auroral_Acceleration_AAA.field_particle_correlation.field_particle_correlation_toggles import FPCToggles
-from src.Alfvenic_Auroral_Acceleration_AAA.distributions.distribution_toggles import DistributionToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_toggles import DistributionToggles
 
 
 #--- get the data ---

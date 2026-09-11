@@ -8,7 +8,7 @@ class Ti:
     def shroeder2021(self, simAlt):
         '''
         :param 1D array simAlt:
-            simulation altitudes in [m]
+            runners altitudes in [m]
         :return:
             Ion Temperature in [eV] for each altitude
         :rtype:
@@ -36,7 +36,7 @@ class Te:
     def shroeder2021(self, simAlt):
         '''
         :param 1D array simAlt:
-            simulation altitudes in [m]
+            runners altitudes in [m]
         :return:
             Ion Temperature in [eV] for each altitude
         :rtype:
@@ -71,7 +71,7 @@ class ne:
         '''
         returns density for altitude "z [km]" in m^-3
         :param 1D array simAlt:
-            simulation altitudes in [m]
+            runners altitudes in [m]
         :return:
             plasma density in [m^-3] for each altitude
         :rtype:
@@ -105,7 +105,7 @@ class ni:
         '''
         returns density for altitude z in m^-3
         :param 1D array simAlt:
-            simulation altitudes in [m]
+            runners altitudes in [m]
         :return:
             two ion density array: (1) Oxygen and (2) Hydrogen in [m^-3]
         :rtype:
@@ -131,7 +131,7 @@ class ion_composition:
         '''
                 ratio of oxygen ions to total ion density
                 :param 1D array simAlt:
-                    simulation altitudes in [m]
+                    runners altitudes in [m]
                 :return:
                      (n_O/n_i) for each altitude
                 :rtype:

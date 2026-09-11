@@ -1,0 +1,17 @@
+
+class SpatialGridToggles:
+
+    ##################################
+    # --- SPATIAL ENVIRONMENT GRID ---
+    ##################################
+    # DEFINE SIMULATION EXTENT in terms of geophysical parameters
+    L_Shell = 8.5
+    z_para_min = 200 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+    z_para_max = 18000 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+
+    ######################
+    # --- MU-Dimension ---
+    ######################
+    N_mu = 15000  # number of points in mu direction
+
+

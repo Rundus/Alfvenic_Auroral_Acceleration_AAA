@@ -1,4 +1,4 @@
-from src.Alfvenic_Auroral_Acceleration_AAA.simulation.my_imports import *
+from src.Alfvenic_Auroral_Acceleration_AAA.runners.my_imports import *
 from timebudget import timebudget
 
 @timebudget
@@ -13,7 +13,7 @@ def flux_generator():
     from glob import glob
     from itertools import product
 
-    # --- Load the wave simulation data ---
+    # --- Load the wave runners data ---
     data_dict_distribution = stl.loadDictFromFile(glob(rf'{ResultsToggles.outputFolder}/{DistributionToggles.z0_obs}km/distributions_{DistributionToggles.z0_obs}km.cdf')[0])
 
     #####################################

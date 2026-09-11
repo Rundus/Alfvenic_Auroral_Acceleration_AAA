@@ -1,7 +1,7 @@
 # --- alfven_Eperp_Generator.py ---
 # --- Author: C. Feltman ---
 # DESCRIPTION:
-# Generates the entire E-Field for all time in the simulation and returns a variable that looks like:
+# Generates the entire E-Field for all time in the runners and returns a variable that looks like:
 # [
 #   [Ez(x=0,t=0),Ez(x=1,t=0),Ez(x=2,t=0)...., Ez(x=len(Alt),t=0)],
 #   [Ez(x=0,t=1),Ez(x=1,t=1),Ez(x=2,t=1)...., Ez(x=len(Alt),t=1)]

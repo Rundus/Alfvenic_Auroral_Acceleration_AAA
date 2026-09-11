@@ -1,8 +1,9 @@
 # scale_length_Sympy_expression_Generator
-# Description: Use sympy to generate analytic expressions for the AAA simulation
+# Description: Use sympy to generate analytic expressions for the AAA runners
 from timebudget import timebudget
 import json
-from src.Alfvenic_Auroral_Acceleration_AAA.simulation.my_imports import *
+from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_toggles import EnvironmentExpressionsToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
 
 @timebudget
 def environment_expressions_generator():
@@ -265,7 +266,7 @@ def environment_expressions_generator():
     ###################
     # PICKLE EVERYTHING
     ###################
-    folder = rf'{SimToggles.sim_root_path}/environment_expressions/pickled_expressions/'
+    folder = rf'{RunToggles.sim_root_path}/environment_expressions/pickled_expressions/'
     for key, funct in funcs.items():
         file = open(folder+f'{key}.pkl','wb')
         dill.dump(funct, file)
@@ -278,7 +279,7 @@ def environment_expressions_generator():
     # create a JSON file that specifies which density model was used to generate the pickle files
     which_density_model = [key for key in EnvironmentExpressionsToggles().environment_expression_dict.keys() if EnvironmentExpressionsToggles().environment_expression_dict[key]][0]
     config_dict = {'density_model':which_density_model}
-    folder_path = f'{SimToggles.sim_root_path}/environment_expressions/pickled_expressions/'
+    folder_path = f'{RunToggles.sim_root_path}/environment_expressions/pickled_expressions/'
     outpath = f'{folder_path}/model_config.json'
     with open(outpath, 'w') as outfile:
         json.dump(config_dict, outfile, indent=3)
