@@ -42,6 +42,7 @@ def plasma_environment_generator():
                         'n_Hp': [[], {'DEPEND_0': 'alt', 'UNITS': 'm!A-3', 'LABLAXIS': 'H+ Density', 'VAR_TYPE': 'data'}],
                         'rho': [[], {'DEPEND_0': 'alt', 'UNITS': 'kg m!A-3', 'LABLAXIS': 'Avg. Mass Density', 'VAR_TYPE': 'data'}],
                         'alt':data_dict_spatial['alt'].copy(),
+                        'Te':[[], {'DEPEND_0': 'alt', 'UNITS': 'eV', 'LABLAXIS': 'T!Be!N', 'VAR_TYPE': 'data'}],
                         }
 
     #################################################

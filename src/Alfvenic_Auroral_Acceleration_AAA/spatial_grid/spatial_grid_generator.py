@@ -22,19 +22,10 @@ def spatial_grid_generator():
     u0 = -1 * np.sqrt(np.cos(np.radians(colat0))) / r0  # [n/a] Initial mu0 point. Lower end of simulation
     chi0 = np.power(np.sin(np.radians(colat0)), 2) / r0 # [n/a] Initial chi point.
 
-    # print('r0',r0)
-    # print('u0',u0)
-    # print('chi0',chi0)
-
     # --- Get the final mu, chi points ---
     uf = SpatialClasses().mu_from_field_line_distance(u0,chi0, SpatialGridToggles.z_para_max)
 
-    # print('uf',muf)
-    # print(SpatialClasses().r_muChi(muf,chi0))
-    # print(SpatialClasses().theta_muChi(muf, chi0))
-
     # --- create the simulation grids ---
-
     # Calculate the modified dipole coordinates
     u_space = np.linspace(u0, uf, SpatialGridToggles.N_mu)
     chi_space = [chi0 for i in range(SpatialGridToggles.N_mu)]

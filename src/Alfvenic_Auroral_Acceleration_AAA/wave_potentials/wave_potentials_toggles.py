@@ -13,7 +13,7 @@ class WavePotentialsToggles:
     Lambda_perp0 = 4 # [km] Perpendicular scale of wave at Z_min (ionosphere). Mapping using flux tube scaling.
 
     # Wave Frequeuency
-    f_0 = 5 # [Hz] Frequency of injected wave
+    f_0 = 4 # [Hz] Frequency of injected wave
 
     driver_dict = {
         'gaussian_pulse':0,
@@ -30,6 +30,6 @@ class WavePotentialsToggles:
     # =============================
     # === RK45 Time Integration ===
     # =============================
-    t_start, t_end = 0.0, 2.25 #[seconds] Time from z_max the wave is allowed to propogate
-    n_out = 400
+    t_start, t_end = 0.0, 10 #[seconds] Time from z_max the wave is allowed to propogate
+    n_out = 350
     cfl = 0.4

@@ -49,7 +49,7 @@ def wave_potentials_generator():
     # 0. WAVE PERPENDICULAR SCALE
     # ==================================================
     simMu = data_dict_spatial["mu"][0]
-    simChi = data_dict_spatial["chi"][0]  #
+    simChi = data_dict_spatial["chi"][0]
 
     flux_tube_scaling = np.sqrt(envDict['B_dipole'](simMu[0], simChi[0]) / envDict['B_dipole'](simMu, simChi))
     lambda_perp = (WavePotentialsToggles.Lambda_perp0 * stl.m_to_km) * flux_tube_scaling

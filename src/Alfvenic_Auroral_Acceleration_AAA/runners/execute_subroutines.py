@@ -42,7 +42,8 @@ def run_AAA_simulation():
         ExecutableClasses().update_run_JSON(
             {
                 'expression_generator':{
-                    'density_model': f'{EnvironmentExpressionsToggles().wDenModel_key}'
+                    'density_model': f'{EnvironmentExpressionsToggles().wDenModel_key}',
+                    'Te_model': f'{EnvironmentExpressionsToggles().wTeModel_key}'
                 }
             }
         )
@@ -92,19 +93,24 @@ def run_AAA_simulation():
         animate_wave_potentials_generator()
 
 
-    if np.any([dict_executable['regen_liouville_mapping'],dict_executable['regen_flux_calculation'],dict_executable['regen_field_particle_correlation'],dict_executable['regen_field_particle_correlation']]):
-        print('-----------------------')
-        print(stl.color.RED + f'--- Altitude {5} km ---' + stl.color.END)
-        print('-----------------------')
-
 
     if dict_executable['regen_liouville_mapping'] == 1:
         print('\n--- Calculating Liouville Mapping ---',end='\n')
-        # distribution_generator()
+        from Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_generator import liouville_mapping_generator
+        liouville_mapping_generator()
 
-        print('\n--- Calculating Liouville Mapping (VelSpace) ---', end='\n')
-        from Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.archive.distribution_generator_velspace import distribution_generator_vel
-        distribution_generator_vel()
+        from src.Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_toggles import LiouvilleToggles
+        ExecutableClasses().update_run_JSON(
+            {
+                'Liouville_mapping': {
+                    'mapping_altitudes':LiouvilleToggles.mapping_alts,
+                    'RK45_rtol': LiouvilleToggles.RK45_rtol,
+                    'RK45_atol': LiouvilleToggles.RK45_atol,
+                    'Observed_energies':LiouvilleToggles.energy_range_obs,
+                    'Observed_pitch_angles':LiouvilleToggles.pitch_range_obs,
+                    'Observed_time_resolution_seconds':LiouvilleToggles.time_rez
+                }
+            })
 
     if dict_executable['regen_flux_calculation'] ==1:
         print('\n--- Calculating Differential Flux ---',end='\n')

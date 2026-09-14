@@ -4,6 +4,10 @@ from scipy.integrate import quad
 from scipy.optimize import minimize_scalar
 
 class SpatialClasses:
+
+
+
+
     # Convert output to geophysical coordinates
     def r_muChi(self,mu, chi):
         '''
@@ -59,12 +63,11 @@ class SpatialClasses:
             [m] Distance along geomagnetic field line
         '''
 
+        # Get the mu scale factor
+        from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
+        envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
 
         def field_align_arc_length(mu, mu0, chi0, z_para_target):
-
-            # Get the mu scale factor
-            from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
-            envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
 
             # Determine
             z_para = quad(

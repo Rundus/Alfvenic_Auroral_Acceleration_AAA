@@ -35,17 +35,42 @@ class ExecutableClasses:
                 raise Exception('Pickled model does not match runners configuration. Try re-generating pickle files.')
 
 
-    def update_run_JSON(self,dict_update):
+    def update_run_JSON(self, dict_update):
+        import numpy as np
+        import tempfile
 
-        # open the JSON file
+        def _to_jsonable(obj):
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()
+            if isinstance(obj, np.integer):
+                return int(obj)
+            if isinstance(obj, np.floating):
+                return float(obj)
+            if isinstance(obj, np.bool_):
+                return bool(obj)
+            raise TypeError(f'{type(obj).__name__} is not JSON serializable')
+
         file_path = f'{RunToggles.sim_data_output_path}/run_config.json'
 
-        with open(file_path, "r+") as f:
+        with open(file_path, 'r') as f:
             data = json.load(f)
-            data.update(dict_update)  # overwrites existing keys, adds new ones — no need to check manually
-            f.seek(0)
-            json.dump(data, f, indent=3)
-            f.truncate()
+        data.update(dict_update)
+
+        # serialize fully in memory — if this raises, the file on disk is untouched
+        text = json.dumps(data, indent=3, default=_to_jsonable)
+
+        folder = os.path.dirname(file_path)
+        fd, tmp_path = tempfile.mkstemp(dir=folder, suffix='.tmp')
+        try:
+            with os.fdopen(fd, 'w') as f:
+                f.write(text)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp_path, file_path)   # atomic on Windows and POSIX
+        except BaseException:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+            raise
 
 
     def generate_run_JSON(self):
