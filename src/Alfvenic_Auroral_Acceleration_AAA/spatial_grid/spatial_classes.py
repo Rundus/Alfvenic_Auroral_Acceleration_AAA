@@ -5,11 +5,9 @@ from scipy.optimize import minimize_scalar
 
 class SpatialClasses:
 
-
-
-
     # Convert output to geophysical coordinates
-    def r_muChi(self,mu, chi):
+    @staticmethod
+    def r_muChi(mu, chi):
         '''
         :param mu:
             mu coordinate value
@@ -30,7 +28,8 @@ class SpatialClasses:
 
         return r
 
-    def theta_muChi(self, mu, chi):
+    @staticmethod
+    def theta_muChi(mu, chi):
         '''
         :param mu:
             mu coordinate value
@@ -47,8 +46,8 @@ class SpatialClasses:
         u = -0.5 * np.sqrt(w) + 0.5 * np.sqrt(2 / (zeta * np.sqrt(w)) - w)
         return np.degrees(np.arcsin(np.sqrt(u)))
 
-
-    def mu_from_field_line_distance(self,mu0,chi0,z_para_target):
+    @staticmethod
+    def mu_from_field_line_distance(mu0,chi0,z_para_target):
         '''
         Finds the final mu value for a given field-line distance starting at (mu0,chi0), S = int_u0^uf (h_mu)dmu. Done by finite integrating
         the differential length element between u0 and uf, where uf is a variable that's solved for by minimizing (S-z_para_target)

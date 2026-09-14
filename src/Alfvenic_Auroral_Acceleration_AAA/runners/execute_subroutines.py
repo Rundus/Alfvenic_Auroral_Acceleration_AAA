@@ -108,7 +108,9 @@ def run_AAA_simulation():
                     'RK45_atol': LiouvilleToggles.RK45_atol,
                     'Observed_energies':LiouvilleToggles.energy_range_obs,
                     'Observed_pitch_angles':LiouvilleToggles.pitch_range_obs,
-                    'Observed_time_resolution_seconds':LiouvilleToggles.time_rez
+                    'Observed_time_resolution_seconds':LiouvilleToggles.time_rez,
+                    'upper_termination_altitude_km':LiouvilleToggles.upper_termination_altitude,
+                    'lower_termination_altitude_km': LiouvilleToggles.lower_termination_altitude,
                 }
             })
 

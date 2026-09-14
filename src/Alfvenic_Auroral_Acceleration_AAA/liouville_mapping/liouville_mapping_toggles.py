@@ -1,12 +1,14 @@
 import numpy as np
 import spaceToolsLib as stl
+import os
 
 class LiouvilleToggles:
 
     #############################
     # --- PARALLEL PROCESSING ---
     #############################
-    processes_count = 20  # Number of CPU cores to commit to this operation
+    processes_count = os.cpu_count()-1  # Number of CPU cores to commit to this operation
+    # processes_count = 20  # Number of CPU cores to commit to this operation
 
     #############################
     # --- RK45 solver toggles ---
@@ -21,7 +23,7 @@ class LiouvilleToggles:
     #############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [500]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [500, 1000,1500]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = 18000 # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = 200 # [km] lower altitude limit where to stop the Rk45
 
@@ -35,7 +37,7 @@ class LiouvilleToggles:
     # --- ESA particle sampling ---
     time_rez = 0.05 # in seconds
     time_obs_start = 0  # in seconds
-    time_obs_end = 10 # in seconds
+    time_obs_end = 3 # in seconds
     N_obs_points = int(time_obs_end/time_rez)+1
     obs_times = np.linspace(time_obs_start, time_obs_end, N_obs_points)
 
