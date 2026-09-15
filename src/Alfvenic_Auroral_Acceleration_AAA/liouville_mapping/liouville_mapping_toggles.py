@@ -28,10 +28,10 @@ class LiouvilleToggles:
 
     # --- ENERGY/PITCH COORDINATES ---
     N_energy_space_points = 30
-    E_max_obs = 4  # the POWER of 10^E_max for the maximum energy
+    E_max_obs = 3  # the POWER of 10^E_max for the maximum energy
     E_min_obs = 1  # the POWER of 10^E_min for the minimum energy
     pitch_range_obs = np.linspace(0, 180, 19)
-    # pitch_range_obs = np.linspace(0, 90, 9+1)
+    # pitch_range_obs = [180]
     energy_range_obs = np.logspace(E_min_obs, E_max_obs, N_energy_space_points)
 
     # --- ESA particle sampling ---
@@ -42,7 +42,7 @@ class LiouvilleToggles:
 
     # --- Loss Cone ---
     use_loss_cone_bool = True
-    alt_lost = lower_termination_altitude-0.1  # [km] altitude which any particles which reach this have distribution=0
+    alt_lost = lower_termination_altitude+1E-3  # [km] altitude which any particles which reach this have distribution=0. Add a "Tiny" 1E-3 Perturbation for numerical reasons
 
     ###########################
     # --- WAVE OBSERVATIONS ---

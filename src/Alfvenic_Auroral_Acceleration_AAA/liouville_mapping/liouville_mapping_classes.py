@@ -38,8 +38,8 @@ class LiouvilleClasses:
         self.chi_obs = data_dict_spatial['chi'][0][0]
         self.r0 = 1 + self.mapping_alt / stl.Re
         self.colat0_rad = np.arcsin(np.sqrt(self.chi_obs * self.r0))
-        self.u0_obs = - np.sqrt(np.cos(self.colat0_rad)) / self.r0
-        self.B0 = self.B_dipole(self.u0_obs, self.chi_obs)
+        self.mu_obs = - np.sqrt(np.cos(self.colat0_rad)) / self.r0
+        self.B0 = self.B_dipole(self.mu_obs, self.chi_obs)
         self.observation_times = np.linspace(LiouvilleToggles.time_obs_start, LiouvilleToggles.time_obs_end, LiouvilleToggles.N_obs_points) # list of observation times
 
         # Calculate Loss Cone properties
@@ -80,7 +80,7 @@ class LiouvilleClasses:
             N_additional_obs_points = int(LiouvilleToggles.injected_wave_time_delay/deltaT_obs)
             self.observation_times = np.concatenate([np.array([deltaT_obs*i for i in range(N_additional_obs_points)]),self.observation_times+LiouvilleToggles.injected_wave_time_delay])
 
-        self.Epara = RegularGridInterpolator((self.time_grid, self.mu_grid),self.Epara,bounds_error=False, fill_value=0.0)
+        self.Epara_interp = RegularGridInterpolator((self.time_grid, self.mu_grid),self.Epara,bounds_error=False, fill_value=0.0)
 
     def map_single_time(self, tmeIdx):
         N_ptch = len(LiouvilleToggles.pitch_range_obs)
@@ -91,9 +91,9 @@ class LiouvilleClasses:
             engyVal = LiouvilleToggles.energy_range_obs[engyIdx]
             ptchVal = np.radians(LiouvilleToggles.pitch_range_obs[ptchIdx])
             speed = np.sqrt(2 * stl.q0 * engyVal / stl.m_e)
-            vperp = speed * np.sin(ptchVal)
+            vperp = round(speed * np.sin(ptchVal),2)
             vpara = speed * np.cos(ptchVal)
-            s0 = [self.u0_obs, self.chi_obs, -vpara, vperp]
+            s0 = [self.mu_obs, self.chi_obs, -vpara, vperp]
 
             t_obs = self.observation_times[tmeIdx]
             uB = (0.5 * stl.m_e * np.square(vperp)) / self.B0
@@ -109,11 +109,16 @@ class LiouvilleClasses:
             mapped_v_perp = vperp * math.sqrt(mapped_B_mag / self.B0)
             mapped_pitch = math.atan(abs(mapped_v_para/mapped_v_perp))
 
+
+            # --- MODIFY/EXPORT DISTRIBUTIONS ---
+
             # Determine the local loss cone based off the equatorial loss cone
             mapped_loss_cone = math.asin(math.sin(self.pitch_eq_lost)*math.sqrt(mapped_B_mag/self.B_eq))
 
-            if LiouvilleToggles.use_loss_cone_bool and mapped_pitch <= mapped_loss_cone: # check if within the loss cone. i.e. if alpha_obs <= alpha_los = arcsin(sqrt(B_obs/B_lower_boundary))
-                block[ptchIdx][engyIdx] = 0
+            if LiouvilleToggles.use_loss_cone_bool and np.any([mapped_pitch <= mapped_loss_cone,
+                                                               mapped_pitch >= 180-mapped_loss_cone,
+                                                               mapped_alt<= LiouvilleToggles.alt_lost]):
+                    block[ptchIdx][engyIdx] = 0
             else:
                 block[ptchIdx][engyIdx] = self.Maxwellian(
                     vperp=mapped_v_perp,
@@ -132,22 +137,17 @@ class LiouvilleClasses:
         interp_eperp = RegularGridInterpolator((self.time_grid, self.mu_grid), self.Eperp, bounds_error=False, fill_value=0.0)
         interp_bperp = RegularGridInterpolator((self.time_grid, self.mu_grid), self.Bperp, bounds_error=False, fill_value=0.0)
 
-        # determine the observation mu-value
-        r0 = 1 + self.mapping_alt / stl.Re
-        colat0_rad = np.arcsin(np.sqrt(self.chi_obs * r0))
-        u0_obs = - np.sqrt(np.cos(colat0_rad)) / r0
-
         # Calculate the interpolated wave-fields at the observation points
         T_end = LiouvilleToggles.time_obs_end + LiouvilleToggles.injected_wave_time_delay if LiouvilleToggles.injected_wave_time_delay > 0 else LiouvilleToggles.time_obs_end
         N_obs_wave_points = int(T_end / LiouvilleToggles.time_rez_waves)
         obs_waves_times = np.linspace(0, T_end, N_obs_wave_points)
-        eval_points = np.array([[obs_waves_times[i], u0_obs] for i in range(N_obs_wave_points)])
+        eval_points = np.array([[obs_waves_times[i], self.mu_obs] for i in range(N_obs_wave_points)])
+
         E_perp_obs = interp_eperp(eval_points)
         E_para_obs = interp_epara(eval_points)
         B_perp_obs = interp_bperp(eval_points)
 
         return E_para_obs, E_perp_obs,B_perp_obs, obs_waves_times
-
 
     def liouville_mapper(self):
         import multiprocessing as mp
@@ -186,7 +186,7 @@ class LiouvilleClasses:
         # DvmuDt_inV = (stl.q0/stl.m_e)*ElectrostaticPotentialClasses().invertedVEField([S[0],S[1],S[2]])
 
         # EM Field
-        # DvmuDt_Alfven = - (stl.q0 / stl.m_e) * self.Epara(np.array([[deltaT + t, S[0]]]))[0]
+        # DvmuDt_Alfven = - (stl.q0 / stl.m_e) * self.Epara_interp(np.array([[deltaT + t, S[0]]]))[0]
 
         # Combine all the parallel effects
         DvmuDt = DvmuDt_mirror
