@@ -1,6 +1,7 @@
 import numpy as np
 from typing import Callable, Optional
 import spaceToolsLib as stl
+from tqdm import tqdm
 
 class WaveFieldsClasses: # for parallel and perp only
 
@@ -128,7 +129,7 @@ class WaveFieldsClasses: # for parallel and perp only
 
         t = 0.0
         acc_bot, acc_top = 0.0, 0.0 # accumulate the flux at the top/bottom of the simulation
-        for k in range(1, n_out):
+        for k in tqdm(range(1, n_out)):
             while t < t_out[k] - 1e-15:
                 h = min(dt, t_out[k] - t)
                 kp, ka,fb1,ft1 = rhs(Phi, A, t)  # SSP-RK2

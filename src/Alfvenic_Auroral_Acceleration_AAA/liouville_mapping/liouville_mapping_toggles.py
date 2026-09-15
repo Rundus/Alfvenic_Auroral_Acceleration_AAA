@@ -1,5 +1,4 @@
 import numpy as np
-import spaceToolsLib as stl
 import os
 
 class LiouvilleToggles:
@@ -18,33 +17,43 @@ class LiouvilleToggles:
     RK45_atol = 1E-9  # controls the absolute accuracy
     # RK45_tspan = [0,-10*data_dict_ray_eqns['time'][0][-1]]  # time range (in seconds). MAKE SURE THIS IS REVERSED IN TIME
 
-    #############################
-    # --- OBSERVATION TOGGLES ---
-    #############################
+    ##############################
+    # --- PARTICLE OBSERVATION ---
+    ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [500, 1000,1500]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [400]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = 18000 # [km] upper altitude limit where to stop the Rk45 solver
-    lower_termination_altitude = 200 # [km] lower altitude limit where to stop the Rk45
+    lower_termination_altitude = 100 # [km] lower altitude limit where to stop the Rk45
 
     # --- ENERGY/PITCH COORDINATES ---
-    N_energy_space_points = 50
+    N_energy_space_points = 30
     E_max_obs = 4  # the POWER of 10^E_max for the maximum energy
     E_min_obs = 1  # the POWER of 10^E_min for the minimum energy
     pitch_range_obs = np.linspace(0, 180, 19)
+    # pitch_range_obs = np.linspace(0, 90, 9+1)
     energy_range_obs = np.logspace(E_min_obs, E_max_obs, N_energy_space_points)
 
     # --- ESA particle sampling ---
-    time_rez = 0.05 # in seconds
+    time_rez = 0.25 # in seconds
     time_obs_start = 0  # in seconds
-    time_obs_end = 3 # in seconds
-    N_obs_points = int(time_obs_end/time_rez)+1
-    obs_times = np.linspace(time_obs_start, time_obs_end, N_obs_points)
+    time_obs_end = 10 # in seconds
+    N_obs_points = int(time_obs_end/time_rez)+1 # number of particle observation points
+
+    # --- Loss Cone ---
+    use_loss_cone_bool = True
+    alt_lost = lower_termination_altitude-0.1  # [km] altitude which any particles which reach this have distribution=0
+
+    ###########################
+    # --- WAVE OBSERVATIONS ---
+    ###########################
 
     # --- Observation Wave-Sampling ---
-    time_rez_waves = 0.001 # in seconds
-    N_obs_wave_points = int(time_obs_end/time_rez_waves)
-    obs_waves_times = np.linspace(0,time_obs_end,N_obs_wave_points)
+    time_rez_waves = 0.001 # [seconds] deltaT sample rate for the waves
+
+    # --- Injected Wave ---
+    injected_wave_time_delay = 3 # [seconds] Time delay added to the wave data to cause it to inject later. Defaults to 0 if set to <=0
+
 
 
 

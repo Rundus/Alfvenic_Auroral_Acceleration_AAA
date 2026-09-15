@@ -12,8 +12,8 @@ class ExecutableClasses:
             'wave_potentials',
             'liouville_mapping',
             'field_particle_correlation',
-            'flux',
-            'results'
+            'detector_flux',
+            'field_particle_correlation'
         ]
 
         for path in folders_paths:

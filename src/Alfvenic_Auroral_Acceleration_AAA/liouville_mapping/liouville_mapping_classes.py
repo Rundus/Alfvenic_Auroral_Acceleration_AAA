@@ -8,6 +8,8 @@ from itertools import product
 from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
 envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
 from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
+import math
+from scipy.interpolate import RegularGridInterpolator
 
 _WORKER = {}
 
@@ -23,25 +25,62 @@ class LiouvilleClasses:
     def __init__(self,mapping_alt):
 
         # form the regular grid interpolator for E-parallel
-        from scipy.interpolate import RegularGridInterpolator
         data_dict_potentials = stl.loadDictFromFile(f'{RunToggles.sim_data_output_path}/wave_potentials/wave_potentials.cdf')
         data_dict_spatial = stl.loadDictFromFile(f'{RunToggles.sim_data_output_path}/spatial_grid/spatial_grid.cdf')
 
+        # Calculate the Observation Info
         self.mapping_alt = mapping_alt
         self.B_dipole = envDict['B_dipole']
         self.dB_dipole_dmu = envDict['dB_dipole_dmu']
         self.h_factors = [envDict['h_mu'], envDict['h_chi'], envDict['h_phi']]
         self.Te = envDict['Te']
         self.ne_density = envDict['n_density']
-        self.chi0_obs = data_dict_spatial['chi'][0][0]
+        self.chi_obs = data_dict_spatial['chi'][0][0]
         self.r0 = 1 + self.mapping_alt / stl.Re
-        self.colat0_rad = np.arcsin(np.sqrt(self.chi0_obs * self.r0))
+        self.colat0_rad = np.arcsin(np.sqrt(self.chi_obs * self.r0))
         self.u0_obs = - np.sqrt(np.cos(self.colat0_rad)) / self.r0
-        self.B0 = self.B_dipole(self.u0_obs, self.chi0_obs)
+        self.B0 = self.B_dipole(self.u0_obs, self.chi_obs)
+        self.observation_times = np.linspace(LiouvilleToggles.time_obs_start, LiouvilleToggles.time_obs_end, LiouvilleToggles.N_obs_points) # list of observation times
 
-        mu_grid = data_dict_spatial['mu'][0]
-        time_grid = data_dict_potentials['time'][0]
-        self.Epara = RegularGridInterpolator((time_grid, mu_grid), data_dict_potentials['E_para'][0],bounds_error=False, fill_value=0.0)
+        # Calculate Loss Cone properties
+        self.r_lost = 1 + LiouvilleToggles.alt_lost / stl.Re
+        self.chi_lost = data_dict_spatial['chi'][0][0]
+        self.colat_lost = np.arcsin(np.sqrt(self.chi_lost * self.r_lost))
+        self.mu_lost = - np.sqrt(np.cos(self.colat_lost)) / self.r_lost
+        self.B_lost = self.B_dipole(self.mu_lost, self.chi_lost)
+        self.mu_eq = -1E-4 # very close to zero but not quite to avoid singularities. Represents the geomagnetic equator for perfect dipole
+        self.chi_eq = data_dict_spatial['chi'][0][0]
+        self.B_eq = self.B_dipole(self.mu_eq, self.chi_eq)
+        self.pitch_eq_lost = math.asin(math.sqrt(self.B_eq/self.B_lost))
+
+        # Construct the Interpolator Object
+        self.mu_grid = data_dict_spatial['mu'][0]
+        self.time_grid = data_dict_potentials['time'][0]
+        self.Epara = data_dict_potentials['E_para'][0].copy()
+        self.Eperp = data_dict_potentials['E_perp'][0].copy()
+        self.Bperp = data_dict_potentials['B_perp'][0].copy()
+
+        if LiouvilleToggles.injected_wave_time_delay > 0:
+
+            # --- Adjust the wave Interpolator ---
+            deltaT = np.gradient(self.time_grid)[0]
+            N_additional_points = int(LiouvilleToggles.injected_wave_time_delay/deltaT)
+            zeros = np.zeros((N_additional_points, self.Epara.shape[1]), dtype=self.Epara.dtype)
+
+            # adjust the fields size
+            self.Epara = np.vstack([zeros, self.Epara])
+            self.Eperp = np.vstack([zeros, self.Eperp])
+            self.Bperp = np.vstack([zeros, self.Bperp])
+
+            # adjust the fields time grid size
+            self.time_grid = np.concatenate([np.array([deltaT*i for i in range(N_additional_points)]),self.time_grid+LiouvilleToggles.injected_wave_time_delay])
+
+            # --- Adjust the observation times ---
+            deltaT_obs = np.gradient(self.observation_times)[0]
+            N_additional_obs_points = int(LiouvilleToggles.injected_wave_time_delay/deltaT_obs)
+            self.observation_times = np.concatenate([np.array([deltaT_obs*i for i in range(N_additional_obs_points)]),self.observation_times+LiouvilleToggles.injected_wave_time_delay])
+
+        self.Epara = RegularGridInterpolator((self.time_grid, self.mu_grid),self.Epara,bounds_error=False, fill_value=0.0)
 
     def map_single_time(self, tmeIdx):
         N_ptch = len(LiouvilleToggles.pitch_range_obs)
@@ -54,32 +93,67 @@ class LiouvilleClasses:
             speed = np.sqrt(2 * stl.q0 * engyVal / stl.m_e)
             vperp = speed * np.sin(ptchVal)
             vpara = speed * np.cos(ptchVal)
-            s0 = [self.u0_obs, self.chi0_obs, -vpara, vperp]
+            s0 = [self.u0_obs, self.chi_obs, -vpara, vperp]
 
-            deltaT = LiouvilleToggles.obs_times[tmeIdx]
+            t_obs = self.observation_times[tmeIdx]
             uB = (0.5 * stl.m_e * np.square(vperp)) / self.B0
 
-            T, p_mu, p_chi, p_vel_mu, p_vel_chi = self.rk45_solver(
-                t_span=[0, -deltaT], s0=s0, deltaT=deltaT, uB=uB)
+            T, p_mu, p_chi, p_vel_mu, p_vel_chi = self.rk45_solver(t_span=[0, -t_obs], s0=s0, deltaT=t_obs, uB=uB)
 
-            B_mag_particle = self.B_dipole(p_mu, p_chi)
-            mapped_v_perp = vperp * np.sqrt(B_mag_particle / self.B0)
+            # Collect the mapped particle properties
+            mapped_v_para = p_vel_mu[-1]
+            mapped_mu = p_mu[-1]
+            mapped_chi = p_chi[-1]
+            mapped_alt = stl.Re*(SpatialClasses.r_muChi(mapped_mu,mapped_chi)-1)
+            mapped_B_mag = self.B_dipole(mapped_mu, mapped_chi)
+            mapped_v_perp = vperp * math.sqrt(mapped_B_mag / self.B0)
+            mapped_pitch = math.atan(abs(mapped_v_para/mapped_v_perp))
 
-            block[ptchIdx][engyIdx] = self.Maxwellian(
-                vperp=mapped_v_perp[-1],
-                vpara=-1 * p_vel_mu[-1],
-                density=self.ne_density(p_mu[-1], p_chi[-1]),
-                Te=self.Te(p_mu[-1], p_chi[-1]),
-                Emin=10 ** LiouvilleToggles.E_min_obs,
-                Emax=10 ** LiouvilleToggles.E_max_obs,
-            )
+            # Determine the local loss cone based off the equatorial loss cone
+            mapped_loss_cone = math.asin(math.sin(self.pitch_eq_lost)*math.sqrt(mapped_B_mag/self.B_eq))
+
+            if LiouvilleToggles.use_loss_cone_bool and mapped_pitch <= mapped_loss_cone: # check if within the loss cone. i.e. if alpha_obs <= alpha_los = arcsin(sqrt(B_obs/B_lower_boundary))
+                block[ptchIdx][engyIdx] = 0
+            else:
+                block[ptchIdx][engyIdx] = self.Maxwellian(
+                    vperp=mapped_v_perp,
+                    vpara=-1 * mapped_v_para,
+                    density=self.ne_density(mapped_mu, mapped_chi),
+                    Te=self.Te(mapped_mu, mapped_chi),
+                    Emin=10 ** LiouvilleToggles.E_min_obs,
+                    Emax=10 ** LiouvilleToggles.E_max_obs,
+                )
         return block
+
+    def observed_fields(self):
+        # Create the Interpolation Objects
+        # Note: fill_value =0 means no wave field outside the simulted domain whereas fille_value =none extrapolates linearly
+        interp_epara = RegularGridInterpolator((self.time_grid, self.mu_grid), self.Epara, bounds_error=False, fill_value=0.0)
+        interp_eperp = RegularGridInterpolator((self.time_grid, self.mu_grid), self.Eperp, bounds_error=False, fill_value=0.0)
+        interp_bperp = RegularGridInterpolator((self.time_grid, self.mu_grid), self.Bperp, bounds_error=False, fill_value=0.0)
+
+        # determine the observation mu-value
+        r0 = 1 + self.mapping_alt / stl.Re
+        colat0_rad = np.arcsin(np.sqrt(self.chi_obs * r0))
+        u0_obs = - np.sqrt(np.cos(colat0_rad)) / r0
+
+        # Calculate the interpolated wave-fields at the observation points
+        T_end = LiouvilleToggles.time_obs_end + LiouvilleToggles.injected_wave_time_delay if LiouvilleToggles.injected_wave_time_delay > 0 else LiouvilleToggles.time_obs_end
+        N_obs_wave_points = int(T_end / LiouvilleToggles.time_rez_waves)
+        obs_waves_times = np.linspace(0, T_end, N_obs_wave_points)
+        eval_points = np.array([[obs_waves_times[i], u0_obs] for i in range(N_obs_wave_points)])
+        E_perp_obs = interp_eperp(eval_points)
+        E_para_obs = interp_epara(eval_points)
+        B_perp_obs = interp_bperp(eval_points)
+
+        return E_para_obs, E_perp_obs,B_perp_obs, obs_waves_times
+
 
     def liouville_mapper(self):
         import multiprocessing as mp
         from tqdm import tqdm
 
-        N_time = len(LiouvilleToggles.obs_times)
+        N_time = len(self.observation_times)
         N_ptch = len(LiouvilleToggles.pitch_range_obs)
         N_engy = len(LiouvilleToggles.energy_range_obs)
         Distribution = np.zeros((N_time, N_ptch, N_engy))
@@ -89,72 +163,6 @@ class LiouvilleClasses:
                 Distribution[tmeIdx] = block
 
         return Distribution
-
-    # def liouville_mapper(self):
-    #     import multiprocessing as mp
-    #     from tqdm import tqdm
-    #
-    #     # --- DEFINE PARALLELIZED OUTPUTS ---
-    #     N_time = len(LiouvilleToggles.obs_times)
-    #     N_ptch = len(LiouvilleToggles.pitch_range_obs)
-    #     N_engy = len(LiouvilleToggles.energy_range_obs)
-    #
-    #     # --- Prepare the output data array ---
-    #     # Distribution Function Array (Parallel Process)
-    #     mp_array_1 = mp.Array('d', N_time * N_ptch * N_engy)
-    #     arr_1 = np.frombuffer(mp_array_1.get_obj())
-    #     Distribution = arr_1.reshape((N_time, N_ptch, N_engy))
-    #
-    #     def parallel_processing_mapper(tmeIdx):
-    #
-    #         for ptchIdx, engyIdx in product(*[range(N_ptch), range(N_engy)]):
-    #
-    #             # get the initial state vector of the particle at z_obs
-    #             engyVal = LiouvilleToggles.energy_range_obs[engyIdx]
-    #             ptchVal = np.radians(LiouvilleToggles.pitch_range_obs[ptchIdx])
-    #             vperp = np.sqrt(2 * stl.q0 * engyVal / stl.m_e) * np.sin(ptchVal)
-    #             vpara = np.sqrt(2 * stl.q0 * engyVal / stl.m_e) * np.cos(ptchVal)
-    #             v_mu = -1 * vpara # flip direction of v_mu to align with modified dipole coordinates
-    #             s0 = [self.u0_obs, self.chi0_obs, v_mu, vperp]
-    #
-    #             # get the solver arguments
-    #             deltaT = LiouvilleToggles.obs_times[tmeIdx]
-    #             uB = (0.5 * stl.m_e * np.square(vperp)) / self.B0
-    #
-    #             # Perform the RK45 Solver for the equations of motion
-    #             [T, particle_mu, particle_chi, particle_vel_Mu, particle_vel_chi] = self.rk45_solver(
-    #                 t_span=[0, -deltaT],
-    #                 s0=s0,
-    #                 deltaT=deltaT,
-    #                 uB = uB)
-    #
-    #
-    #             ################################
-    #             # --- PERPENDICULAR DYNAMICS ---
-    #             ################################
-    #             # geomagnetic field experienced by particle
-    #             B_mag_particle = self.B_dipole(particle_mu.copy(), particle_chi.copy())
-    #             mapped_v_perp = vperp * np.sqrt(B_mag_particle / self.B0 )
-    #
-    #             #######################################
-    #             # --- CALCULATE MAPPED DISTRIBUTION ---
-    #             #######################################
-    #             Distribution[tmeIdx][ptchIdx][engyIdx] = self.Maxwellian(
-    #                 vperp=mapped_v_perp[-1],
-    #                 vpara=-1 *particle_vel_Mu[-1],
-    #                 density= self.ne_density(particle_mu[-1],particle_chi[-1]),
-    #                 Te=self.Te(particle_mu[-1],particle_chi[-1]),
-    #                 Emin=10**LiouvilleToggles.E_min_obs,
-    #                 Emax=10**LiouvilleToggles.E_max_obs
-    #             )
-    #
-    #     processes_count = 20  # Number of CPU cores to commit to this operation
-    #     pool_object = mp.Pool(processes_count)
-    #     inputs = range(N_time)
-    #     for _ in tqdm(pool_object.imap_unordered(parallel_processing_mapper, inputs), total=N_time):
-    #         pass
-    #
-    #     return Distribution
 
     # The
     def equations_of_motion(self, t, S, deltaT, uB):
@@ -178,7 +186,7 @@ class LiouvilleClasses:
         # DvmuDt_inV = (stl.q0/stl.m_e)*ElectrostaticPotentialClasses().invertedVEField([S[0],S[1],S[2]])
 
         # EM Field
-        DvmuDt_Alfven = - (stl.q0 / stl.m_e) * self.Epara(np.array([[deltaT + t, S[0]]]))[0]
+        # DvmuDt_Alfven = - (stl.q0 / stl.m_e) * self.Epara(np.array([[deltaT + t, S[0]]]))[0]
 
         # Combine all the parallel effects
         DvmuDt = DvmuDt_mirror

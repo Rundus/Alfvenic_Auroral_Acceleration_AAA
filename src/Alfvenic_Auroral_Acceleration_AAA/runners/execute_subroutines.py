@@ -48,7 +48,6 @@ def run_AAA_simulation():
             }
         )
 
-
     if dict_executable['regen_spatial_grid'] == 1:
         print('\n--- Regenerating Spatial Environment ---', end='\n')
         from src.Alfvenic_Auroral_Acceleration_AAA.spatial_grid.spatial_grid_generator import spatial_grid_generator
@@ -92,8 +91,6 @@ def run_AAA_simulation():
         from Alfvenic_Auroral_Acceleration_AAA.wave_potentials.wave_potentials_animator import animate_wave_potentials_generator
         animate_wave_potentials_generator()
 
-
-
     if dict_executable['regen_liouville_mapping'] == 1:
         print('\n--- Calculating Liouville Mapping ---',end='\n')
         from Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_generator import liouville_mapping_generator
@@ -114,10 +111,10 @@ def run_AAA_simulation():
                 }
             })
 
-    if dict_executable['regen_flux_calculation'] ==1:
-        print('\n--- Calculating Differential Flux ---',end='\n')
-        from src.Alfvenic_Auroral_Acceleration_AAA.flux.flux_generator import flux_generator
-        flux_generator()
+    if dict_executable['regen_detector_flux'] ==1:
+        print('\n--- Calculating Detector Differential Flux ---',end='\n')
+        from src.Alfvenic_Auroral_Acceleration_AAA.flux.detector_flux_generator import detector_flux_generator
+        detector_flux_generator()
 
     if dict_executable['regen_field_particle_correlation'] == 1:
         print('\n--- Calculating Field-Particle Correlation ---', end='\n')

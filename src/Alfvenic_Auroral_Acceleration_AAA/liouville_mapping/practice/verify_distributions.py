@@ -1,6 +1,8 @@
-import numpy as np
+from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
+envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
 
-x = -1
-y = 1
+# At equator
+mu = -0.001
+chi = 0.11406
 
-print(np.degrees(np.arctan2(x,y)))
+print(envDict['B_dipole'](mu,chi))
