@@ -112,13 +112,23 @@ class LiouvilleClasses:
 
             # --- MODIFY/EXPORT DISTRIBUTIONS ---
 
-            # Determine the local loss cone based off the equatorial loss cone
-            mapped_loss_cone = math.asin(math.sin(self.pitch_eq_lost)*math.sqrt(mapped_B_mag/self.B_eq))
+            if LiouvilleToggles.use_loss_cone_bool:
 
-            if LiouvilleToggles.use_loss_cone_bool and np.any([mapped_pitch <= mapped_loss_cone,
-                                                               mapped_pitch >= 180-mapped_loss_cone,
-                                                               mapped_alt<= LiouvilleToggles.alt_lost]):
+                mapped_loss_SineCone = math.sin(self.pitch_eq_lost) * math.sqrt(mapped_B_mag / self.B_eq)
+
+                if mapped_alt < LiouvilleToggles.alt_lost: # check if the particle ORIGINATES from an altitude below alt_loss. It should not be there
                     block[ptchIdx][engyIdx] = 0
+                elif np.any([mapped_pitch <= math.asin(mapped_loss_SineCone), mapped_pitch >= 180-math.asin(mapped_loss_SineCone)]):
+                    block[ptchIdx][engyIdx] = 0
+                else:
+                    block[ptchIdx][engyIdx] = self.Maxwellian(
+                        vperp=mapped_v_perp,
+                        vpara=-1 * mapped_v_para,
+                        density=self.ne_density(mapped_mu, mapped_chi),
+                        Te=self.Te(mapped_mu, mapped_chi),
+                        Emin=10 ** LiouvilleToggles.E_min_obs,
+                        Emax=10 ** LiouvilleToggles.E_max_obs,
+                    )
             else:
                 block[ptchIdx][engyIdx] = self.Maxwellian(
                     vperp=mapped_v_perp,
@@ -186,11 +196,11 @@ class LiouvilleClasses:
         # DvmuDt_inV = (stl.q0/stl.m_e)*ElectrostaticPotentialClasses().invertedVEField([S[0],S[1],S[2]])
 
         # EM Field
-        # DvmuDt_Alfven = - (stl.q0 / stl.m_e) * self.Epara_interp(np.array([[deltaT + t, S[0]]]))[0]
+        DvmuDt_Alfven = - (stl.q0 / stl.m_e) * self.Epara_interp(np.array([[deltaT + t, S[0]]]))[0]
 
         # Combine all the parallel effects
-        DvmuDt = DvmuDt_mirror
-        # DvmuDt = DvmuDt_mirror + DvmuDt_Alfven
+        # DvmuDt = DvmuDt_mirror
+        DvmuDt = DvmuDt_mirror + DvmuDt_Alfven
 
         # dv_chi/dt
         DvchiDt = 0
