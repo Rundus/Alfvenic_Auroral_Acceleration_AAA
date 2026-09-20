@@ -20,7 +20,7 @@ def environment_expressions_generator():
     ####################################
     # --- Define the Sympy Variables ---
     ####################################
-    B, mu, chi, n, z, u, w, zeta, gamma, rho, theta, R, THETA, mu_eq, chi_eq = sp.symbols('B mu chi n z u w zeta gamma rho theta R, THETA, mu_eq, chi_eq, B_eq')
+    B, mu, chi, n, z, u, w, zeta, gamma, rho, theta, R, THETA = sp.symbols('B mu chi n z u w zeta gamma rho theta R, THETA')
 
     #####################################
     # --- Modified Dipole coordinates ---
