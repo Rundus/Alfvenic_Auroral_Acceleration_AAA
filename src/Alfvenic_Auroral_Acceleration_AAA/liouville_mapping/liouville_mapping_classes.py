@@ -35,8 +35,6 @@ class LiouvilleClasses:
         self.B_dipole = envDict['B_dipole']
         self.dB_dipole_dmu = envDict['dB_dipole_dmu']
         self.h_factors = [envDict['h_mu'], envDict['h_chi'], envDict['h_phi']]
-        self.Te = envDict['Te']
-        self.ne_density = envDict['n_density']
         self.chi_obs = data_dict_spatial['chi'][0][0]
         self.r0 = 1 + self.mapping_alt / stl.Re
         self.colat0_rad = np.arcsin(np.sqrt(self.chi_obs * self.r0))
@@ -46,18 +44,19 @@ class LiouvilleClasses:
 
         # Setup the Loss cone + Plasma Sheet Density vs altitude
         if LiouvilleToggles.use_loss_cone_bool:
-            valid = np.isfinie(data_dict_plasma['loss_cone'][0])
-            i0 = valid.argmin() # first finite sample
-            assert valid[i0:].all() # verifies NaNs are really only on the left block of the data
+            valid = np.isfinite(data_dict_plasma['loss_cone'][0]) # find the non-nan values
+            i0 = np.where(valid==True)[0][0] # first non-nan value
+            assert np.isfinite(valid[i0:]).all() # verifies NaNs are really only on the left block of the data
 
             mu_interp = data_dict_spatial['mu'][0][i0:]
-            self.loss_cone_interp = np.interp(mu_interp, valid[i0:], left=0) # creates interpolation object where outside this the density is zero
-            density_PS = data_dict_spatial['density_PS'][0][i0:]
+            # self.loss_cone_interp = np.interp(mu_interp, valid[i0:], left=0)
+            self.loss_cone_interp = RegularGridInterpolator( (mu_interp,), valid[i0:], method="pchip", bounds_error=False, fill_value=0.0) # creates interpolation object where outside this the density is zero
+            density_PS = data_dict_plasma['n_density_PS'][0][i0:]
         else:
             mu_interp = data_dict_spatial['mu'][0]
             density_PS = np.array([PlasmaEnvironmentToggles.n0_PS for i in range(len(mu_interp))])
 
-        self.density_PS_interp = np.interp(mu_interp, density_PS, left=0)
+        self.density_PS_interp = RegularGridInterpolator( (mu_interp,), density_PS, method="pchip", bounds_error=False, fill_value=0.0)
 
         # Construct the Wave Interpolator Object
         self.mu_grid = data_dict_spatial['mu'][0]
@@ -242,8 +241,8 @@ class LiouvilleClasses:
 
         # --- plasma sheet ---
         if LiouvilleToggles.use_loss_cone_bool:
-            if mapped_pitch>= self.loss_cone_interp(mu): # check if particle within loss cone
-
+            if mapped_pitch <= self.loss_cone_interp(mu): # check if particle within loss cone
+                density_val = 0
             else: # if not, report the density reduced by loss cone effects
                 density_val = self.density_PS_interp(mu)
         else:
@@ -257,6 +256,7 @@ class LiouvilleClasses:
                                   Emin=PlasmaEnvironmentToggles.Emin_PS)
 
         # --- Cold Background ---
+        # The cold background has no loss cone and is generally described by the density formulae
         dist_cold = self.Maxwellian(vperp=vperp,
                                   vpara=vpara,
                                   density= envDict['n_density_cold'](mu,chi),
@@ -282,8 +282,6 @@ class LiouvilleClasses:
             return 0
         else:
             return density * np.sqrt(np.power(stl.m_e / (2 * np.pi * Te * stl.q0), 3)) * np.exp(-0.5 * stl.m_e * (np.square(vperp) + np.square(vpara)) / (stl.q0 * Te))
-
-
 
     def Kappa(self, mass, Vperp,Vpara,charge ,n, Te, vpara, vperp, kappa):
         # Input: density [cm^-3], Temperature [eV], Velocities [m/s]
