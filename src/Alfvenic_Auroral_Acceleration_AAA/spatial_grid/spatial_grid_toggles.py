@@ -1,3 +1,4 @@
+import spaceToolsLib as stl
 
 class SpatialGridToggles:
 
@@ -12,6 +13,6 @@ class SpatialGridToggles:
     ######################
     # --- MU-Dimension ---
     ######################
-    N_mu = 15000  # number of points in mu direction
+    N_mu = 20000  # number of points in mu direction
 
 

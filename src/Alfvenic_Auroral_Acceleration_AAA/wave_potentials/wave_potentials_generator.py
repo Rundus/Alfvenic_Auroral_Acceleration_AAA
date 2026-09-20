@@ -15,7 +15,6 @@ def wave_potentials_generator():
     import numpy as np
     import spaceToolsLib as stl
     from glob import glob
-    from typing import Callable, Optional, Sequence
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_potentials.wave_potentials_toggles import WavePotentialsToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_potentials.wave_potentials_classes import WaveFieldsClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles

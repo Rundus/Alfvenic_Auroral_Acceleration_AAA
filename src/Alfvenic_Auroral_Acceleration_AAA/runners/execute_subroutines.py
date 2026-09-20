@@ -43,7 +43,6 @@ def run_AAA_simulation():
             {
                 'expression_generator':{
                     'density_model': f'{EnvironmentExpressionsToggles().wDenModel_key}',
-                    'Te_model': f'{EnvironmentExpressionsToggles().wTeModel_key}'
                 }
             }
         )

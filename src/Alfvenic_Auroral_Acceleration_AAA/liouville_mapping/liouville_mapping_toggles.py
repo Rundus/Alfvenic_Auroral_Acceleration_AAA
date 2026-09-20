@@ -42,7 +42,6 @@ class LiouvilleToggles:
 
     # --- Loss Cone ---
     use_loss_cone_bool = True
-    alt_lost = 550  # [km] altitude which any particles which reach this have distribution=0. The exobase is where particles are essentially collisionless
 
     ###########################
     # --- WAVE OBSERVATIONS ---

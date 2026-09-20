@@ -55,7 +55,7 @@ from src.Alfvenic_Auroral_Acceleration_AAA.wave_potentials.wave_potentials_toggl
 # in section 3 below.
 
 
-data_dict_output = stl.loadDictFromFile(f'{RunToggles.sim_data_output_path}/wave_potentials/wave_potentials.cdf')  # <-- replace this line
+data_dict_output = stl.loadDictFromFile(f'{RunToggles.sim_data_output_path}/wave_potentials/wave_potentials.cdf')
 
 # =============================================================================
 # 2. OUTPUT SETTINGS

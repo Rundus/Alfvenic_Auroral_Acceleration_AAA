@@ -20,7 +20,7 @@ def environment_expressions_generator():
     ####################################
     # --- Define the Sympy Variables ---
     ####################################
-    B, mu, chi, n, z, u, w, zeta, gamma, rho, theta, R, THETA = sp.symbols('B mu chi n z u w zeta gamma rho theta R, THETA')
+    B, mu, chi, n, z, u, w, zeta, gamma, rho, theta, R, THETA, mu_eq, chi_eq = sp.symbols('B mu chi n z u w zeta gamma rho theta R, THETA, mu_eq, chi_eq, B_eq')
 
     #####################################
     # --- Modified Dipole coordinates ---
@@ -93,25 +93,24 @@ def environment_expressions_generator():
         n_F = nF[i] * (z - F0[i]) * sp.exp(-1 * ((z - F0[i]) / alpha_[i]) ** (eta[i]))
         n_Hp_density = (stl.cm_to_m ** 3) * (n_mag + n_E + n_F)
 
-    n_density = (n_Op_density + n_Hp_density)
+    n_density_cold = (n_Op_density + n_Hp_density)
+
+    # # PLASMA TEMPERATURE
+    # if EnvironmentExpressionsToggles().environment_temp_dict['shroeder2021']:
+    #     # The following are chosen so that T=1 eV at 300 km and 2 keV at 10,0000 over a transition length of deltaZ = 0.3R_E center at
+    #     # plasma sheet altitude z=3.75 R_E
+    #     T0 = 1 # [eV] Ionospheric temperature
+    #     T1 = 0.0135# [eV]
+    #     h0 = 2000 # [m] Ionospheric height scaling
+    #     T_ps =  2000 # [eV] Plasma sheet temperature
+    #     deltaZ = 0.3 *stl.Re # [m] scaling of altitude to the plamsa shet
+    #     z_ps = 3.75*stl.Re # [m] height of the plasma sheet
+    #     T_l = T1*sp.exp(z/h0) + T0
+    #     WW = 0.5*(1 - sp.tanh((z-z_ps)/deltaZ))
+    #     Te = T_l*WW + T_ps*(1-WW)
 
 
-    # PLASMA TEMPERATURE
-    if EnvironmentExpressionsToggles().environment_temp_dict['shroeder2021']:
-        # The following are chosen so that T=1 eV at 300 km and 2 keV at 10,0000 over a transition length of deltaZ = 0.3R_E center at
-        # plasma sheet altitude z=3.75 R_E
-        T0 = 1 # [eV] Ionospheric temperature
-        T1 = 0.0135# [eV]
-        h0 = 2000 # [m] Ionospheric height scaling
-        T_ps =  2000 # [eV] Plasma sheet temperature
-        deltaZ = 0.3 *stl.Re # [m] scaling of altitude to the plamsa shet
-        z_ps = 3.75*stl.Re # [m] height of the plasma sheet
-        T_l = T1*sp.exp(z/h0) + T0
-        WW = 0.5*(1 - sp.tanh((z-z_ps)/deltaZ))
-        Te = T_l*WW + T_ps*(1-WW)
-
-
-    # PLASMA MASS DENSITY
+    # COLD PLASMA MASS DENSITY
     m_Op = stl.ion_dict['O+']
     m_Hp = stl.ion_dict['H+']
     rho_density = (m_Op*n_Op_density + m_Hp*n_Hp_density)
@@ -138,7 +137,7 @@ def environment_expressions_generator():
     expression_dict = {
                        'B':[B, B_dipole],
                        'rho':[rho, rho_density],
-                       'n':[n, n_density],
+                       'n':[n, n_density_cold],
                        'R':[R, R_coord],
                        'THETA':[THETA, THETA_coord],
                        'Theta':[theta, Theta_coord],
@@ -239,11 +238,6 @@ def environment_expressions_generator():
     rho_function = m_Op*n_Op_function + m_Hp*n_Hp_function
     m_eff_function = rho_function/(m_Op + m_Hp)
 
-    # Electron Temperature
-    Te_function = Te
-    for key, item in expression_dict.items():
-        Te_function = Te_function.subs({item[0]:item[1]})
-
     ###############################################
     # --- CONVERT EVERYTHING TO LAMBDA FUNCTION ---
     ###############################################
@@ -266,8 +260,6 @@ def environment_expressions_generator():
     func_h_chi = lambdify([mu, chi], h_chi, modules="numpy")
     func_h_phi = lambdify([mu, chi], h_phi, modules="numpy")
     func_pDD_n_density_mu = lambdify([mu,chi], diff_n_total_mu,modules="numpy")
-    func_Te = lambdify([mu,chi],Te_function,modules='numpy')
-
 
     funcs = {'lmb_e': func_lmb_e,
              'pDD_lmb_e_mu': func_pDD_mu_lmb_e,
@@ -281,12 +273,11 @@ def environment_expressions_generator():
              'B_dipole':func_B_dipole,
              'n_Op':func_nOp,
              'n_Hp':func_nHp,
-             'n_density':func_n_density,
+             'n_density_cold':func_n_density,
              'meff':func_meff,
              'rho':func_rho,
              'dB_dipole_dmu':func_pDD_mu_Bgeo,
              'pDD_n_density_mu':func_pDD_n_density_mu,
-             'Te':func_Te
              }
 
     ###################
@@ -304,9 +295,7 @@ def environment_expressions_generator():
     #######################################
     # create a JSON file that specifies which density model was used to generate the pickle files
     which_density_model = [key for key in EnvironmentExpressionsToggles().environment_density_dict.keys() if EnvironmentExpressionsToggles().environment_density_dict[key]][0]
-    which_Te_model = [key for key in EnvironmentExpressionsToggles().environment_temp_dict.keys() if EnvironmentExpressionsToggles().environment_temp_dict[key]][0]
-    config_dict = {'density_model':which_density_model,
-                   'Te_model':which_Te_model}
+    config_dict = {'density_model':which_density_model}
     folder_path = f'{RunToggles.sim_root_path}/environment_expressions/pickled_expressions/'
     outpath = f'{folder_path}/model_config.json'
     with open(outpath, 'w') as outfile:

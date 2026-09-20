@@ -8,6 +8,7 @@ from itertools import product
 from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
 envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
 from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_toggles import PlasmaEnvironmentToggles
 import math
 from scipy.interpolate import RegularGridInterpolator
 
@@ -27,6 +28,7 @@ class LiouvilleClasses:
         # form the regular grid interpolator for E-parallel
         data_dict_potentials = stl.loadDictFromFile(f'{RunToggles.sim_data_output_path}/wave_potentials/wave_potentials.cdf')
         data_dict_spatial = stl.loadDictFromFile(f'{RunToggles.sim_data_output_path}/spatial_grid/spatial_grid.cdf')
+        data_dict_plasma = stl.loadDictFromFile(f'{RunToggles.sim_data_output_path}/plasma_environment/plasma_environment.cdf')
 
         # Calculate the Observation Info
         self.mapping_alt = mapping_alt
@@ -42,18 +44,22 @@ class LiouvilleClasses:
         self.B0 = self.B_dipole(self.mu_obs, self.chi_obs)
         self.observation_times = np.linspace(LiouvilleToggles.time_obs_start, LiouvilleToggles.time_obs_end, LiouvilleToggles.N_obs_points) # list of observation times
 
-        # Calculate Loss Cone properties
-        self.r_lost = 1 + LiouvilleToggles.alt_lost / stl.Re
-        self.chi_lost = data_dict_spatial['chi'][0][0]
-        self.colat_lost = np.arcsin(np.sqrt(self.chi_lost * self.r_lost))
-        self.mu_lost = - np.sqrt(np.cos(self.colat_lost)) / self.r_lost
-        self.B_lost = self.B_dipole(self.mu_lost, self.chi_lost)
-        self.mu_eq = -1E-4 # very close to zero but not quite to avoid singularities. Represents the geomagnetic equator for perfect dipole
-        self.chi_eq = data_dict_spatial['chi'][0][0]
-        self.B_eq = self.B_dipole(self.mu_eq, self.chi_eq)
-        self.pitch_eq_lost = math.asin(math.sqrt(self.B_eq/self.B_lost))
+        # Setup the Loss cone + Plasma Sheet Density vs altitude
+        if LiouvilleToggles.use_loss_cone_bool:
+            valid = np.isfinie(data_dict_plasma['loss_cone'][0])
+            i0 = valid.argmin() # first finite sample
+            assert valid[i0:].all() # verifies NaNs are really only on the left block of the data
 
-        # Construct the Interpolator Object
+            mu_interp = data_dict_spatial['mu'][0][i0:]
+            self.loss_cone_interp = np.interp(mu_interp, valid[i0:], left=0) # creates interpolation object where outside this the density is zero
+            density_PS = data_dict_spatial['density_PS'][0][i0:]
+        else:
+            mu_interp = data_dict_spatial['mu'][0]
+            density_PS = np.array([PlasmaEnvironmentToggles.n0_PS for i in range(len(mu_interp))])
+
+        self.density_PS_interp = np.interp(mu_interp, density_PS, left=0)
+
+        # Construct the Wave Interpolator Object
         self.mu_grid = data_dict_spatial['mu'][0]
         self.time_grid = data_dict_potentials['time'][0]
         self.Epara = data_dict_potentials['E_para'][0].copy()
@@ -101,43 +107,19 @@ class LiouvilleClasses:
             T, p_mu, p_chi, p_vel_mu, p_vel_chi = self.rk45_solver(t_span=[0, -t_obs], s0=s0, deltaT=t_obs, uB=uB)
 
             # Collect the mapped particle properties
-            mapped_v_para = p_vel_mu[-1]
             mapped_mu = p_mu[-1]
             mapped_chi = p_chi[-1]
-            mapped_alt = stl.Re*(SpatialClasses.r_muChi(mapped_mu,mapped_chi)-1)
+            mapped_v_para = p_vel_mu[-1]
             mapped_B_mag = self.B_dipole(mapped_mu, mapped_chi)
             mapped_v_perp = vperp * math.sqrt(mapped_B_mag / self.B0)
-            mapped_pitch = math.atan(abs(mapped_v_para/mapped_v_perp))
-
 
             # --- MODIFY/EXPORT DISTRIBUTIONS ---
-
-            if LiouvilleToggles.use_loss_cone_bool:
-
-                mapped_loss_SineCone = math.sin(self.pitch_eq_lost) * math.sqrt(mapped_B_mag / self.B_eq)
-
-                if mapped_alt < LiouvilleToggles.alt_lost: # check if the particle ORIGINATES from an altitude below alt_loss. It should not be there
-                    block[ptchIdx][engyIdx] = 0
-                elif np.any([mapped_pitch <= math.asin(mapped_loss_SineCone), mapped_pitch >= 180-math.asin(mapped_loss_SineCone)]):
-                    block[ptchIdx][engyIdx] = 0
-                else:
-                    block[ptchIdx][engyIdx] = self.Maxwellian(
-                        vperp=mapped_v_perp,
-                        vpara=-1 * mapped_v_para,
-                        density=self.ne_density(mapped_mu, mapped_chi),
-                        Te=self.Te(mapped_mu, mapped_chi),
-                        Emin=10 ** LiouvilleToggles.E_min_obs,
-                        Emax=10 ** LiouvilleToggles.E_max_obs,
-                    )
-            else:
-                block[ptchIdx][engyIdx] = self.Maxwellian(
-                    vperp=mapped_v_perp,
-                    vpara=-1 * mapped_v_para,
-                    density=self.ne_density(mapped_mu, mapped_chi),
-                    Te=self.Te(mapped_mu, mapped_chi),
-                    Emin=10 ** LiouvilleToggles.E_min_obs,
-                    Emax=10 ** LiouvilleToggles.E_max_obs,
-                )
+            block[ptchIdx][engyIdx] = self.Maxwellian_total(
+                mu=mapped_mu,
+                chi=mapped_chi,
+                vperp=mapped_v_perp,
+                vpara=-1 * mapped_v_para,
+            )
         return block
 
     def observed_fields(self):
@@ -173,7 +155,6 @@ class LiouvilleClasses:
                 Distribution[tmeIdx] = block
 
         return Distribution
-
     # The
     def equations_of_motion(self, t, S, deltaT, uB):
         # State Vector - [mu, chi, vel_mu, vel_chi]
@@ -253,6 +234,38 @@ class LiouvilleClasses:
     ################################
     # --- DISTRIBUTION FUNCTIONS ---
     ################################
+
+    def Maxwellian_total(self, mu,chi, vperp, vpara):
+
+        mapped_alt = stl.Re * (SpatialClasses.r_muChi(mu, chi) - 1)
+        mapped_pitch = math.atan(abs(vpara / vperp))
+
+        # --- plasma sheet ---
+        if LiouvilleToggles.use_loss_cone_bool:
+            if mapped_pitch>= self.loss_cone_interp(mu): # check if particle within loss cone
+
+            else: # if not, report the density reduced by loss cone effects
+                density_val = self.density_PS_interp(mu)
+        else:
+            density_val = PlasmaEnvironmentToggles.n0_PS
+
+        dist_PS = self.Maxwellian(vperp=vperp,
+                                  vpara=vpara,
+                                  density=density_val,
+                                  Te=PlasmaEnvironmentToggles.Te_PS,
+                                  Emax=PlasmaEnvironmentToggles.Emax_PS,
+                                  Emin=PlasmaEnvironmentToggles.Emin_PS)
+
+        # --- Cold Background ---
+        dist_cold = self.Maxwellian(vperp=vperp,
+                                  vpara=vpara,
+                                  density= envDict['n_density_cold'](mu,chi),
+                                  Te=PlasmaEnvironmentToggles.Te_cold,
+                                  Emax=PlasmaEnvironmentToggles.Emax_cold,
+                                  Emin=PlasmaEnvironmentToggles.Emin_cold)
+
+        return dist_PS + dist_cold
+
     def Maxwellian(self, vperp, vpara, density, Te, Emax, Emin):
         """
                 :param vpara: Particle Velocity parallel to the background geomagnetic field in [m/s]
@@ -269,6 +282,8 @@ class LiouvilleClasses:
             return 0
         else:
             return density * np.sqrt(np.power(stl.m_e / (2 * np.pi * Te * stl.q0), 3)) * np.exp(-0.5 * stl.m_e * (np.square(vperp) + np.square(vpara)) / (stl.q0 * Te))
+
+
 
     def Kappa(self, mass, Vperp,Vpara,charge ,n, Te, vpara, vperp, kappa):
         # Input: density [cm^-3], Temperature [eV], Velocities [m/s]

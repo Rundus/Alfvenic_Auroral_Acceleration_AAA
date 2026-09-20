@@ -35,8 +35,8 @@ class EnvironmentExpressionsClasses:
                 n_Op = func
             elif 'n_Hp.pkl' in file_nam:
                 n_Hp = func
-            elif 'n_density.pkl' in file_nam:
-                n_density = func
+            elif 'n_density_cold.pkl' in file_nam:
+                n_density_cold = func
             elif 'meff.pkl' in file_nam:
                 meff = func
             elif 'rho.pkl' in file_nam:
@@ -45,8 +45,6 @@ class EnvironmentExpressionsClasses:
                 dB_dipole_dmu = func
             elif 'pDD_n_density_mu' in file_nam:
                 pDD_n_density_mu = func
-            elif 'Te' in file_nam:
-                Te = func
 
         funcs = {'lambda_e': lmb_e,
                  'pDD_lambda_e_mu': pDD_mu_lmb_e,
@@ -60,12 +58,11 @@ class EnvironmentExpressionsClasses:
                  'B_dipole': B_dipole,
                  'n_Op': n_Op,
                  'n_Hp': n_Hp,
-                 'n_density': n_density,
+                 'n_density_cold': n_density_cold,
                  'meff': meff,
                  'rho': rho,
                  'dB_dipole_dmu':dB_dipole_dmu,
                  'pDD_n_density_mu': pDD_n_density_mu,
-                 'Te': Te,
                  }
 
         return funcs
