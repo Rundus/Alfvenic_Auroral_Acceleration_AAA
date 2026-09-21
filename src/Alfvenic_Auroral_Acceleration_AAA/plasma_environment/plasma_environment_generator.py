@@ -13,6 +13,7 @@ def plasma_environment_generator():
     from glob import glob
     from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_toggles import PlasmaEnvironmentToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_classes import PlasmaEnvironmentClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
 
     # --- Load the wave runners data ---
@@ -76,24 +77,11 @@ def plasma_environment_generator():
     data_dict_output['Te_PS'][0] = np.array([PlasmaEnvironmentToggles.Te_PS for i in range(len(data_dict_output['alt'][0]))])
 
     # HOT PLASMA SHEET DENSITY
-
-    # determine the equatorial loss cone angle
-    r_lost = 1 + PlasmaEnvironmentToggles.alt_lost / stl.Re
-    chi_lost = data_dict_spatial['chi'][0][0]
-    colat_lost = np.arcsin(np.sqrt(chi_lost * r_lost))
-    mu_lost = - np.sqrt(np.cos(colat_lost)) / r_lost
-    B_lost = envDict['B_dipole'](mu_lost, chi_lost)
-    mu_eq = -1E-4  # very close to zero but not quite to avoid singularities. Represents the geomagnetic equator for perfect dipole
-    chi_eq = data_dict_spatial['chi'][0][0]
-    B_eq = envDict['B_dipole'](mu_eq, chi_eq)
-    loss_cone_eq = math.asin(math.sqrt(B_eq / B_lost))
-
-    # use equatorial loss cone to get loss cone everywhere else. Set any domain error issues == 90
-    loss_cone = (180/np.pi)*np.arcsin(np.sin(loss_cone_eq)*np.sqrt(data_dict_output['B_dipole'][0].copy()/B_eq))
-    data_dict_output['loss_cone'][0] = loss_cone
+    plasma_environ_object = PlasmaEnvironmentClasses()
+    data_dict_output['loss_cone'][0] = plasma_environ_object.loss_cone_angle(data_dict_spatial['mu'][0], data_dict_spatial['chi'][0])
 
     # Use loss cone angle to get hot plasma density from zero-th moment of plasma distribution
-    data_dict_output['n_density_PS'][0] = (stl.cm_to_m ** 3) * PlasmaEnvironmentToggles.n0_PS * np.cos(np.radians(loss_cone))
+    data_dict_output['n_density_PS'][0] = plasma_environ_object.n_density_PS_loss_cone(data_dict_output['loss_cone'][0])
 
     ################
     # --- OUTPUT ---

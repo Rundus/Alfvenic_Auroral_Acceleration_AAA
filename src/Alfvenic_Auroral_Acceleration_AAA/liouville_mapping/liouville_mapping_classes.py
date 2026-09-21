@@ -9,6 +9,7 @@ from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_e
 envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
 from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_toggles import PlasmaEnvironmentToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_classes import PlasmaEnvironmentClasses
 import math
 from scipy.interpolate import RegularGridInterpolator
 
@@ -42,29 +43,15 @@ class LiouvilleClasses:
         self.B0 = self.B_dipole(self.mu_obs, self.chi_obs)
         self.observation_times = np.linspace(LiouvilleToggles.time_obs_start, LiouvilleToggles.time_obs_end, LiouvilleToggles.N_obs_points) # list of observation times
 
-        # Setup the Loss cone + Plasma Sheet Density vs altitude
-        if LiouvilleToggles.use_loss_cone_bool:
-            loss_cone = data_dict_plasma['loss_cone'][0]
-            valid = np.isfinite(loss_cone) # find the non-nan values
-            i0 = np.where(valid==True)[0] # first non-nan value
-            assert np.isfinite(valid[i0[0]]).all() # verifies NaNs are really only on the left block of the data
-
-            mu_interp = data_dict_spatial['mu'][0][i0]
-            # self.loss_cone_interp = np.interp(mu_interp, valid[i0:], left=0)
-            self.loss_cone_interp = RegularGridInterpolator( (mu_interp,), data_dict_plasma['loss_cone'][0][i0], method="pchip", bounds_error=False, fill_value=0.0) # creates interpolation object where outside this the density is zero
-            density_PS = data_dict_plasma['n_density_PS'][0][i0]
-        else:
-            mu_interp = data_dict_spatial['mu'][0]
-            density_PS = np.array([PlasmaEnvironmentToggles.n0_PS for i in range(len(mu_interp))])
-
-        self.density_PS_interp = RegularGridInterpolator( (mu_interp,), density_PS, method="pchip", bounds_error=False, fill_value=0.0)
-
         # Construct the Wave Interpolator Object
         self.mu_grid = data_dict_spatial['mu'][0]
         self.time_grid = data_dict_potentials['time'][0]
         self.Epara = data_dict_potentials['E_para'][0].copy()
         self.Eperp = data_dict_potentials['E_perp'][0].copy()
         self.Bperp = data_dict_potentials['B_perp'][0].copy()
+
+        # Construct a Plasma Environment Class
+        self.plasma_environment_object = PlasmaEnvironmentClasses()
 
         if LiouvilleToggles.injected_wave_time_delay > 0:
 
@@ -180,8 +167,8 @@ class LiouvilleClasses:
         DvmuDt_Alfven = - (stl.q0 / stl.m_e) * self.Epara_interp(np.array([[deltaT + t, S[0]]]))[0]
 
         # Combine all the parallel effects
-        DvmuDt = DvmuDt_mirror
-        # DvmuDt = DvmuDt_mirror + DvmuDt_Alfven
+        # DvmuDt = DvmuDt_mirror
+        DvmuDt = DvmuDt_mirror + DvmuDt_Alfven
 
         # dv_chi/dt
         DvchiDt = 0
@@ -238,25 +225,25 @@ class LiouvilleClasses:
     def Maxwellian_total(self, mu,chi, vperp, vpara):
 
         mapped_alt = stl.Re * (SpatialClasses.r_muChi(mu, chi) - 1)
-        mapped_pitch = (180/math.pi)*abs(math.atan2(vperp, vpara)) # [Degrees] calculate the pitch angle of the particle
+        mapped_pitch = abs(math.atan2(vperp, vpara)) # [Radians] calculate the pitch angle of the particle
 
-        # print(f'Alt: {round(mapped_alt,1)}',f'Mapped Pitch {mapped_pitch}',f'Mapped Loss Cone {self.loss_cone_interp(np.atleast_1d(mu))[0]},')
+        # print(f'Alt: {round(mapped_alt,1)}',
+        #       f'Mapped Pitch {mapped_pitch}',
+        #       f'Mapped Loss Cone {self.plasma_environment_object.loss_cone_angle(mu,chi)},')
 
         # --- plasma sheet ---
         if LiouvilleToggles.use_loss_cone_bool:
-            mapped_loss_cone_angle = self.loss_cone_interp(np.atleast_1d(mu))[0]
-            if mapped_pitch <=mapped_loss_cone_angle or np.all([mapped_alt<=PlasmaEnvironmentToggles.alt_lost, mapped_loss_cone_angle==0]): # check if particle within loss cone
-                density_val = [0]
+            mapped_loss_cone_angle = self.plasma_environment_object.loss_cone_angle(mu,chi) # BEWARE warnings are turned off for this function
+            if mapped_pitch <= mapped_loss_cone_angle or mapped_loss_cone_angle == np.nan: # check if particle within loss cone or at an altitude
+                density_val = 0
             else: # if not, report the density reduced by loss cone effects
-                density_val = self.density_PS_interp(np.atleast_1d(mu))
+                density_val = self.plasma_environment_object.n_density_PS_loss_cone(mapped_loss_cone_angle)
         else:
-            density_val = [(stl.cm_to_m**3)*PlasmaEnvironmentToggles.n0_PS]
-
-        # print(mapped_alt,mapped_pitch, self.loss_cone_interp(np.atleast_1d(mu))[0], density_val[0])
+            density_val = (stl.cm_to_m**3)*PlasmaEnvironmentToggles.n0_PS
 
         dist_PS = self.Maxwellian(vperp=vperp,
                                   vpara=vpara,
-                                  density=density_val[0], # Note: The density value must be an array for the interpolators to work, but it always just has one element
+                                  density=density_val,
                                   Te=PlasmaEnvironmentToggles.Te_PS,
                                   Emax=PlasmaEnvironmentToggles.Emax_PS,
                                   Emin=PlasmaEnvironmentToggles.Emin_PS)
