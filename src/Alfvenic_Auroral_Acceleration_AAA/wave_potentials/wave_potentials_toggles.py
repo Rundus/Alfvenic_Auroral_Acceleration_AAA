@@ -30,6 +30,6 @@ class WavePotentialsToggles:
     # =============================
     # === RK45 Time Integration ===
     # =============================
-    t_start, t_end = 0.0, 10 #[seconds] Time from z_max the wave is allowed to propogate
-    n_out = 1000  # number of time-points to store for output
+    t_start, t_end = 0.0, 5 #[seconds] Time from z_max the wave is allowed to propogate
+    n_out = 300  # number of time-points to store for output
     cfl = 0.4

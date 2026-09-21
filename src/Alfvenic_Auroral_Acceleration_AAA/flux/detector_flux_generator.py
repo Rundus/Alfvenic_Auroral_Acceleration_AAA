@@ -34,9 +34,10 @@ def detector_flux_generator():
         # --- CALCULATE DIFFERENTIAL FLUX ---
         #####################################
         Energy = data_dict_distribution['energy'][0]
-        if DetectorFluxToggles.use_esa_specs_bool: # use realistic ESA detector toggles
-            deltaT = DetectorFluxToggles.esa_acqusition_time - DetectorFluxToggles.count_threshold*DetectorFluxToggles.esa_deadtime
-            JN_thresh = DetectorFluxToggles.count_threshold/(DetectorFluxToggles.esa_geometric_factor * Energy*deltaT)
+
+        # Below is used on if realistic ESA detector toggles are ==True
+        deltaT = DetectorFluxToggles.esa_acqusition_time - DetectorFluxToggles.count_threshold*DetectorFluxToggles.esa_deadtime
+        JN_thresh = DetectorFluxToggles.count_threshold/(DetectorFluxToggles.esa_geometric_factor * Energy*deltaT)
 
         JE = np.zeros_like(data_dict_distribution['distribution_function'][0]) # In S.I units
         JN = np.zeros_like(data_dict_distribution['distribution_function'][0])  # In S.I units
@@ -52,9 +53,13 @@ def detector_flux_generator():
             # Convert to 1/[eV-s-cm^2-str]
             JN_val = (stl.q0/np.square(stl.cm_to_m)) * JN_val
 
-            if JN_val <= JN_thresh[engyIdx]: # check if value is above the threshold
-                JN[tmeIdx][ptchIdx][engyIdx] = 0
-                JE[tmeIdx][ptchIdx][engyIdx] = 0
+            if DetectorFluxToggles.use_esa_specs_bool: # check if value is above the threshold
+                if JN_val <= JN_thresh[engyIdx]:
+                    JN[tmeIdx][ptchIdx][engyIdx] = 0
+                    JE[tmeIdx][ptchIdx][engyIdx] = 0
+                else:
+                    JN[tmeIdx][ptchIdx][engyIdx] = JN_val
+                    JE[tmeIdx][ptchIdx][engyIdx] = data_dict_distribution['energy'][0][engyIdx] * JN_val
             else:
                 JN[tmeIdx][ptchIdx][engyIdx] = JN_val
                 JE[tmeIdx][ptchIdx][engyIdx] = data_dict_distribution['energy'][0][engyIdx]*JN_val

@@ -22,7 +22,8 @@ import spaceToolsLib as stl
 # --------------------------------------------------------------------------- #
 # Configuration
 # --------------------------------------------------------------------------- #
-DATA_DIR = Path(r"C:/data/alfvenic_auroral_acceleration_AAA/run_0/detector_flux")
+# DATA_DIR = Path(r"C:/data/alfvenic_auroral_acceleration_AAA/run_0/detector_flux")
+DATA_DIR = Path(r"/home/connor/Data/MODELS/alfvenic_auroral_acceleration_AAA/run_0/detector_flux/")
 
 FLUX_KEY = "Differential_Energy_Flux"
 TIME_KEY = "time"
