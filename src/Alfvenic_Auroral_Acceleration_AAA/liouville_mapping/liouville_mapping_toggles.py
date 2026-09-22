@@ -22,15 +22,16 @@ class LiouvilleToggles:
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [400, 1000, 3000, 6000, 9000,12000,15000 ]  # [km] This is the altitude where the Louisville mapping is measured
-    upper_termination_altitude = 18000 # [km] upper altitude limit where to stop the Rk45 solver
+    mapping_alts = [400, 1000, 3000, 6000, 9000,12000, 15000 ]  # [km] This is the altitude where the Louisville mapping is measured
+    upper_termination_altitude = 30000 # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = 100 # [km] lower altitude limit where to stop the Rk45
 
     # --- ESA ENERGY/PITCH COORDINATES ---
-    N_energy_space_points = 50
+    N_energy_space_points = 30
     E_max_obs = 4  # the POWER of 10^E_max for the maximum energy
-    E_min_obs = 0.7  # the POWER of 10^E_min for the minimum energy
-    pitch_range_obs = np.linspace(0, 180, 18+1)
+    E_min_obs = 1  # the POWER of 10^E_min for the minimum energy
+    # pitch_range_obs = np.linspace(0, 180, 18+1)
+    pitch_range_obs = np.linspace(0, 180, 6 + 1)
     energy_range_obs = np.logspace(E_min_obs, E_max_obs, N_energy_space_points)
 
     # --- ESA particle sampling ---

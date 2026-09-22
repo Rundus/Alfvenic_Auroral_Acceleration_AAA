@@ -112,8 +112,12 @@ def run_AAA_simulation():
 
     if dict_executable['regen_detector_flux'] ==1:
         print('\n--- Calculating Detector Differential Flux ---',end='\n')
-        from src.Alfvenic_Auroral_Acceleration_AAA.flux.detector_flux_generator import detector_flux_generator
+        from src.Alfvenic_Auroral_Acceleration_AAA.detector_flux.detector_flux_generator import detector_flux_generator
         detector_flux_generator()
+
+    if dict_executable['plot_detector_flux'] ==1:
+        print('\n--- Plotting Detector Differential Flux ---',end='\n')
+        from src.Alfvenic_Auroral_Acceleration_AAA.detector_flux import detector_flux_plotter
 
     if dict_executable['regen_field_particle_correlation'] == 1:
         print('\n--- Calculating Field-Particle Correlation ---', end='\n')

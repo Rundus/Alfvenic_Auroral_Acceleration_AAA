@@ -6,18 +6,19 @@
 class RunToggles:
 
     # --- Run Identification ---
-    run_number = 0
+    run_number = 1
 
     # --- SubRoutine Options ---
     dict_executable = {
         'regen_EVERYTHING': 0,
-        'regen_environment_expressions': 1,
-        'regen_spatial_grid': 1,
-        'regen_plasma_environment': 1,
-        'regen_wave_potentials': 1,
-        'animate_wave_potentials': 1,
+        'regen_environment_expressions': 0,
+        'regen_spatial_grid': 0,
+        'regen_plasma_environment': 0,
+        'regen_wave_potentials': 0,
+        'animate_wave_potentials': 0,
         'regen_liouville_mapping': 0,
-        'regen_detector_flux': 0,
+        'regen_detector_flux': 1,
+        'plot_detector_flux':1,
         'regen_field_particle_correlation': 0
     }
 
