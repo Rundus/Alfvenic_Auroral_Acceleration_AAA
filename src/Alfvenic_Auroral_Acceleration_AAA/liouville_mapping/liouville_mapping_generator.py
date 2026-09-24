@@ -11,8 +11,7 @@ def liouville_mapping_generator():
 
     # --- File-specific imports ---
     from scipy.interpolate import RegularGridInterpolator
-    from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_toggles import LiouvilleToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import LiouvilleToggles, RunToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_classes import LiouvilleClasses
 
     # --- Delete any old/previous files ---

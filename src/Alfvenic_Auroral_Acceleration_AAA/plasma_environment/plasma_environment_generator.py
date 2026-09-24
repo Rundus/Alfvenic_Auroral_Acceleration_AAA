@@ -12,7 +12,7 @@ def plasma_environment_generator():
     # --- File-specific imports ---
     from glob import glob
     from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
-    from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_toggles import PlasmaEnvironmentToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import PlasmaEnvironmentToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_classes import PlasmaEnvironmentClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
 

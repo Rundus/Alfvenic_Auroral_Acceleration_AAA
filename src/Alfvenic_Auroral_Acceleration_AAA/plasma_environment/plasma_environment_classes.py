@@ -1,6 +1,5 @@
 import spaceToolsLib as stl
-from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_toggles import PlasmaEnvironmentToggles
-from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import PlasmaEnvironmentToggles,RunToggles
 from glob import glob
 import numpy as np
 

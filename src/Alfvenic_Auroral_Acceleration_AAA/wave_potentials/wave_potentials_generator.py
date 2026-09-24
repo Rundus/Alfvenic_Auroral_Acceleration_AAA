@@ -15,7 +15,7 @@ def wave_potentials_generator():
     import numpy as np
     import spaceToolsLib as stl
     from glob import glob
-    from src.Alfvenic_Auroral_Acceleration_AAA.wave_potentials.wave_potentials_toggles import WavePotentialsToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import WavePotentialsToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.wave_potentials.wave_potentials_classes import WaveFieldsClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
@@ -80,8 +80,9 @@ def wave_potentials_generator():
     # ==================================================
     s = data_dict_plasma['V_A'][0].copy() / data_dict_output['inertial_term'][0].copy()
     Z = data_dict_plasma['V_A'][0].copy() * data_dict_output['inertial_term'][0].copy()
+
     t_out, Phis, As, dA_dt, Flux_bot, Flux_top = WaveFieldsClasses().solve_hyperbolic(
-        z=data_dict_spatial['alt'][0],
+        z=data_dict_plasma['h_mu'][0],
         s=s,
         Z=Z,
         # sigma_P=WavePotentialsToggles.SIGMA_P,

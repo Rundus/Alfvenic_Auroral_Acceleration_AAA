@@ -10,7 +10,7 @@ def run_AAA_simulation():
     import time
     import spaceToolsLib as stl
     import warnings
-    from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles,EnvironmentExpressionsToggles,SpatialGridToggles,WavePotentialsToggles, LiouvilleToggles
     import numpy as np
     from Alfvenic_Auroral_Acceleration_AAA.runners.executable_classes import ExecutableClasses
     warnings.filterwarnings("ignore")
@@ -37,7 +37,6 @@ def run_AAA_simulation():
     if dict_executable['regen_environment_expressions']==1:
         print('\n--- Regenerating Ray Equation Expressions ---',end='\n')
         from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_generator import environment_expressions_generator
-        from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_toggles import EnvironmentExpressionsToggles
         environment_expressions_generator()
         ExecutableClasses().update_run_JSON(
             {
@@ -50,7 +49,6 @@ def run_AAA_simulation():
     if dict_executable['regen_spatial_grid'] == 1:
         print('\n--- Regenerating Spatial Environment ---', end='\n')
         from src.Alfvenic_Auroral_Acceleration_AAA.spatial_grid.spatial_grid_generator import spatial_grid_generator
-        from src.Alfvenic_Auroral_Acceleration_AAA.spatial_grid.spatial_grid_toggles import SpatialGridToggles
         spatial_grid_generator()
         ExecutableClasses().update_run_JSON(
             {
@@ -75,7 +73,6 @@ def run_AAA_simulation():
         print('\n--- Calculating Wave Potentials ---',end='\n')
         from Alfvenic_Auroral_Acceleration_AAA.wave_potentials.wave_potentials_generator import wave_potentials_generator
         wave_potentials_generator()
-        from src.Alfvenic_Auroral_Acceleration_AAA.wave_potentials.wave_potentials_toggles import WavePotentialsToggles
         ExecutableClasses().update_run_JSON(
             {
                'Wave_Potentials':{
@@ -95,7 +92,6 @@ def run_AAA_simulation():
         from Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_generator import liouville_mapping_generator
         liouville_mapping_generator()
 
-        from src.Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_toggles import LiouvilleToggles
         ExecutableClasses().update_run_JSON(
             {
                 'Liouville_mapping': {

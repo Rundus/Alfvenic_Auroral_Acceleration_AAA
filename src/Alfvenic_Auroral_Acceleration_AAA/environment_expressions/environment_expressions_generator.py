@@ -2,7 +2,7 @@
 # Description: Use sympy to generate analytic expressions for the AAA runners
 from timebudget import timebudget
 import json
-from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_toggles import EnvironmentExpressionsToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import EnvironmentExpressionsToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
 
 @timebudget
@@ -237,7 +237,7 @@ def environment_expressions_generator():
 
     # weighted ion mass
     rho_function = m_Op*n_Op_function + m_Hp*n_Hp_function
-    m_eff_function = rho_function/(m_Op + m_Hp)
+    m_eff_function = rho_function/(n_Op_function + n_Hp_function)
 
     ###############################################
     # --- CONVERT EVERYTHING TO LAMBDA FUNCTION ---

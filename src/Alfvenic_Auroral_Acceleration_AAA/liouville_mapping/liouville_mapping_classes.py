@@ -1,5 +1,4 @@
 # Simulation Imports
-from src.Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_toggles import LiouvilleToggles
 from scipy.special import gamma
 from src.Alfvenic_Auroral_Acceleration_AAA.spatial_grid.spatial_classes import SpatialClasses
 import numpy as np
@@ -8,10 +7,10 @@ from itertools import product
 from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
 envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
 from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
-from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_toggles import PlasmaEnvironmentToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_classes import PlasmaEnvironmentClasses
 import math
 from scipy.interpolate import RegularGridInterpolator
+from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import LiouvilleToggles,PlasmaEnvironmentToggles
 
 _WORKER = {}
 
@@ -137,7 +136,7 @@ class LiouvilleClasses:
         N_engy = len(LiouvilleToggles.energy_range_obs)
         Distribution = np.zeros((N_time, N_ptch, N_engy))
 
-        with mp.Pool(processes=20, initializer=_init_worker, initargs=(self.mapping_alt,)) as pool:
+        with mp.Pool(processes=LiouvilleToggles.processes_count, initializer=_init_worker, initargs=(self.mapping_alt,)) as pool:
             for tmeIdx, block in tqdm(pool.imap_unordered(_map_one_time, range(N_time)), total=N_time):
                 Distribution[tmeIdx] = block
 
@@ -178,7 +177,7 @@ class LiouvilleClasses:
     # An event is a function where the RK45 method determines event(t,y)=0
     def escaped_upper(self, t, S, deltaT, uB):
 
-        alt = stl.Re*(SpatialClasses.r_muChi(S[0],S[1]) - 1)
+        alt = envDict['h_mu'](S[0],S[1])
 
         # top boundary checker
         top_boundary_checker = alt - LiouvilleToggles.upper_termination_altitude
@@ -188,7 +187,7 @@ class LiouvilleClasses:
     escaped_upper.terminal = True
 
     def escaped_lower(self, t, S, deltaT, uB):
-        alt = stl.Re  * (SpatialClasses.r_muChi(S[0], S[1]) - 1)
+        alt = envDict['h_mu'](S[0],S[1])
 
         # lower boundary
         lower_boundary_checker = alt - LiouvilleToggles.lower_termination_altitude
@@ -235,7 +234,10 @@ class LiouvilleClasses:
             else: # if not, report the density reduced by loss cone effects
                 density_val = self.plasma_environment_object.n_density_PS_loss_cone(mapped_loss_cone_angle)
         else:
-            density_val = (stl.cm_to_m**3)*PlasmaEnvironmentToggles.n0_PS
+            if mapped_alt <= PlasmaEnvironmentToggles.alt_lost:
+                density_val = 0
+            else:
+                density_val = (stl.cm_to_m**3)*PlasmaEnvironmentToggles.n0_PS
 
         dist_PS = self.Maxwellian(vperp=vperp,
                                   vpara=vpara,

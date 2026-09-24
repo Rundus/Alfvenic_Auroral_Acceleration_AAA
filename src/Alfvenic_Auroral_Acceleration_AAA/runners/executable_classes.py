@@ -1,6 +1,6 @@
 import json
 import os
-from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles,EnvironmentExpressionsToggles
 
 class ExecutableClasses:
 
@@ -26,8 +26,6 @@ class ExecutableClasses:
         # Determine which density model was used to generate the pickle files
         folder_path = f'{RunToggles.sim_data_output_path}'
         model_config_path = f'{folder_path}/run_config.json'
-
-        from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_toggles import EnvironmentExpressionsToggles
 
         with open(model_config_path,'r') as configFile:
             config_dict = json.load(configFile)

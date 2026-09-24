@@ -25,16 +25,13 @@ section 1 below.
 """
 
 import matplotlib
-
-from Alfvenic_Auroral_Acceleration_AAA.wave_potentials.wave_potentials_toggles import WavePotentialsToggles
-
 matplotlib.use("Agg")  # headless: render frames without a display
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.animation import FFMpegWriter, FuncAnimation
 import spaceToolsLib as stl
 from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
-from src.Alfvenic_Auroral_Acceleration_AAA.wave_potentials.wave_potentials_toggles import WavePotentialsToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import WavePotentialsToggles
 
 # =============================================================================
 # 1. LOAD YOUR DATA HERE

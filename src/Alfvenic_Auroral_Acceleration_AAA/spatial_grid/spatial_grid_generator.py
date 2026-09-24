@@ -1,5 +1,5 @@
 from timebudget import timebudget
-from src.Alfvenic_Auroral_Acceleration_AAA.spatial_grid.spatial_grid_toggles import SpatialGridToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import SpatialGridToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.spatial_grid.spatial_classes import SpatialClasses
 import numpy as np
 from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
