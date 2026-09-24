@@ -122,7 +122,7 @@ def animate_wave_potentials(
     A = _array(data_dict_output, "A_para")
     E_perp = _array(data_dict_output, "E_perp") * 1e3   # V/m -> mV/m
     B_perp = _array(data_dict_output, "B_perp") * 1e9   # T   -> nT
-    E_par = _array(data_dict_output, "E_para") * 1e3    # V/m -> mV/m
+    E_par = -1*_array(data_dict_output, "E_para") * 1e3    # V/m -> mV/m. The -1 is to convert from modified dipole to field-aligned
     E_norm = _array(data_dict_output, "system_energy_normalized")
 
     for name, arr in (("Phi", Phi), ("A_para", A), ("E_perp", E_perp),
@@ -150,7 +150,7 @@ def animate_wave_potentials(
     sigma_P = WavePotentialsToggles.SIGMA_P
     f_0 = WavePotentialsToggles.f_0
     lambda_0 = WavePotentialsToggles.Lambda_perp0
-    phi_0 = WavePotentialsToggles.Phi_0
+    phi_0 = WavePotentialsToggles.Phi_0/2
 
     for label, val in (("SIGMA_P", sigma_P), ("f0", f_0),
                        ("Lambda_perp0", lambda_0), ("Phi_0", phi_0)):

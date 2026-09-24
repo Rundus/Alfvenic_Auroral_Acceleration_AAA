@@ -22,8 +22,8 @@ import spaceToolsLib as stl
 # --------------------------------------------------------------------------- #
 # Configuration
 # --------------------------------------------------------------------------- #
-# DATA_DIR = Path(r"C:/data/alfvenic_auroral_acceleration_AAA/run_0/detector_flux")
-DATA_DIR = Path(r"/home/connor/Data/MODELS/alfvenic_auroral_acceleration_AAA/run_0/detector_flux/")
+from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
+DATA_DIR = Path(rf"/home/connor/Data/MODELS/alfvenic_auroral_acceleration_AAA/run_{RunToggles.run_number}/detector_flux/")
 
 FLUX_KEY = "Differential_Energy_Flux"
 TIME_KEY = "time"
@@ -373,7 +373,6 @@ def plot_flux_dictionaries(dictionaries, save_path="auto"):
                         tick.set_horizontalalignment("right")
 
     fig.suptitle(f"{FLUX_KEY} — {DATA_DIR.parent.name}", fontsize=12)
-
     if save_path == "auto":
         save_path = resolve_save_path()
     if save_path is not None:
@@ -385,10 +384,9 @@ def plot_flux_dictionaries(dictionaries, save_path="auto"):
 
 
 # --------------------------------------------------------------------------- #
-if __name__ == "__main__":
-    data_dictionaries = load_data_dictionaries()
-    print(f"{len(data_dictionaries)} file(s): {', '.join(data_dictionaries)}")
+data_dictionaries = load_data_dictionaries()
+print(f"{len(data_dictionaries)} file(s): {', '.join(data_dictionaries)}")
 
-    plot_flux_dictionaries(data_dictionaries)
-    if SHOW:
-        plt.show()
+plot_flux_dictionaries(data_dictionaries)
+if SHOW:
+    plt.show()

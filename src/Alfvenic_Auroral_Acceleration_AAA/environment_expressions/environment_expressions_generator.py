@@ -93,6 +93,7 @@ def environment_expressions_generator():
         n_F = nF[i] * (z - F0[i]) * sp.exp(-1 * ((z - F0[i]) / alpha_[i]) ** (eta[i]))
         n_Hp_density = (stl.cm_to_m ** 3) * (n_mag + n_E + n_F)
 
+
     n_density_cold = (n_Op_density + n_Hp_density)
 
     # # PLASMA TEMPERATURE

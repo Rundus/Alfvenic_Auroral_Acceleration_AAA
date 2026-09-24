@@ -227,10 +227,6 @@ class LiouvilleClasses:
         mapped_alt = stl.Re * (SpatialClasses.r_muChi(mu, chi) - 1)
         mapped_pitch = abs(math.atan2(vperp, vpara)) # [Radians] calculate the pitch angle of the particle
 
-        # print(f'Alt: {round(mapped_alt,1)}',
-        #       f'Mapped Pitch {mapped_pitch}',
-        #       f'Mapped Loss Cone {self.plasma_environment_object.loss_cone_angle(mu,chi)},')
-
         # --- plasma sheet ---
         if LiouvilleToggles.use_loss_cone_bool:
             mapped_loss_cone_angle = self.plasma_environment_object.loss_cone_angle(mu,chi) # BEWARE warnings are turned off for this function

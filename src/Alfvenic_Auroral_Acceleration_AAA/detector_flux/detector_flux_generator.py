@@ -15,7 +15,7 @@ def detector_flux_generator():
     from itertools import product
     from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
     from tqdm import tqdm
-    from src.Alfvenic_Auroral_Acceleration_AAA.flux.detector_flux_toggles import DetectorFluxToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.detector_flux.detector_flux_toggles import DetectorFluxToggles
 
     # --- Delete the old Flux Files ---
     old_files = glob(f'{RunToggles.sim_data_output_path}/detector_flux/*.cdf*')

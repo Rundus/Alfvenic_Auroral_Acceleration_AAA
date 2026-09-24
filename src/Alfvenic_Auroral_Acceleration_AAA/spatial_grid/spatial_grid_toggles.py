@@ -8,7 +8,7 @@ class SpatialGridToggles:
     # DEFINE SIMULATION EXTENT in terms of geophysical parameters
     L_Shell = 8.5
     z_para_min = 100 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
-    z_para_max = 30000 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+    z_para_max = 3.4*stl.Re # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
 
     ######################
     # --- MU-Dimension ---

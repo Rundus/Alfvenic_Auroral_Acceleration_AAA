@@ -6,9 +6,9 @@ class EnvironmentExpressionsToggles:
     def __init__(self):
         self.environment_density_dict ={
                 'chaston2006':False,
-                'shroeder2021':True,
+                'shroeder2021':True, # Note this is EXACTLY the Kletzing & Torbert Model
                 'chaston2003_nightside':False,
-                'chaston2003_cusp': False
+                'chaston2003_cusp': False,
             }
 
         # FILE I/O
