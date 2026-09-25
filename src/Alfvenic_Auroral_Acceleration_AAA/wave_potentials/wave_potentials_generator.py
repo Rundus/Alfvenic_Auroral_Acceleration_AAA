@@ -82,7 +82,7 @@ def wave_potentials_generator():
     Z = data_dict_plasma['V_A'][0].copy() * data_dict_output['inertial_term'][0].copy()
 
     t_out, Phis, As, dA_dt, Flux_bot, Flux_top = WaveFieldsClasses().solve_hyperbolic(
-        z=data_dict_plasma['h_mu'][0],
+        z=data_dict_spatial['S_para'][0],
         s=s,
         Z=Z,
         # sigma_P=WavePotentialsToggles.SIGMA_P,
@@ -128,7 +128,7 @@ def wave_potentials_generator():
         'E_perp':[E_perp, {"DEPEND_0": "time", "DEPEND_1": "alt", "UNITS": "V/m", "LABLAXIS": "E!B&perp;!N", "VAR_TYPE": "data"}],
         'B_perp': [B_perp, {"DEPEND_0": "time", "DEPEND_1": "alt", "UNITS": "T", "LABLAXIS": "B!B&perp;!N", "VAR_TYPE": "data"}],
         'E_para': [E_para, {"DEPEND_0": "time", "DEPEND_1": "alt", "UNITS": "V/m", "LABLAXIS": "E!B&para;!N", "VAR_TYPE": "data"}],
-        'S_para': [S_para, {"DEPEND_0": "time", "DEPEND_1": "alt", "UNITS": "T", "LABLAXIS": "W/m!A2!N", "VAR_TYPE": "data"}],
+        'S_para': [S_para, {"DEPEND_0": "time", "DEPEND_1": "alt", "UNITS": "W/m!A2!N", "LABLAXIS": "Parallel Poynting Flux", "VAR_TYPE": "data"}],
     })
 
     if RunToggles.store_output:

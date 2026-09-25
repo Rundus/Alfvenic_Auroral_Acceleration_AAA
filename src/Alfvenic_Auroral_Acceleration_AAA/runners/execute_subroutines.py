@@ -53,8 +53,8 @@ def run_AAA_simulation():
         ExecutableClasses().update_run_JSON(
             {
                 'spatial_grid':{
-                    'z_para_min_km':SpatialGridToggles.z_para_min,
-                    'z_para_max_km': SpatialGridToggles.z_para_max,
+                    's_para_min_km':SpatialGridToggles.s_para_min,
+                    's_para_max_km': SpatialGridToggles.s_para_max,
                     'Num_points_mu':SpatialGridToggles.N_mu,
                     'L_Shell_init':SpatialGridToggles.L_Shell,
                 }

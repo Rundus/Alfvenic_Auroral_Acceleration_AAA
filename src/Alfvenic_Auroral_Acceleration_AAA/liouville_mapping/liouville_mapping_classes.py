@@ -9,6 +9,8 @@ envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
 from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_classes import PlasmaEnvironmentClasses
 import math
+import multiprocessing as mp
+from tqdm import tqdm
 from scipy.interpolate import RegularGridInterpolator
 from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import LiouvilleToggles,PlasmaEnvironmentToggles
 
@@ -28,7 +30,10 @@ class LiouvilleClasses:
         # form the regular grid interpolator for E-parallel
         data_dict_potentials = stl.loadDictFromFile(f'{RunToggles.sim_data_output_path}/wave_potentials/wave_potentials.cdf')
         data_dict_spatial = stl.loadDictFromFile(f'{RunToggles.sim_data_output_path}/spatial_grid/spatial_grid.cdf')
-        data_dict_plasma = stl.loadDictFromFile(f'{RunToggles.sim_data_output_path}/plasma_environment/plasma_environment.cdf')
+
+        # Define the Simulation Boundary Info
+        self.mu_top = data_dict_spatial['mu'][0][-1]
+        self.mu_bot = data_dict_spatial['mu'][0][0]
 
         # Calculate the Observation Info
         self.mapping_alt = mapping_alt
@@ -85,7 +90,7 @@ class LiouvilleClasses:
             speed = np.sqrt(2 * stl.q0 * engyVal / stl.m_e)
             vperp = round(speed * np.sin(ptchVal),2)
             vpara = speed * np.cos(ptchVal)
-            s0 = [self.mu_obs, self.chi_obs, -vpara, vperp]
+            s0 = [self.mu_obs, self.chi_obs, -vpara, vperp] # the -1 on vpara is to convert to modified dipole coordinates
 
             t_obs = self.observation_times[tmeIdx]
             uB = (0.5 * stl.m_e * np.square(vperp)) / self.B0
@@ -95,17 +100,19 @@ class LiouvilleClasses:
             # Collect the mapped particle properties
             mapped_mu = p_mu[-1]
             mapped_chi = p_chi[-1]
-            mapped_v_para = p_vel_mu[-1]
+            mapped_v_mu = p_vel_mu[-1]
             mapped_B_mag = self.B_dipole(mapped_mu, mapped_chi)
             mapped_v_perp = vperp * math.sqrt(mapped_B_mag / self.B0)
 
             # --- MODIFY/EXPORT DISTRIBUTIONS ---
-            block[ptchIdx][engyIdx] = self.Maxwellian_total(
-                mu=mapped_mu,
-                chi=mapped_chi,
-                vperp=mapped_v_perp,
-                vpara=-1 * mapped_v_para,
-            )
+            E_src = 0.5 * stl.m_e * (mapped_v_perp**2 + mapped_v_mu**2)  # [J] kinetic energy at the end point
+            block[ptchIdx][engyIdx] = self.f_plasma_sheet(E_src, uB) + self.f_cold(mapped_mu, mapped_chi, E_src)
+            # block[ptchIdx][engyIdx] = self.Maxwellian_total(
+            #     mu=mapped_mu,
+            #     chi=mapped_chi,
+            #     vperp=mapped_v_perp,
+            #     vpara=-1 * mapped_v_mu, # -1 is to convert from modified dipole back to field-aligned
+            # )
         return block
 
     def observed_fields(self):
@@ -128,8 +135,6 @@ class LiouvilleClasses:
         return E_para_obs, E_perp_obs,B_perp_obs, obs_waves_times
 
     def liouville_mapper(self):
-        import multiprocessing as mp
-        from tqdm import tqdm
 
         N_time = len(self.observation_times)
         N_ptch = len(LiouvilleToggles.pitch_range_obs)
@@ -177,20 +182,17 @@ class LiouvilleClasses:
     # An event is a function where the RK45 method determines event(t,y)=0
     def escaped_upper(self, t, S, deltaT, uB):
 
-        alt = envDict['h_mu'](S[0],S[1])
-
         # top boundary checker
-        top_boundary_checker = alt - LiouvilleToggles.upper_termination_altitude
+        top_boundary_checker = S[0] - self.mu_top
 
         return top_boundary_checker
 
     escaped_upper.terminal = True
 
     def escaped_lower(self, t, S, deltaT, uB):
-        alt = envDict['h_mu'](S[0],S[1])
 
         # lower boundary
-        lower_boundary_checker = alt - LiouvilleToggles.lower_termination_altitude
+        lower_boundary_checker =S[0]-self.plasma_environment_object.mu_lost # TODO: Think about this more
 
         return lower_boundary_checker
     escaped_lower.terminal = True
@@ -221,23 +223,17 @@ class LiouvilleClasses:
     # --- DISTRIBUTION FUNCTIONS ---
     ################################
 
-    def Maxwellian_total(self, mu,chi, vperp, vpara):
-
-        mapped_alt = stl.Re * (SpatialClasses.r_muChi(mu, chi) - 1)
+    def Maxwellian_total(self, mu, chi, vperp, vpara):
         mapped_pitch = abs(math.atan2(vperp, vpara)) # [Radians] calculate the pitch angle of the particle
 
         # --- plasma sheet ---
-        if LiouvilleToggles.use_loss_cone_bool:
-            mapped_loss_cone_angle = self.plasma_environment_object.loss_cone_angle(mu,chi) # BEWARE warnings are turned off for this function
-            if mapped_pitch <= mapped_loss_cone_angle or mapped_loss_cone_angle == np.nan: # check if particle within loss cone or at an altitude
-                density_val = 0
-            else: # if not, report the density reduced by loss cone effects
-                density_val = self.plasma_environment_object.n_density_PS_loss_cone(mapped_loss_cone_angle)
-        else:
-            if mapped_alt <= PlasmaEnvironmentToggles.alt_lost:
-                density_val = 0
-            else:
-                density_val = (stl.cm_to_m**3)*PlasmaEnvironmentToggles.n0_PS
+        if mu <= self.plasma_environment_object.mu_lost: # if you came from below the exobase, you are lost
+            density_val = 0
+        elif mapped_pitch <= self.plasma_environment_object.loss_cone_eq: # if you came from the equatorial loss cone, you are lost
+            density_val = 0
+        else: # if you do not originate from a loss cone
+            mapped_loss_cone_angle = self.plasma_environment_object.loss_cone_angle(mu, chi)  # BEWARE warnings are turned off for this function
+            density_val = (stl.cm_to_m**3)*self.plasma_environment_object.n_density_PS_loss_cone(mapped_loss_cone_angle)
 
         dist_PS = self.Maxwellian(vperp=vperp,
                                   vpara=vpara,
@@ -257,6 +253,26 @@ class LiouvilleClasses:
 
         return dist_PS + dist_cold
 
+    def f_plasma_sheet(self, E_src, uB):
+        # E_src: kinetic energy at the end of the backward trace [J]; uB: magnetic moment [J/T], conserved.
+        # The electron mirrors where E = uB*B, so it reaches the exobase (a loss cone, either direction)
+        # exactly when E_src > uB*B_loss. Outside the cones, f is the FULL Maxwellian normalized to n0.
+        if E_src > uB * self.plasma_environment_object.B_lost:
+            return 0.0
+        E_eV = E_src / stl.q0
+        if not (PlasmaEnvironmentToggles.Emin_PS <= E_eV <= PlasmaEnvironmentToggles.Emax_PS):
+            return 0.0
+        Te = PlasmaEnvironmentToggles.Te_PS
+        return self.plasma_environment_object.n0_PS_norm * np.power(stl.m_e / (2*np.pi*Te*stl.q0), 1.5) * np.exp(-E_eV / Te)
+
+    def f_cold(self, mu, chi, E_src):
+        # cold isotropic population: local Maxwellian with the model density at the end point
+        E_eV = E_src / stl.q0
+        if not (PlasmaEnvironmentToggles.Emin_cold <= E_eV <= PlasmaEnvironmentToggles.Emax_cold):
+            return 0.0
+        Te = PlasmaEnvironmentToggles.Te_cold
+        return envDict['n_density_cold'](mu, chi) * np.power(stl.m_e / (2*np.pi*Te*stl.q0), 1.5) * np.exp(-E_eV / Te)
+
     def Maxwellian(self, vperp, vpara, density, Te, Emax, Emin):
         """
                 :param vpara: Particle Velocity parallel to the background geomagnetic field in [m/s]
@@ -267,12 +283,13 @@ class LiouvilleClasses:
 
                 :return: Plasma Distribution Function in [m^-6 s^-3] evaluated at vpara, vperp
                 """
-        if 0.5 * (stl.m_e / stl.q0) * (np.square(vpara) + np.square(vperp)) > Emax:  # check if energy is above the specific level the distribution
+        E = 0.5 * (stl.m_e / stl.q0) * (np.square(vpara) + np.square(vperp)) # energy in eV
+        if E > Emax:  # check if energy is above the specific level the distribution
             return 0
-        elif 0.5 * (stl.m_e / stl.q0) * (np.square(vpara) + np.square(vperp)) < Emin:  # check if energy is below the specific level the distribution:
+        elif E < Emin:  # check if energy is below the specific level the distribution:
             return 0
         else:
-            return density * np.sqrt(np.power(stl.m_e / (2 * np.pi * Te * stl.q0), 3)) * np.exp(-0.5 * stl.m_e * (np.square(vperp) + np.square(vpara)) / (stl.q0 * Te))
+            return density * np.sqrt(np.power(stl.m_e / (2 * np.pi * Te * stl.q0), 3)) * np.exp(-E/Te)
 
     def Kappa(self, mass, Vperp,Vpara,charge ,n, Te, vpara, vperp, kappa):
         # Input: density [cm^-3], Temperature [eV], Velocities [m/s]

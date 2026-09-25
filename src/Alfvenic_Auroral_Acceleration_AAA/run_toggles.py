@@ -14,14 +14,14 @@ class RunToggles:
     # --- SubRoutine Options ---
     dict_executable = {
         'regen_EVERYTHING': 0,
-        'regen_environment_expressions': 1,
-        'regen_spatial_grid': 1,
-        'regen_plasma_environment': 1,
-        'regen_wave_potentials': 1,
-        'animate_wave_potentials': 1,
+        'regen_environment_expressions': 0,
+        'regen_spatial_grid': 0,
+        'regen_plasma_environment': 0,
+        'regen_wave_potentials': 0,
+        'animate_wave_potentials': 0,
         'regen_liouville_mapping': 1,
         'regen_detector_flux': 1,
-        'plot_detector_flux':1,
+        'plot_detector_flux':0,
         'regen_field_particle_correlation': 0
     }
 
@@ -56,8 +56,8 @@ class SpatialGridToggles:
     ##################################
     # DEFINE SIMULATION EXTENT in terms of geophysical parameters
     L_Shell = 8.5
-    z_para_min = 100 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
-    z_para_max = 3.4*stl.Re # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+    s_para_min = 100 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+    s_para_max = 3*stl.Re # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
 
     ######################
     # --- MU-Dimension ---
@@ -70,7 +70,7 @@ class PlasmaEnvironmentToggles:
     Te_PS = 100  # [eV] Temperature of the isotropic Plasma Sheet Distribution
     n0_PS = 0.5  # [cm^-3] Density of the plasma sheet population at the dipole geomagnetic equator
     Emin_PS = 0 # [eV]
-    Emax_PS = 1E5  # [eV]
+    Emax_PS = 250  # [eV]
 
     # Ionosphere/Plasmasphere/Exosphere (Cold)
     Te_cold = 1 # [eV] Temperature of the cold ionospheric plasma up to 20,000 km
@@ -86,8 +86,8 @@ class WavePotentialsToggles:
     # === WAVE TOGGLES ===
     # ====================
     # Initial Electric Wave Field Strength - At the initial position
-    Phi_0 = -1*2*500  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
-    # from the conversion between a CHARACTERSITIC and ACTUAL potential. On RHS boundary: Φ = Z (W⁺ − W⁻)/2
+    Phi_0 = -1*2*1500  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
+    # from the conversion between a CHARACTERISTIC and ACTUAL potential. On RHS boundary: Φ = Z (W⁺ − W⁻)/2
     # which we specify W⁺ =0, W⁻ = W⁻ = −Φ₀/(v_A \sqrt{1+\lambda k_{\perp}}^{2}), so Φ = Z · (0 + Φ₀/Z)/2 = Φ₀/2
     # Note: The -1* out front is to flip from parallel electric field to modified dipole coordinate electric field
 
@@ -95,7 +95,7 @@ class WavePotentialsToggles:
     Lambda_perp0 = 3 # [km] Perpendicular scale of wave at Z_min (ionosphere). Mapping using flux tube scaling.
 
     # Wave Frequeuency
-    f_0 = 2 # [Hz] Frequency of injected wave
+    f_0 = 5 # [Hz] Frequency of injected wave
 
     driver_dict = {
         'gaussian_pulse':0,
@@ -112,7 +112,7 @@ class WavePotentialsToggles:
     # =============================
     # === RK45 Time Integration ===
     # =============================
-    t_start, t_end = 0.0, 8 #[seconds] Time from z_max the wave is allowed to propogate
+    t_start, t_end = 0.0, 4 #[seconds] Time from z_max the wave is allowed to propogate
     n_out = 1000  # number of time-points to store for output
     cfl = 0.4
 
@@ -138,26 +138,23 @@ class LiouvilleToggles:
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [700]  # [km] This is the altitude where the Louisville mapping is measured
-    upper_termination_altitude = SpatialGridToggles.z_para_max # [km] upper altitude limit where to stop the Rk45 solver
-    lower_termination_altitude = SpatialGridToggles.z_para_min # [km] lower altitude limit where to stop the Rk45
+    mapping_alts = [600]  # [km] This is the altitude where the Louisville mapping is measured
+    upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
+    lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
     # --- ESA ENERGY/PITCH COORDINATES ---
     N_energy_space_points = 40
     E_max_obs = 4  # the POWER of 10^E_max for the maximum energy
     E_min_obs = 1  # the POWER of 10^E_min for the minimum energy
     pitch_range_obs = np.linspace(0, 180, 12+1)
-    # pitch_range_obs = np.linspace(0, 180, 9 + 1)
+    # pitch_range_obs = np.linspace(0, 180, 18 + 1)
     energy_range_obs = np.logspace(E_min_obs, E_max_obs, N_energy_space_points)
 
     # --- ESA particle sampling ---
-    time_rez = 0.05 # in seconds
+    time_rez = 0.10 # in seconds
     time_obs_start = 0  # in seconds
-    time_obs_end = 5 # in seconds
+    time_obs_end = 10 # in seconds
     N_obs_points = int(time_obs_end/time_rez)+1 # number of particle observation points
-
-    # --- Loss Cone ---
-    use_loss_cone_bool = False
 
     ###########################
     # --- WAVE OBSERVATIONS ---
@@ -167,7 +164,15 @@ class LiouvilleToggles:
     time_rez_waves = 0.001 # [seconds] deltaT sample rate for the waves
 
     # --- Injected Wave ---
-    injected_wave_time_delay = 10 # [seconds] Time delay added to the wave data to cause it to inject later. Defaults to 0 if set to <=0
+    injected_wave_time_delay = 9 # [seconds] Time delay added to the wave data to cause it to inject later. Defaults to 0 if set to <=0
+
+class DetectorFluxToggles:
+
+    use_esa_specs_bool = False
+    count_threshold = 1 # count level required for flux to output non-zero value
+    esa_geometric_factor = 1.74E-4
+    esa_deadtime = 674E-9 # [seconds]
+    esa_acqusition_time = 0.9E-3 # [seconds]
 
 # class FPCToggles:
 #
