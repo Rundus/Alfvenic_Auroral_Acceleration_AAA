@@ -28,7 +28,6 @@ class WaveFieldsClasses: # for parallel and perp only
 
         return driver
 
-
     def gaussian_wavepacket(self,Phi_0: float, f_0: float, n_cycles: float = 3.0) -> Callable[[float], float]:
         """Gaussian-enveloped sinusoid, zero-mean, centred at t = n_cycles/(2 f_0)."""
         omega = 2.0 * np.pi * f_0
@@ -39,7 +38,6 @@ class WaveFieldsClasses: # for parallel and perp only
             return Phi_0 * np.exp(-0.5 * ((t - t_c) / sigma) ** 2) * np.sin(omega * (t - t_c))
 
         return drive
-
 
     def gaussian_pulse(self,Phi_0: float,  f_0: float, t_centre: Optional[float] = None) -> Callable[[float], float]:
         """Unipolar Gaussian pulse of 1-sigma duration `width_s`.

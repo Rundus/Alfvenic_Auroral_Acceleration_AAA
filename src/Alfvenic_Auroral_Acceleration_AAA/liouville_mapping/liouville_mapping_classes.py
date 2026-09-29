@@ -50,7 +50,7 @@ class LiouvilleClasses:
         # Construct the Wave Interpolator Object
         self.mu_grid = data_dict_spatial['mu'][0]
         self.time_grid = data_dict_potentials['time'][0]
-        self.Epara = data_dict_potentials['E_para'][0].copy()
+        self.Emu = data_dict_potentials['E_mu'][0].copy()
         self.Eperp = data_dict_potentials['E_perp'][0].copy()
         self.Bperp = data_dict_potentials['B_perp'][0].copy()
 
@@ -62,10 +62,10 @@ class LiouvilleClasses:
             # --- Adjust the wave Interpolator ---
             deltaT = np.gradient(self.time_grid)[0]
             N_additional_points = int(LiouvilleToggles.injected_wave_time_delay/deltaT)
-            zeros = np.zeros((N_additional_points, self.Epara.shape[1]), dtype=self.Epara.dtype)
+            zeros = np.zeros((N_additional_points, self.Emu.shape[1]), dtype=self.Emu.dtype)
 
             # adjust the fields size
-            self.Epara = np.vstack([zeros, self.Epara])
+            self.Emu = np.vstack([zeros, self.Emu])
             self.Eperp = np.vstack([zeros, self.Eperp])
             self.Bperp = np.vstack([zeros, self.Bperp])
 
@@ -77,7 +77,7 @@ class LiouvilleClasses:
             N_additional_obs_points = int(LiouvilleToggles.injected_wave_time_delay/deltaT_obs)
             self.observation_times = np.concatenate([np.array([deltaT_obs*i for i in range(N_additional_obs_points)]),self.observation_times+LiouvilleToggles.injected_wave_time_delay])
 
-        self.Epara_interp = RegularGridInterpolator((self.time_grid, self.mu_grid),self.Epara,bounds_error=False, fill_value=0.0)
+        self.Emu_interp = RegularGridInterpolator((self.time_grid, self.mu_grid),self.Emu,bounds_error=False, fill_value=0.0)
 
     def map_single_time(self, tmeIdx):
         N_ptch = len(LiouvilleToggles.pitch_range_obs)
@@ -118,7 +118,7 @@ class LiouvilleClasses:
     def observed_fields(self):
         # Create the Interpolation Objects
         # Note: fill_value =0 means no wave field outside the simulted domain whereas fille_value =none extrapolates linearly
-        interp_epara = RegularGridInterpolator((self.time_grid, self.mu_grid), self.Epara, bounds_error=False, fill_value=0.0)
+        interp_emu = RegularGridInterpolator((self.time_grid, self.mu_grid), self.Emu, bounds_error=False, fill_value=0.0)
         interp_eperp = RegularGridInterpolator((self.time_grid, self.mu_grid), self.Eperp, bounds_error=False, fill_value=0.0)
         interp_bperp = RegularGridInterpolator((self.time_grid, self.mu_grid), self.Bperp, bounds_error=False, fill_value=0.0)
 
@@ -129,10 +129,10 @@ class LiouvilleClasses:
         eval_points = np.array([[obs_waves_times[i], self.mu_obs] for i in range(N_obs_wave_points)])
 
         E_perp_obs = interp_eperp(eval_points)
-        E_para_obs = interp_epara(eval_points)
+        E_mu_obs = interp_emu(eval_points)
         B_perp_obs = interp_bperp(eval_points)
 
-        return E_para_obs, E_perp_obs,B_perp_obs, obs_waves_times
+        return E_mu_obs, E_perp_obs,B_perp_obs, obs_waves_times
 
     def liouville_mapper(self):
 
@@ -168,7 +168,7 @@ class LiouvilleClasses:
         # DvmuDt_inV = (stl.q0/stl.m_e)*ElectrostaticPotentialClasses().invertedVEField([S[0],S[1],S[2]])
 
         # EM Field
-        DvmuDt_Alfven = - (stl.q0 / stl.m_e) * self.Epara_interp(np.array([[deltaT + t, S[0]]]))[0]
+        DvmuDt_Alfven = - (stl.q0 / stl.m_e) * self.Emu_interp(np.array([[deltaT + t, S[0]]]))[0]
 
         # Combine all the parallel effects
         # DvmuDt = DvmuDt_mirror

@@ -119,7 +119,7 @@ def animate_wave_potentials(
     A = _array(data_dict_output, "A_para")
     E_perp = _array(data_dict_output, "E_perp") * 1e3   # V/m -> mV/m
     B_perp = _array(data_dict_output, "B_perp") * 1e9   # T   -> nT
-    E_par = -1*_array(data_dict_output, "E_para") * 1e3    # V/m -> mV/m. The -1 is to convert from modified dipole to field-aligned
+    E_par = _array(data_dict_output, "E_para") * 1e3    # V/m -> mV/m. The -1 is to convert from modified dipole to field-aligned
     E_norm = _array(data_dict_output, "system_energy_normalized")
 
     for name, arr in (("Phi", Phi), ("A_para", A), ("E_perp", E_perp),
@@ -233,8 +233,7 @@ def animate_wave_potentials(
     # line), so it cannot share the altitude axis above. The full curve is
     # drawn once; a marker tracks the current frame along it.
     ax_energy.plot(t_full, E_norm_full, color="0.6", lw=1.0, zorder=1)
-    (energy_marker,) = ax_energy.plot([t[0]], [E_norm[0]], "o", color="tab:red",
-                                      ms=6, zorder=2)
+    (energy_marker,) = ax_energy.plot([t[0]], [E_norm[0]], "o", color="tab:red", ms=6, zorder=2)
     ax_energy.set_xlabel("Time [s]", fontsize=label_fontsize)
     ax_energy.set_ylabel("Normalized\nsystem energy", fontsize=label_fontsize)
     ax_energy.tick_params(axis="both", labelsize=tick_fontsize)

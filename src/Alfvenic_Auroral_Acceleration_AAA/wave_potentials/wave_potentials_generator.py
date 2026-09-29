@@ -85,8 +85,8 @@ def wave_potentials_generator():
         z=data_dict_spatial['S_para'][0],
         s=s,
         Z=Z,
-        # sigma_P=WavePotentialsToggles.SIGMA_P,
-        sigma_P=data_dict_output['SIGMA_A'][0][0],
+        sigma_P=WavePotentialsToggles.SIGMA_P,
+        # sigma_P=data_dict_output['SIGMA_A'][0][0],
         drive=driver,
         t_end=WavePotentialsToggles.t_end,
         n_out=WavePotentialsToggles.n_out,
@@ -113,7 +113,8 @@ def wave_potentials_generator():
     # ==================================================
     E_perp = data_dict_output['k_perp'][0]*Phis # E⊥ = −∇⊥Φ→ |E⊥| = k_perp * Phi [V/m]
     B_perp = data_dict_output['k_perp'][0]*As #|B⊥| = k_perp * A_par      [T]
-    E_para = np.square(data_dict_output['k_perp'][0]*data_dict_plasma['lambda_e'][0])*dA_dt
+    E_mu = np.square(data_dict_output['k_perp'][0]*data_dict_plasma['lambda_e'][0])*dA_dt
+    E_para = -1*E_mu
     S_para = np.square(data_dict_output['k_perp'][0])*As*Phis/stl.u0
 
     # ==================================================
@@ -127,7 +128,8 @@ def wave_potentials_generator():
         'system_energy_normalized': [E_norm,{"DEPEND_0": "time", "UNITS": None, "LABLAXIS": "Normalized Energy", "VAR_TYPE": "data"}],
         'E_perp':[E_perp, {"DEPEND_0": "time", "DEPEND_1": "alt", "UNITS": "V/m", "LABLAXIS": "E!B&perp;!N", "VAR_TYPE": "data"}],
         'B_perp': [B_perp, {"DEPEND_0": "time", "DEPEND_1": "alt", "UNITS": "T", "LABLAXIS": "B!B&perp;!N", "VAR_TYPE": "data"}],
-        'E_para': [E_para, {"DEPEND_0": "time", "DEPEND_1": "alt", "UNITS": "V/m", "LABLAXIS": "E!B&para;!N", "VAR_TYPE": "data"}],
+        'E_mu': [E_mu, {"DEPEND_0": "time", "DEPEND_1": "alt", "UNITS": "V/m", "LABLAXIS": "E!B&mu;!N", "VAR_TYPE": "data"}],
+        'E_para': [E_para, {"DEPEND_0": "time", "DEPEND_1": "alt", "UNITS": "V/m", "LABLAXIS": "E!B&parallel;!N", "VAR_TYPE": "data"}],
         'S_para': [S_para, {"DEPEND_0": "time", "DEPEND_1": "alt", "UNITS": "W/m!A2!N", "LABLAXIS": "Parallel Poynting Flux", "VAR_TYPE": "data"}],
     })
 

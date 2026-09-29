@@ -17,10 +17,10 @@ class RunToggles:
         'regen_environment_expressions': 0,
         'regen_spatial_grid': 0,
         'regen_plasma_environment': 0,
-        'regen_wave_potentials': 0,
-        'animate_wave_potentials': 0,
-        'regen_liouville_mapping': 1,
-        'regen_detector_flux': 1,
+        'regen_wave_potentials': 1,
+        'animate_wave_potentials': 1,
+        'regen_liouville_mapping': 0,
+        'regen_detector_flux': 0,
         'plot_detector_flux':0,
         'regen_field_particle_correlation': 0
     }
@@ -67,18 +67,18 @@ class SpatialGridToggles:
 class PlasmaEnvironmentToggles:
 
     # Plasma Sheet (Hot)
-    Te_PS = 100  # [eV] Temperature of the isotropic Plasma Sheet Distribution
+    Te_PS = 200  # [eV] Temperature of the isotropic Plasma Sheet Distribution
     n0_PS = 0.5  # [cm^-3] Density of the plasma sheet population at the dipole geomagnetic equator
     Emin_PS = 0 # [eV]
-    Emax_PS = 250  # [eV]
+    Emax_PS = 1E5  # [eV]
 
     # Ionosphere/Plasmasphere/Exosphere (Cold)
-    Te_cold = 1 # [eV] Temperature of the cold ionospheric plasma up to 20,000 km
+    Te_cold = 2.5 # [eV] Temperature of the cold ionospheric plasma up to 20,000 km
     Emin_cold = 0  # [eV]
     Emax_cold = 1E5  # [eV]
 
     # --- Loss Cone Information ---
-    alt_lost = 550  # [km] altitude which any particles which reach this have distribution=0. The exobase is where particles are essentially collisionless
+    alt_lost = 0  # [km] altitude which any particles which reach this have distribution=0. The exobase is where particles are essentially collisionless
 
 class WavePotentialsToggles:
 
@@ -86,16 +86,16 @@ class WavePotentialsToggles:
     # === WAVE TOGGLES ===
     # ====================
     # Initial Electric Wave Field Strength - At the initial position
-    Phi_0 = -1*2*1500  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
+    Phi_0 = 1*2*200  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
     # from the conversion between a CHARACTERISTIC and ACTUAL potential. On RHS boundary: Φ = Z (W⁺ − W⁻)/2
     # which we specify W⁺ =0, W⁻ = W⁻ = −Φ₀/(v_A \sqrt{1+\lambda k_{\perp}}^{2}), so Φ = Z · (0 + Φ₀/Z)/2 = Φ₀/2
     # Note: The -1* out front is to flip from parallel electric field to modified dipole coordinate electric field
 
     # Perpendicular Scale at The Ionosphere
-    Lambda_perp0 = 3 # [km] Perpendicular scale of wave at Z_min (ionosphere). Mapping using flux tube scaling.
+    Lambda_perp0 = 1 # [km] Perpendicular scale of wave at Z_min (ionosphere). Mapping using flux tube scaling.
 
     # Wave Frequeuency
-    f_0 = 5 # [Hz] Frequency of injected wave
+    f_0 = 2 # [Hz] Frequency of injected wave
 
     driver_dict = {
         'gaussian_pulse':0,
@@ -107,7 +107,7 @@ class WavePotentialsToggles:
     # ===========================
     # === BOUNDARY CONDITIONS ===
     # ===========================
-    SIGMA_P = 1 # [S] Pedersen Conductance in Ionosphere
+    SIGMA_P = 0.13 # [S] Pedersen Conductance in Ionosphere
 
     # =============================
     # === RK45 Time Integration ===
@@ -138,7 +138,7 @@ class LiouvilleToggles:
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [600]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [700]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
@@ -164,7 +164,7 @@ class LiouvilleToggles:
     time_rez_waves = 0.001 # [seconds] deltaT sample rate for the waves
 
     # --- Injected Wave ---
-    injected_wave_time_delay = 9 # [seconds] Time delay added to the wave data to cause it to inject later. Defaults to 0 if set to <=0
+    injected_wave_time_delay = 5 # [seconds] Time delay added to the wave data to cause it to inject later. Defaults to 0 if set to <=0
 
 class DetectorFluxToggles:
 
