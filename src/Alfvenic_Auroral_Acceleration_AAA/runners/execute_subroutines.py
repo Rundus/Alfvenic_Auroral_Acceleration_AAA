@@ -2,7 +2,7 @@
 # --- Author: C. Feltman ---
 # DESCRIPTION: execute the AAA code
 
-def run_AAA_simulation():
+def run_AAA_simulation(dict_executable):
 
     #################
     # --- IMPORTS ---
@@ -10,8 +10,7 @@ def run_AAA_simulation():
     import time
     import spaceToolsLib as stl
     import warnings
-    from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles,EnvironmentExpressionsToggles,SpatialGridToggles,WavePotentialsToggles, LiouvilleToggles
-    import numpy as np
+    from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import EnvironmentExpressionsToggles,SpatialGridToggles,WavePotentialsToggles, LiouvilleToggles
     from Alfvenic_Auroral_Acceleration_AAA.runners.executable_classes import ExecutableClasses
     warnings.filterwarnings("ignore")
     start_time = time.time()
@@ -25,8 +24,6 @@ def run_AAA_simulation():
     # ---------------------------
     # --- EXECUTE SUBROUTINES ---
     # ---------------------------
-
-    dict_executable = RunToggles.dict_executable.copy()
 
     # re-run everything
     if dict_executable['regen_EVERYTHING']==1:

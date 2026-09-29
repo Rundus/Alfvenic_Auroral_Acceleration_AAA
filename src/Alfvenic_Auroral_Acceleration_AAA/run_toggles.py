@@ -11,20 +11,6 @@ class RunToggles:
     # --- Run Identification ---
     run_number = 1
 
-    # --- SubRoutine Options ---
-    dict_executable = {
-        'regen_EVERYTHING': 0,
-        'regen_environment_expressions': 0,
-        'regen_spatial_grid': 0,
-        'regen_plasma_environment': 0,
-        'regen_wave_potentials': 1,
-        'animate_wave_potentials': 1,
-        'regen_liouville_mapping': 0,
-        'regen_detector_flux': 0,
-        'plot_detector_flux':0,
-        'regen_field_particle_correlation': 0
-    }
-
     # --- FILE I/O ---
     store_output = True
     sim_root_path = r'/home/connor/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
