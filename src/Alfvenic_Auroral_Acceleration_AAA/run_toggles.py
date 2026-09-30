@@ -42,7 +42,7 @@ class SpatialGridToggles:
     ##################################
     # DEFINE SIMULATION EXTENT in terms of geophysical parameters
     L_Shell = 8.5
-    s_para_min = 100 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+    s_para_min = 0 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
     s_para_max = 3*stl.Re # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
 
     ######################
@@ -64,7 +64,7 @@ class PlasmaEnvironmentToggles:
     Emax_cold = 1E5  # [eV]
 
     # --- Loss Cone Information ---
-    alt_lost = 0  # [km] altitude which any particles which reach this have distribution=0. The exobase is where particles are essentially collisionless
+    alt_lost = -500  # [km] altitude which any particles which reach this have distribution=0. The exobase is where particles are essentially collisionless
 
 class WavePotentialsToggles:
 
@@ -72,7 +72,7 @@ class WavePotentialsToggles:
     # === WAVE TOGGLES ===
     # ====================
     # Initial Electric Wave Field Strength - At the initial position
-    Phi_0 = 1*2*200  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
+    Phi_0 = -1*2*200  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
     # from the conversion between a CHARACTERISTIC and ACTUAL potential. On RHS boundary: Φ = Z (W⁺ − W⁻)/2
     # which we specify W⁺ =0, W⁻ = W⁻ = −Φ₀/(v_A \sqrt{1+\lambda k_{\perp}}^{2}), so Φ = Z · (0 + Φ₀/Z)/2 = Φ₀/2
     # Note: The -1* out front is to flip from parallel electric field to modified dipole coordinate electric field
@@ -132,7 +132,7 @@ class LiouvilleToggles:
     N_energy_space_points = 40
     E_max_obs = 4  # the POWER of 10^E_max for the maximum energy
     E_min_obs = 1  # the POWER of 10^E_min for the minimum energy
-    pitch_range_obs = np.linspace(0, 180, 12+1)
+    pitch_range_obs = np.linspace(5, 175, 10+1)
     # pitch_range_obs = np.linspace(0, 180, 18 + 1)
     energy_range_obs = np.logspace(E_min_obs, E_max_obs, N_energy_space_points)
 
