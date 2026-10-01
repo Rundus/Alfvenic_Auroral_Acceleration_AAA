@@ -1,6 +1,5 @@
 # Simulation Imports
 from scipy.special import gamma
-from src.Alfvenic_Auroral_Acceleration_AAA.spatial_grid.spatial_classes import SpatialClasses
 import numpy as np
 import spaceToolsLib as stl
 from itertools import product
@@ -17,16 +16,14 @@ from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import LiouvilleToggles,P
 _WORKER = {}
 
 def _init_worker(mapping_alt):
-    _WORKER['obj'] = LiouvilleClasses(mapping_alt)
+    _WORKER['obj'] = LiouvilleMapping(mapping_alt)
 
 def _map_one_time(tmeIdx):
     return tmeIdx, _WORKER['obj'].map_single_time(tmeIdx)
 
-
-class LiouvilleClasses:
+class LiouvilleMapping:
 
     def __init__(self,mapping_alt):
-
         # form the regular grid interpolator for E-parallel
         data_dict_potentials = stl.loadDictFromFile(f'{RunToggles.sim_data_output_path}/wave_potentials/wave_potentials.cdf')
         data_dict_spatial = stl.loadDictFromFile(f'{RunToggles.sim_data_output_path}/spatial_grid/spatial_grid.cdf')
@@ -45,7 +42,7 @@ class LiouvilleClasses:
         self.colat0_rad = np.arcsin(np.sqrt(self.chi_obs * self.r0))
         self.mu_obs = - np.sqrt(np.cos(self.colat0_rad)) / self.r0
         self.B0 = self.B_dipole(self.mu_obs, self.chi_obs)
-        self.observation_times = np.linspace(LiouvilleToggles.time_obs_start, LiouvilleToggles.time_obs_end, LiouvilleToggles.N_obs_points) # list of observation times
+        self.observation_times = np.linspace(LiouvilleToggles.time_obs_start, LiouvilleToggles.time_obs_end, LiouvilleToggles.N_obs_points)  # list of observation times
 
         # Construct the Wave Interpolator Object
         self.mu_grid = data_dict_spatial['mu'][0]
@@ -58,10 +55,9 @@ class LiouvilleClasses:
         self.plasma_environment_object = PlasmaEnvironmentClasses()
 
         if LiouvilleToggles.injected_wave_time_delay > 0:
-
             # --- Adjust the wave Interpolator ---
-            deltaT = np.gradient(self.time_grid)[0]
-            N_additional_points = int(LiouvilleToggles.injected_wave_time_delay/deltaT)
+            deltaT_time = np.gradient(self.time_grid)[0]
+            N_additional_points = int(LiouvilleToggles.injected_wave_time_delay / deltaT_time)
             zeros = np.zeros((N_additional_points, self.Emu.shape[1]), dtype=self.Emu.dtype)
 
             # adjust the fields size
@@ -70,14 +66,26 @@ class LiouvilleClasses:
             self.Bperp = np.vstack([zeros, self.Bperp])
 
             # adjust the fields time grid size
-            self.time_grid = np.concatenate([np.array([deltaT*i for i in range(N_additional_points)]),self.time_grid+LiouvilleToggles.injected_wave_time_delay])
+            self.time_grid = np.concatenate([np.array([deltaT_time * i for i in range(N_additional_points)]), self.time_grid + LiouvilleToggles.injected_wave_time_delay])
 
             # --- Adjust the observation times ---
             deltaT_obs = np.gradient(self.observation_times)[0]
-            N_additional_obs_points = int(LiouvilleToggles.injected_wave_time_delay/deltaT_obs)
-            self.observation_times = np.concatenate([np.array([deltaT_obs*i for i in range(N_additional_obs_points)]),self.observation_times+LiouvilleToggles.injected_wave_time_delay])
+            N_additional_obs_points = int(LiouvilleToggles.injected_wave_time_delay / deltaT_obs)
+            self.observation_times = np.concatenate([np.array([deltaT_obs * i for i in range(N_additional_obs_points)]), self.observation_times + LiouvilleToggles.injected_wave_time_delay])
 
-        self.Emu_interp = RegularGridInterpolator((self.time_grid, self.mu_grid),self.Emu,bounds_error=False, fill_value=0.0)
+        self.Emu_interp = RegularGridInterpolator((self.time_grid, self.mu_grid), self.Emu, bounds_error=False, fill_value=0.0)
+
+    def liouville_mapper(self):
+
+        N_time = len(self.observation_times)
+        N_ptch = len(LiouvilleToggles.pitch_range_obs)
+        N_engy = len(LiouvilleToggles.energy_range_obs)
+        Distribution = np.zeros((N_time, N_ptch, N_engy))
+
+        with mp.Pool(processes=LiouvilleToggles.processes_count, initializer=_init_worker, initargs=(self.mapping_alt,)) as pool:
+            for tmeIdx, block in tqdm(pool.imap_unordered(_map_one_time, range(N_time)), total=N_time):
+                Distribution[tmeIdx] = block
+        return Distribution
 
     def map_single_time(self, tmeIdx):
         N_ptch = len(LiouvilleToggles.pitch_range_obs)
@@ -89,9 +97,8 @@ class LiouvilleClasses:
             ptchVal = np.radians(LiouvilleToggles.pitch_range_obs[ptchIdx])
             speed = np.sqrt(2 * stl.q0 * engyVal / stl.m_e)
             vperp = round(speed * np.sin(ptchVal),2)
-            vpara = speed * np.cos(ptchVal)
-            s0 = [self.mu_obs, self.chi_obs, -vpara, vperp] # the -1 on vpara is to convert to modified dipole coordinates
-
+            v_mu = -1*speed * np.cos(ptchVal)
+            s0 = [self.mu_obs, self.chi_obs, v_mu, vperp] # the -1 on vpara is to convert to modified dipole coordinates
             t_obs = self.observation_times[tmeIdx]
             uB = (0.5 * stl.m_e * np.square(vperp)) / self.B0
 
@@ -107,46 +114,9 @@ class LiouvilleClasses:
             # --- MODIFY/EXPORT DISTRIBUTIONS ---
             E_src = 0.5 * stl.m_e * (mapped_v_perp**2 + mapped_v_mu**2)  # [J] kinetic energy at the end point
             block[ptchIdx][engyIdx] = self.f_plasma_sheet(E_src, uB) + self.f_cold(mapped_mu, mapped_chi, E_src)
-            # block[ptchIdx][engyIdx] = self.Maxwellian_total(
-            #     mu=mapped_mu,
-            #     chi=mapped_chi,
-            #     vperp=mapped_v_perp,
-            #     vpara=-1 * mapped_v_mu, # -1 is to convert from modified dipole back to field-aligned
-            # )
         return block
 
-    def observed_fields(self):
-        # Create the Interpolation Objects
-        # Note: fill_value =0 means no wave field outside the simulted domain whereas fille_value =none extrapolates linearly
-        interp_emu = RegularGridInterpolator((self.time_grid, self.mu_grid), self.Emu, bounds_error=False, fill_value=0.0)
-        interp_eperp = RegularGridInterpolator((self.time_grid, self.mu_grid), self.Eperp, bounds_error=False, fill_value=0.0)
-        interp_bperp = RegularGridInterpolator((self.time_grid, self.mu_grid), self.Bperp, bounds_error=False, fill_value=0.0)
 
-        # Calculate the interpolated wave-fields at the observation points
-        T_end = LiouvilleToggles.time_obs_end + LiouvilleToggles.injected_wave_time_delay if LiouvilleToggles.injected_wave_time_delay > 0 else LiouvilleToggles.time_obs_end
-        N_obs_wave_points = int(T_end / LiouvilleToggles.time_rez_waves)
-        obs_waves_times = np.linspace(0, T_end, N_obs_wave_points)
-        eval_points = np.array([[obs_waves_times[i], self.mu_obs] for i in range(N_obs_wave_points)])
-
-        E_perp_obs = interp_eperp(eval_points)
-        E_mu_obs = interp_emu(eval_points)
-        B_perp_obs = interp_bperp(eval_points)
-
-        return E_mu_obs, E_perp_obs,B_perp_obs, obs_waves_times
-
-    def liouville_mapper(self):
-
-        N_time = len(self.observation_times)
-        N_ptch = len(LiouvilleToggles.pitch_range_obs)
-        N_engy = len(LiouvilleToggles.energy_range_obs)
-        Distribution = np.zeros((N_time, N_ptch, N_engy))
-
-        with mp.Pool(processes=LiouvilleToggles.processes_count, initializer=_init_worker, initargs=(self.mapping_alt,)) as pool:
-            for tmeIdx, block in tqdm(pool.imap_unordered(_map_one_time, range(N_time)), total=N_time):
-                Distribution[tmeIdx] = block
-
-        return Distribution
-    # The
     def equations_of_motion(self, t, S, deltaT, uB):
         # State Vector - [mu, chi, vel_mu, vel_chi]
 
@@ -161,13 +131,13 @@ class LiouvilleClasses:
         # --- Velocity ---
         # dv_mu/dt
 
-        # magnetic mirroring
+        # magnetic mirroring - the sign on this is CONFIRMED correct! needs the negative sign
         DvmuDt_mirror = - (uB/stl.m_e) * (self.dB_dipole_dmu(S[0],S[1])/self.h_factors[0](S[0],S[1]))
 
         # inverted-V
         # DvmuDt_inV = (stl.q0/stl.m_e)*ElectrostaticPotentialClasses().invertedVEField([S[0],S[1],S[2]])
 
-        # EM Field
+        # EM Field - the sign on this is CONFIRMED correct! needs the negative sign
         DvmuDt_Alfven = - (stl.q0 / stl.m_e) * self.Emu_interp(np.array([[deltaT + t, S[0]]]))[0]
 
         # Combine all the parallel effects
@@ -219,51 +189,52 @@ class LiouvilleClasses:
         vel_chi = soln.y[3, :]
         return [T, particle_mu, particle_chi, vel_Mu, vel_chi]
 
-    ################################
-    # --- DISTRIBUTION FUNCTIONS ---
-    ################################
+    def observed_fields(self):
+        # Create the Interpolation Objects
+        # Note: fill_value =0 means no wave field outside the simulted domain whereas fille_value =none extrapolates linearly
+        interp_emu = RegularGridInterpolator((self.time_grid, self.mu_grid), self.Emu, bounds_error=False, fill_value=0.0)
+        interp_eperp = RegularGridInterpolator((self.time_grid, self.mu_grid), self.Eperp, bounds_error=False, fill_value=0.0)
+        interp_bperp = RegularGridInterpolator((self.time_grid, self.mu_grid), self.Bperp, bounds_error=False, fill_value=0.0)
 
-    def Maxwellian_total(self, mu, chi, vperp, vpara):
-        mapped_pitch = abs(math.atan2(vperp, vpara)) # [Radians] calculate the pitch angle of the particle
+        # Calculate the interpolated wave-fields at the observation points
+        T_end = LiouvilleToggles.time_obs_end + LiouvilleToggles.injected_wave_time_delay if LiouvilleToggles.injected_wave_time_delay > 0 else LiouvilleToggles.time_obs_end
+        N_obs_wave_points = int(T_end / LiouvilleToggles.time_rez_waves)
+        obs_waves_times = np.linspace(0, T_end, N_obs_wave_points)
+        eval_points = np.array([[obs_waves_times[i], self.mu_obs] for i in range(N_obs_wave_points)])
 
-        # --- plasma sheet ---
-        if mu <= self.plasma_environment_object.mu_lost: # if you came from below the exobase, you are lost
-            density_val = 0
-        elif mapped_pitch <= self.plasma_environment_object.loss_cone_eq: # if you came from the equatorial loss cone, you are lost
-            density_val = 0
-        else: # if you do not originate from a loss cone
-            mapped_loss_cone_angle = self.plasma_environment_object.loss_cone_angle(mu, chi)  # BEWARE warnings are turned off for this function
-            density_val = (stl.cm_to_m**3)*self.plasma_environment_object.n_density_PS_loss_cone(mapped_loss_cone_angle)
+        E_perp_obs = interp_eperp(eval_points)
+        E_mu_obs = interp_emu(eval_points)
+        B_perp_obs = interp_bperp(eval_points)
 
-        dist_PS = self.Maxwellian(vperp=vperp,
-                                  vpara=vpara,
-                                  density=density_val,
-                                  Te=PlasmaEnvironmentToggles.Te_PS,
-                                  Emax=PlasmaEnvironmentToggles.Emax_PS,
-                                  Emin=PlasmaEnvironmentToggles.Emin_PS)
+        return E_mu_obs, E_perp_obs,B_perp_obs, obs_waves_times
 
-        # --- Cold Background ---
-        # The cold background has no loss cone and is generally described by the density formulae
-        dist_cold = self.Maxwellian(vperp=vperp,
-                                  vpara=vpara,
-                                  density= envDict['n_density_cold'](mu,chi),
-                                  Te=PlasmaEnvironmentToggles.Te_cold,
-                                  Emax=PlasmaEnvironmentToggles.Emax_cold,
-                                  Emin=PlasmaEnvironmentToggles.Emin_cold)
-
-        return dist_PS + dist_cold
+    def Kappa(self, mass, Vperp,Vpara,charge ,n, Te, vpara, vperp, kappa):
+        # Input: density [cm^-3], Temperature [eV], Velocities [m/s]
+        # output: the distribution function in SI units [s^3 m^-6]
+        Emag = (0.5 * mass * (Vperp ** 2 + Vpara ** 2)) / charge
+        Ek = Te * (1 - 3 / (2 * kappa))
+        return (1E6) * n * np.power(mass / (2 * np.pi * kappa * stl.q0 * Ek), 3 / 2) * (gamma(kappa + 1) / gamma(kappa - 0.5)) * np.power(1 + Emag / (kappa * Ek), -(kappa + 1))
 
     def f_plasma_sheet(self, E_src, uB):
         # E_src: kinetic energy at the end of the backward trace [J]; uB: magnetic moment [J/T], conserved.
         # The electron mirrors where E = uB*B, so it reaches the exobase (a loss cone, either direction)
         # exactly when E_src > uB*B_loss. Outside the cones, f is the FULL Maxwellian normalized to n0.
-        if E_src > uB * self.plasma_environment_object.B_lost:
-            return 0.0
+
+        if PlasmaEnvironmentToggles.use_loss_cone_bool:
+            if E_src > uB * self.plasma_environment_object.B_lost: # the particle has mirrored
+                return 0.0
+
         E_eV = E_src / stl.q0
-        if not (PlasmaEnvironmentToggles.Emin_PS <= E_eV <= PlasmaEnvironmentToggles.Emax_PS):
+        if not (PlasmaEnvironmentToggles.Emin_PS <= E_eV <= PlasmaEnvironmentToggles.Emax_PS): # the prticle is outside the range of the distribution
             return 0.0
         Te = PlasmaEnvironmentToggles.Te_PS
-        return self.plasma_environment_object.n0_PS_norm * np.power(stl.m_e / (2*np.pi*Te*stl.q0), 1.5) * np.exp(-E_eV / Te)
+
+        if PlasmaEnvironmentToggles.use_loss_cone_bool:
+            density_val = self.plasma_environment_object.n0_PS_norm
+        else:
+            density_val = (stl.cm_to_m**3)*PlasmaEnvironmentToggles.n0_PS
+        return density_val * np.power(stl.m_e / (2 * np.pi * Te * stl.q0),1.5) * np.exp(-E_eV / Te)
+
 
     def f_cold(self, mu, chi, E_src):
         # cold isotropic population: local Maxwellian with the model density at the end point
@@ -273,29 +244,6 @@ class LiouvilleClasses:
         Te = PlasmaEnvironmentToggles.Te_cold
         return envDict['n_density_cold'](mu, chi) * np.power(stl.m_e / (2*np.pi*Te*stl.q0), 1.5) * np.exp(-E_eV / Te)
 
-    def Maxwellian(self, vperp, vpara, density, Te, Emax, Emin):
-        """
-                :param vpara: Particle Velocity parallel to the background geomagnetic field in [m/s]
-                :type vpara: float
 
-                :param vperp: Particle Velocity parallel to the background geomagnetic field in [m/s]
-                :type vperp: float
-
-                :return: Plasma Distribution Function in [m^-6 s^-3] evaluated at vpara, vperp
-                """
-        E = 0.5 * (stl.m_e / stl.q0) * (np.square(vpara) + np.square(vperp)) # energy in eV
-        if E > Emax:  # check if energy is above the specific level the distribution
-            return 0
-        elif E < Emin:  # check if energy is below the specific level the distribution:
-            return 0
-        else:
-            return density * np.sqrt(np.power(stl.m_e / (2 * np.pi * Te * stl.q0), 3)) * np.exp(-E/Te)
-
-    def Kappa(self, mass, Vperp,Vpara,charge ,n, Te, vpara, vperp, kappa):
-        # Input: density [cm^-3], Temperature [eV], Velocities [m/s]
-        # output: the distribution function in SI units [s^3 m^-6]
-        Emag = (0.5 * mass * (Vperp ** 2 + Vpara ** 2)) / charge
-        Ek = Te * (1 - 3 / (2 * kappa))
-        return (1E6) * n * np.power(mass / (2 * np.pi * kappa * stl.q0 * Ek), 3 / 2) * (gamma(kappa + 1) / gamma(kappa - 0.5)) * np.power(1 + Emag / (kappa * Ek), -(kappa + 1))
 
 

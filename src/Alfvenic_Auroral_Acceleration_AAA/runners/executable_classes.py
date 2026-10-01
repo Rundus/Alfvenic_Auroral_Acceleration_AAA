@@ -1,6 +1,7 @@
 import json
 import os
 from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles,EnvironmentExpressionsToggles
+import inspect
 
 class ExecutableClasses:
 
@@ -13,7 +14,8 @@ class ExecutableClasses:
             'liouville_mapping',
             'field_particle_correlation',
             'detector_flux',
-            'field_particle_correlation'
+            'field_particle_correlation',
+            'pre_defined_runs'
         ]
 
         for path in folders_paths:
@@ -31,7 +33,6 @@ class ExecutableClasses:
             config_dict = json.load(configFile)
             if EnvironmentExpressionsToggles().wDenModel_key != config_dict['expression_generator']['density_model']:
                 raise Exception('Pickled model does not match runners configuration. Try re-generating pickle files.')
-
 
     def update_run_JSON(self, dict_update):
         import numpy as np
@@ -70,37 +71,59 @@ class ExecutableClasses:
                 os.remove(tmp_path)
             raise
 
+    def update_toggle(self,module,class_name,attr,value):
+        classes = {name: cls for name, cls in inspect.getmembers(module, inspect.isclass) if cls.__module__ == module.__name__}
+        cls = classes[class_name]
+        setattr(cls, attr, value)
+
+    def load_class_toggles(self,module):
+        return {name: cls for name, cls in inspect.getmembers(module, inspect.isclass) if cls.__module__ == module.__name__}
+
+    def load_class_toggle_data(self, cls):
+        return {k: v for k, v in vars(cls).items() if not k.startswith('__') and not callable(v)}
+
+    def update_class_toggles(self, module, module_overrides):
+
+        # load the current class info
+        dict_overrides = self.load_class_toggles(module_overrides)
+        dict_current = self.load_class_toggles(module)
+
+        # load the overrides data
+        override_settings = {cls_name: self.load_class_toggle_data(val) for cls_name, val in dict_overrides.items()}
+
+        for class_name, cls_obj in dict_current.items():
+
+            if class_name !='RunToggles': # DONT update the FileIO toggles
+
+                for attr, val in override_settings[class_name].items():
+                    self.update_toggle(module,class_name,attr,val)
+
+    def load_preset_run(self):
+        from src.Alfvenic_Auroral_Acceleration_AAA import run_toggles
+
+        # find which pre-defined classes to load and update the toggles
+        if not RunToggles.dict_run_settings['custom']:
+
+             # Load the toggles if predefined
+            if RunToggles.dict_run_settings['Kletzing&Hu_2001']:
+                from src.Alfvenic_Auroral_Acceleration_AAA.runners.predefined_runs import kletzingHu2001
+                module_predefined = kletzingHu2001
+
+             # update the toggles for the run
+            self.update_class_toggles(run_toggles, module_predefined)
+
+    def print_run_toggles(self):
+        from src.Alfvenic_Auroral_Acceleration_AAA import run_toggles
+        dict = self.load_class_toggles(run_toggles)
+        settings = {cls_name: self.load_class_toggle_data(val) for cls_name, val in dict.items()}
+        for key, val in settings.items():
+            print(key)
+            print(val)
 
     def generate_run_JSON(self):
 
         # Determine the Density model used
         config_dict = {}
-
-
-        config_dict = {**config_dict,
-                       **{
-                            # 'Density_Model':f'{EnvironmentExpressionsToggles().wDenModel_key}',
-                           # 'Observation': {
-                           #      'z_obs': mapping_alt,
-                           #      'time_rez': DistributionToggles.time_rez,
-                           #      'time_obs_start':DistributionToggles.time_obs_start,
-                           #     'time_obs_end': DistributionToggles.time_obs_end,
-                           #     'time_rez_waves':DistributionToggles.time_rez_waves,
-                           #     'E_max_obs(log)':DistributionToggles.E_max_obs,
-                           #     'E_min_obs(log)':DistributionToggles.E_min_obs,
-                           #     'N_energy_space_points':DistributionToggles.N_energy_space_points
-                           #     # 'Pitch_Range':list(DistributionToggles.pitch_range),
-                           #     # 'Energy_Range':list(DistributionToggles.energy_range)
-                           #                 },
-                           # 'Plasma_Sheet':
-                           #     {
-                           #         'n_PS':DistributionToggles.n_PS,
-                           #         'Te_PS':DistributionToggles.Te_PS,
-                           #         'Emax_PS':DistributionToggles.Emax_PS,
-                           #         'Emin_PS':DistributionToggles.Emin_PS
-                           #     },
-                          }
-                       }
 
         # JSON I/O
         folder_path = f'{RunToggles.sim_data_output_path}'

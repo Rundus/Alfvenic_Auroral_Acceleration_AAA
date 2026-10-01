@@ -12,7 +12,7 @@ def liouville_mapping_generator():
     # --- File-specific imports ---
     from scipy.interpolate import RegularGridInterpolator
     from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import LiouvilleToggles, RunToggles
-    from src.Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_classes import LiouvilleClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_classes import LiouvilleMapping
 
     # --- Delete any old/previous files ---
     old_files = glob(f'{RunToggles.sim_data_output_path}/liouville_mapping/*.cdf*')
@@ -33,7 +33,7 @@ def liouville_mapping_generator():
         #######################################################
         ### EXECUTE LIOUVILLE MAPPING (Parallel Processing) ###
         #######################################################
-        mapping_object = LiouvilleClasses(z_obs)
+        mapping_object = LiouvilleMapping(z_obs)
         distribution_function = mapping_object.liouville_mapper()
 
         ##############################

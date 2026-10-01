@@ -2,6 +2,7 @@ import numpy as np
 from typing import Callable, Optional
 import spaceToolsLib as stl
 from tqdm import tqdm
+from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import WavePotentialsToggles
 
 class WaveFieldsClasses: # for parallel and perp only
 
@@ -99,13 +100,21 @@ class WaveFieldsClasses: # for parallel and perp only
             a = PhiL + ZL * AL  # right-going invariant, from the left cell
             b = PhiR - ZR * AR  # left-going  invariant, from the right cell
             Af, Pf = np.empty(N + 1), np.empty(N + 1)
+
+            # Interior Points
             Af[1:-1] = (a - b) / (ZL + ZR)  # exact Riemann solution at the face
             Pf[1:-1] = (ZR * a + ZL * b) / (ZL + ZR)
 
+            # Left-side boundary (Ionosphere)
             g = stl.u0 * sigma_P * Z[0]  # = Sigma_P / Sigma_A
-            Pf[0] = (Phi[0] - Z[0] * A[0]) / (1.0 + g)  # only W^- reaches this face
-            Af[0] = -1 * stl.u0 * sigma_P * Pf[0]
+            if WavePotentialsToggles.absorbing_ionosphere_bool:
+                Pf[0] = 0
+                Af[0] = 0
+            else:
+                Pf[0] = (Phi[0] - Z[0] * A[0]) / (1.0 + g)  # only W^- reaches this face
+                Af[0] = -1 * stl.u0 * sigma_P * Pf[0]
 
+            # Right-side Boundary (Magnetosphere driver)
             d = drive(t)  # matched -> transparent
             Pf[-1] = (Phi[-1] + Z[-1] * A[-1] + d) / 2.0  # only W^+ reaches this face
             Af[-1] = (Pf[-1] - d) / Z[-1]
@@ -134,6 +143,8 @@ class WaveFieldsClasses: # for parallel and perp only
                 P1, A1 = Phi + h * kp, A + h * ka
                 kp2, ka2, fb2,ft2 = rhs(P1, A1, t + h)
                 Phi, A = 0.5 * (Phi + P1 + h * kp2), 0.5 * (A + A1 + h * ka2)
+
+                # accumulated flux
                 acc_bot += 0.5 * h * (fb1 + fb2)
                 acc_top += 0.5 * h * (ft1 + ft2)
                 t += h

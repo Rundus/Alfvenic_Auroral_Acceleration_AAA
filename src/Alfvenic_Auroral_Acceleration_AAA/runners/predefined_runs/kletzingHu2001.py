@@ -1,4 +1,4 @@
-# run_toggles.py
+# kletzingHu2001.py
 """
     This is where the run-level toggles are stored
 """
@@ -7,39 +7,19 @@ import spaceToolsLib as stl
 import numpy as np
 import os
 
-class RunToggles:
-
-    # --- Run Identification ---
-    run_number = 1
-
-    # --- FILE I/O ---
-    store_output = True
-    sim_root_path = r'/home/connor/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
-    sim_data_output_path = rf'/home/connor/Data/MODELS/alfvenic_auroral_acceleration_AAA/run_{run_number}'
-
-    # --- Pre-defined Run configuration ---
-    dict_run_settings = {
-        'custom':False,
-        'Kletzing&Hu_2001': True
-    }
-
-    # sim_root_path = r'C:/Users/conno/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
-    # sim_data_output_path = rf'C:/data/alfvenic_auroral_acceleration_AAA/run_{run_number}'
-
-    # sim_root_path = r'C:/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
-    # sim_data_output_path = rf'C:/Data/MODELS/alfvenic_auroral_Acceleration_AAA/run_{run_number}'
 
 class EnvironmentExpressionsToggles:
 
-    environment_density_dict ={
-            'chaston2006':False,
-            'shroeder2021':True, # Note this is EXACTLY the Kletzing & Torbert Model
-            'chaston2003_nightside':False,
-            'chaston2003_cusp': False,
-        }
+    def __init__(self):
+        self.environment_density_dict ={
+                'chaston2006':False,
+                'shroeder2021':True, # Note this is EXACTLY the Kletzing & Torbert Model
+                'chaston2003_nightside':False,
+                'chaston2003_cusp': False,
+            }
 
-    # FILE I/O
-    wDenModel_key = next(key for key,val in environment_density_dict.items() if val)
+        # FILE I/O
+        self.wDenModel_key = [key for key in self.environment_density_dict.keys() if self.environment_density_dict[key]][0]
 
 class SpatialGridToggles:
 
@@ -59,7 +39,7 @@ class SpatialGridToggles:
 class PlasmaEnvironmentToggles:
 
     # Plasma Sheet (Hot)
-    Te_PS = 500  # [eV] Temperature of the isotropic Plasma Sheet Distribution
+    Te_PS = 200  # [eV] Temperature of the isotropic Plasma Sheet Distribution
     n0_PS = 0.5  # [cm^-3] Density of the plasma sheet population at the dipole geomagnetic equator
     Emin_PS = 0 # [eV]
     Emax_PS = 1E5  # [eV]

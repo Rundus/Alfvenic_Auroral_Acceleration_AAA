@@ -25,6 +25,9 @@ section 1 below.
 """
 
 import matplotlib
+
+from Alfvenic_Auroral_Acceleration_AAA.run_toggles import LiouvilleToggles
+
 matplotlib.use("Agg")  # headless: render frames without a display
 import matplotlib.pyplot as plt
 import numpy as np
@@ -138,7 +141,7 @@ def animate_wave_potentials(
     t_full = t.copy()          # full-resolution time axis, for the energy curve
     E_norm_full = E_norm.copy()
 
-    t = t[::stride]
+    t = t[::stride] + LiouvilleToggles.injected_wave_time_delay
     Phi, A, E_perp, B_perp, E_par = (arr[::stride] for arr in (Phi, A, E_perp, B_perp, E_par))
     E_norm = E_norm[::stride]
     n_frames = t.size

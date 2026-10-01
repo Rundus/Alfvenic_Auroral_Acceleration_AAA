@@ -11,7 +11,6 @@ class PlasmaEnvironmentClasses:
         self.B_dipole = envDict['B_dipole']
         data_dict_spatial = stl.loadDictFromFile(glob(rf'{RunToggles.sim_data_output_path}//spatial_grid/*.cdf*')[0])
 
-
         # --- Exobase (loss altitude) on this field line ---
         # determine the equatorial loss cone angle
         self.r_lost = 1 + PlasmaEnvironmentToggles.alt_lost / stl.Re

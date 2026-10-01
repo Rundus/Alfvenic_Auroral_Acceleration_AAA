@@ -21,6 +21,11 @@ def run_AAA_simulation(dict_executable):
     # Generate the Configuration File for this run
     ExecutableClasses().generate_run_JSON()
 
+    # Update the toggles if for predefined runs
+    ExecutableClasses().load_preset_run()
+    ExecutableClasses().print_run_toggles()
+
+
     # ---------------------------
     # --- EXECUTE SUBROUTINES ---
     # ---------------------------
@@ -32,7 +37,7 @@ def run_AAA_simulation(dict_executable):
         pass
 
     if dict_executable['regen_environment_expressions']==1:
-        print('\n--- Regenerating Ray Equation Expressions ---',end='\n')
+        print('\n--- Regenerating Environment Equation Expressions ---',end='\n')
         from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_generator import environment_expressions_generator
         environment_expressions_generator()
         ExecutableClasses().update_run_JSON(
