@@ -2,7 +2,7 @@
 import numpy as np
 import spaceToolsLib as stl
 
-class FieldParticleCorrelationClasses:
+class FPCClasses:
     def to_Vel(self, Energy_eV):
         return np.sqrt(2 * Energy_eV * stl.q0 / stl.m_e)
 

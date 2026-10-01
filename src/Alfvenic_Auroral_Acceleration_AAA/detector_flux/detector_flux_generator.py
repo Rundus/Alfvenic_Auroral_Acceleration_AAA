@@ -13,7 +13,7 @@ def detector_flux_generator():
     # --- File-specific imports ---
     from glob import glob
     from itertools import product
-    from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles,DetectorFluxToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles, DetectorFluxToggles
     from tqdm import tqdm
 
     # --- Delete the old Flux Files ---
@@ -21,7 +21,7 @@ def detector_flux_generator():
     for old_file in old_files:
         os.remove(old_file)
 
-    # --- Load the wave runners data ---
+    # --- Load the liouville mapped data ---
     liouville_files = glob(rf'{RunToggles.sim_data_output_path}/liouville_mapping/*.cdf*')
 
     for i in tqdm(range(len(liouville_files))):
@@ -84,7 +84,7 @@ def detector_flux_generator():
             'distribution_function_esa': [distribution_function_esa,{'DEPEND_0': 'time', 'DEPEND_1': 'pitch_angle', 'DEPEND_2': 'energy', 'UNITS': 'm!A-6!Ns!A-3!N', 'LABLAXIS': 'Distribution Function ESA', 'VAR_TYPE': 'data'}],
             'Differential_Number_Flux': [np.array(JN), {'DEPEND_0':'time','DEPEND_2':'energy','DEPEND_1':'pitch_angle','UNITS':'cm!U-2!N str!U-1!N s!U-1!N eV!U-1!N','LABLAXIS': 'Differential_Number_Flux','VAR_TYPE':'data'}],
             'Differential_Energy_Flux': [np.array(JE), {'DEPEND_0': 'time', 'DEPEND_2': 'energy', 'DEPEND_1': 'pitch_angle', 'UNITS': 'cm!U-2!N str!U-1!N s!U-1!N eV/eV', 'LABLAXIS': 'Differential_Energy_Flux', 'VAR_TYPE': 'data'}],
-            'E_para_obs':data_dict_distribution['E_para_obs'].copy(),
+            'E_mu_obs':data_dict_distribution['E_mu_obs'].copy(),
             'E_perp_obs':data_dict_distribution['E_perp_obs'].copy(),
             'B_perp_obs':data_dict_distribution['B_perp_obs'].copy(),
             'JN_thresh' : [JN_thresh,{'DEPEND_0':'energy','UNITS':'cm!U-2!N str!U-1!N s!U-1!N eV!U-1!N','LABLAXIS': 'Threshold Differential_Number_Flux','VAR_TYPE':'data'}]

@@ -96,11 +96,12 @@ class LiouvilleMapping:
             engyVal = LiouvilleToggles.energy_range_obs[engyIdx]
             ptchVal = np.radians(LiouvilleToggles.pitch_range_obs[ptchIdx])
             speed = np.sqrt(2 * stl.q0 * engyVal / stl.m_e)
-            vperp = round(speed * np.sin(ptchVal),2)
+            vperp = speed * np.sin(ptchVal)
             v_mu = -1*speed * np.cos(ptchVal)
-            s0 = [self.mu_obs, self.chi_obs, v_mu, vperp] # the -1 on vpara is to convert to modified dipole coordinates
-            t_obs = self.observation_times[tmeIdx]
             uB = (0.5 * stl.m_e * np.square(vperp)) / self.B0
+
+            s0 = [self.mu_obs, self.chi_obs, v_mu, vperp]  # the -1 on vpara is to convert to modified dipole coordinates
+            t_obs = self.observation_times[tmeIdx]
 
             T, p_mu, p_chi, p_vel_mu, p_vel_chi = self.rk45_solver(t_span=[0, -t_obs], s0=s0, deltaT=t_obs, uB=uB)
 
@@ -115,7 +116,6 @@ class LiouvilleMapping:
             E_src = 0.5 * stl.m_e * (mapped_v_perp**2 + mapped_v_mu**2)  # [J] kinetic energy at the end point
             block[ptchIdx][engyIdx] = self.f_plasma_sheet(E_src, uB) + self.f_cold(mapped_mu, mapped_chi, E_src)
         return block
-
 
     def equations_of_motion(self, t, S, deltaT, uB):
         # State Vector - [mu, chi, vel_mu, vel_chi]
@@ -132,7 +132,8 @@ class LiouvilleMapping:
         # dv_mu/dt
 
         # magnetic mirroring - the sign on this is CONFIRMED correct! needs the negative sign
-        DvmuDt_mirror = - (uB/stl.m_e) * (self.dB_dipole_dmu(S[0],S[1])/self.h_factors[0](S[0],S[1]))
+        DvmuDt_mirror = -1*(uB/stl.m_e) * (self.dB_dipole_dmu(S[0],S[1])/self.h_factors[0](S[0],S[1]))
+        # DvmuDt_mirror = 0
 
         # inverted-V
         # DvmuDt_inV = (stl.q0/stl.m_e)*ElectrostaticPotentialClasses().invertedVEField([S[0],S[1],S[2]])
@@ -156,7 +157,6 @@ class LiouvilleMapping:
         top_boundary_checker = S[0] - self.mu_top
 
         return top_boundary_checker
-
     escaped_upper.terminal = True
 
     def escaped_lower(self, t, S, deltaT, uB):
@@ -234,7 +234,6 @@ class LiouvilleMapping:
         else:
             density_val = (stl.cm_to_m**3)*PlasmaEnvironmentToggles.n0_PS
         return density_val * np.power(stl.m_e / (2 * np.pi * Te * stl.q0),1.5) * np.exp(-E_eV / Te)
-
 
     def f_cold(self, mu, chi, E_src):
         # cold isotropic population: local Maxwellian with the model density at the end point

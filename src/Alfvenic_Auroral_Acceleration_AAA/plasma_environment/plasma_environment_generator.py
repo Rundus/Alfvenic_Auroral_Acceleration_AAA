@@ -35,7 +35,7 @@ def plasma_environment_generator():
                         'h_mu': [[], {'DEPEND_0': 'alt', 'UNITS': 'm', 'LABLAXIS': 'h!B&mu;!N', 'VAR_TYPE': 'data'}],
                         'h_chi': [[], {'DEPEND_0': 'alt', 'UNITS': 'm', 'LABLAXIS': 'h!B&chi;!N', 'VAR_TYPE': 'data'}],
                         'h_phi': [[], {'DEPEND_0': 'alt', 'UNITS': 'm', 'LABLAXIS': 'h!B&phi;!N', 'VAR_TYPE': 'data'}],
-                        'B_dipole':[[],{'DEPEND_0': 'alt', 'UNITS': 'nT', 'LABLAXIS': '|B|', 'VAR_TYPE': 'data'}],
+                        'B_dipole':[[],{'DEPEND_0': 'alt', 'UNITS': 'T', 'LABLAXIS': '|B|', 'VAR_TYPE': 'data'}],
                         'meff': [[], {'DEPEND_0': 'alt', 'UNITS': 'kg', 'LABLAXIS': 'mass (avg)', 'VAR_TYPE': 'data'}],
                         'pDD_n_density_mu': [[], {'DEPEND_0': 'alt', 'UNITS': 'm!A-3', 'LABLAXIS': '(dn/d&mu;)', 'VAR_TYPE': 'data'}],
                         'pDD_n_density_alt': [[], {'DEPEND_0': 'alt','UNITS': 'm^-3 / m','LABLAXIS':'dn/dz', 'VAR_TYPE':'data'}],

@@ -119,11 +119,12 @@ def run_AAA_simulation(dict_executable):
 
     if dict_executable['regen_field_particle_correlation'] == 1:
         print('\n--- Calculating Field-Particle Correlation ---', end='\n')
-        # field_particle_correlation_generator()
+        from src.Alfvenic_Auroral_Acceleration_AAA.field_particle_correlation.field_particle_correlation_generator import field_particle_correlation_generator
+        field_particle_correlation_generator()
 
-        print('\n--- Calculating Field-Particle Correlation (Vel Space) ---', end='\n')
-        from src.Alfvenic_Auroral_Acceleration_AAA.field_particle_correlation.field_particle_correlation_generator_velspace import field_particle_correlation_generator_vel
-        field_particle_correlation_generator_vel()
+        # print('\n--- Calculating Field-Particle Correlation (Vel Space) ---', end='\n')
+        # from src.Alfvenic_Auroral_Acceleration_AAA.field_particle_correlation.field_particle_correlation_generator_velspace import field_particle_correlation_generator_vel
+        # field_particle_correlation_generator_vel()
 
     stl.Done(start_time)
 

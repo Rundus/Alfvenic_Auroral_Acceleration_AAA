@@ -39,7 +39,7 @@ def liouville_mapping_generator():
         ##############################
         # --- OBSERVED WAVE FIELDS ---
         ##############################
-        E_para_obs, E_perp_obs, B_perp_obs, obs_waves_times = mapping_object.observed_fields()
+        E_mu_obs, E_perp_obs, B_perp_obs, obs_waves_times = mapping_object.observed_fields()
 
         ################
         # --- OUTPUT ---
@@ -52,7 +52,7 @@ def liouville_mapping_generator():
             'pitch_angle': [np.array(LiouvilleToggles.pitch_range_obs), {'UNITS': 'deg', 'LABLAXIS': 'Pitch Angle'}],
             'B_perp_obs': [B_perp_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'T', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],
             'E_perp_obs': [E_perp_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&perp;!N', 'VAR_TYPE': 'data'}],
-            'E_para_obs': [E_para_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&parallel;!N', 'VAR_TYPE': 'data'}],
+            'E_mu_obs': [E_mu_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&mu;!N', 'VAR_TYPE': 'data'}],
             'z_obs':[np.array([z_obs]),{'DEPEND_0': None, 'UNITS': 'km', 'LABLAXIS': 'Observation Altitude', 'VAR_TYPE': 'support_data'}]
         }
 

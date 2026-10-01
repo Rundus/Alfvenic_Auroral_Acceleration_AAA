@@ -1,4 +1,4 @@
-# run_toggles.py
+# Tanaka2005.py
 """
     This is where the run-level toggles are stored
 """
@@ -7,35 +7,14 @@ import spaceToolsLib as stl
 import numpy as np
 import os
 
-class RunToggles:
-
-    # --- Run Identification ---
-    run_number = 0
-
-    # --- FILE I/O ---
-    store_output = True
-    sim_root_path = r'/home/connor/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
-    sim_data_output_path = rf'/home/connor/Data/MODELS/alfvenic_auroral_acceleration_AAA/run_{run_number}'
-
-    # --- Pre-defined Run configuration ---
-    dict_run_settings = {
-        'custom':True,
-        'Kletzing&Hu_2001': False
-    }
-
-    # sim_root_path = r'C:/Users/conno/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
-    # sim_data_output_path = rf'C:/data/alfvenic_auroral_acceleration_AAA/run_{run_number}'
-
-    # sim_root_path = r'C:/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
-    # sim_data_output_path = rf'C:/Data/MODELS/alfvenic_auroral_Acceleration_AAA/run_{run_number}'
 
 class EnvironmentExpressionsToggles:
 
     environment_density_dict ={
             'chaston2006':False,
-            'shroeder2021':True, # Note this is EXACTLY the Kletzing & Torbert Model
+            'shroeder2021':False, # Note this is EXACTLY the Kletzing & Torbert Model
             'chaston2003_nightside':False,
-            'chaston2003_cusp': False,
+            'chaston2003_cusp': True,
         }
 
     # FILE I/O
@@ -85,7 +64,7 @@ class WavePotentialsToggles:
     # Note: The -1* out front is to flip from parallel electric field to modified dipole coordinate electric field
 
     # Perpendicular Scale at The Ionosphere
-    Lambda_perp0 = 6 # [km] Perpendicular scale of wave at Z_min (ionosphere). Mapping using flux tube scaling.
+    Lambda_perp0 = 3 # [km] Perpendicular scale of wave at Z_min (ionosphere). Mapping using flux tube scaling.
 
     # Wave Frequeuency
     f_0 = 4 # [Hz] Frequency of injected wave
@@ -107,7 +86,7 @@ class WavePotentialsToggles:
     # === RK45 Time Integration ===
     # =============================
     t_start, t_end = 0.0, 4 #[seconds] Time from z_max the wave is allowed to propogate
-    n_out = 700  # number of time-points to store for output
+    n_out = 1000  # number of time-points to store for output
     cfl = 0.4
 
 class LiouvilleToggles:
@@ -121,31 +100,30 @@ class LiouvilleToggles:
     # --- RK45 solver toggles ---
     #############################
     RK45_method = 'RK45' # 'LSODA'
-    RK45_rtol = 1E-4  # controls the relative accuracy.
-    RK45_atol = 1E-5  # controls the absolute accuracy
+    RK45_rtol = 1E-8  # controls the relative accuracy.
+    RK45_atol = 1E-9  # controls the absolute accuracy
 
     ##############################
     # --- PARTICLE OBSERVATION ---
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [700, 2*stl.Re]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [700]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
     # --- ESA ENERGY/PITCH COORDINATES ---
     N_energy_space_points = 100
-    # E_max_obs = 3.6  # the POWER of 10^E_max for the maximum energy
-    E_max_obs = 5  # the POWER of 10^E_max for the maximum energy
+    E_max_obs = 3.6  # the POWER of 10^E_max for the maximum energy
     E_min_obs = 1  # the POWER of 10^E_min for the minimum energy
     pitch_range_obs = np.linspace(5, 175, 10+1)
     # pitch_range_obs = np.linspace(0, 180, 18 + 1)
     energy_range_obs = np.logspace(E_min_obs, E_max_obs, N_energy_space_points)
 
     # --- ESA particle sampling ---
-    time_rez = 0.01 # in seconds
+    time_rez = 0.025 # in seconds
     time_obs_start = 0  # in seconds
-    time_obs_end = 6 # in seconds
+    time_obs_end = 4 # in seconds
     N_obs_points = int(time_obs_end/time_rez)+1 # number of particle observation points
 
     ###########################

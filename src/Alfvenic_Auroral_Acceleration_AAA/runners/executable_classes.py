@@ -112,13 +112,30 @@ class ExecutableClasses:
              # update the toggles for the run
             self.update_class_toggles(run_toggles, module_predefined)
 
+    # def print_run_toggles(self):
+    #     from src.Alfvenic_Auroral_Acceleration_AAA import run_toggles
+    #     dict = self.load_class_toggles(run_toggles)
+    #     settings = {cls_name: self.load_class_toggle_data(val) for cls_name, val in dict.items()}
+    #     for key, val in settings.items():
+    #         print(key)
+    #         print(val)
+
     def print_run_toggles(self):
+        import numpy as np
         from src.Alfvenic_Auroral_Acceleration_AAA import run_toggles
-        dict = self.load_class_toggles(run_toggles)
-        settings = {cls_name: self.load_class_toggle_data(val) for cls_name, val in dict.items()}
-        for key, val in settings.items():
-            print(key)
-            print(val)
+
+        for name, cls in self.load_class_toggles(run_toggles).items():
+            data = self.load_class_toggle_data(cls)
+            width = max(map(len, data), default=0)
+            print(f"── {name} " + "─" * max(0, 60 - len(name)))
+            for key, val in data.items():
+                if isinstance(val, np.ndarray) and val.size > 8:
+                    val = f"{val.size} pts, {val.min():.6g} to {val.max():.6g}"
+                elif isinstance(val, dict) and all(isinstance(v, (bool, int)) and v in (0, 1) for v in val.values()):
+                    val = ", ".join(k for k, v in val.items() if v)
+                elif isinstance(val, float):
+                    val = f"{val:.6g}"
+                print(f"  {key:<{width}} = {val}")
 
     def generate_run_JSON(self):
 

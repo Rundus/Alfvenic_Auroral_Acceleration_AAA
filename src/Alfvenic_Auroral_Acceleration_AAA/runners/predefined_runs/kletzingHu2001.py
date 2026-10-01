@@ -10,16 +10,15 @@ import os
 
 class EnvironmentExpressionsToggles:
 
-    def __init__(self):
-        self.environment_density_dict ={
-                'chaston2006':False,
-                'shroeder2021':True, # Note this is EXACTLY the Kletzing & Torbert Model
-                'chaston2003_nightside':False,
-                'chaston2003_cusp': False,
-            }
+    environment_density_dict ={
+            'chaston2006':False,
+            'shroeder2021':True, # Note this is EXACTLY the Kletzing & Torbert Model
+            'chaston2003_nightside':False,
+            'chaston2003_cusp': False,
+        }
 
-        # FILE I/O
-        self.wDenModel_key = [key for key in self.environment_density_dict.keys() if self.environment_density_dict[key]][0]
+    # FILE I/O
+    wDenModel_key = next(key for key,val in environment_density_dict.items() if val)
 
 class SpatialGridToggles:
 
@@ -87,7 +86,7 @@ class WavePotentialsToggles:
     # === RK45 Time Integration ===
     # =============================
     t_start, t_end = 0.0, 4 #[seconds] Time from z_max the wave is allowed to propogate
-    n_out = 1500  # number of time-points to store for output
+    n_out = 1000  # number of time-points to store for output
     cfl = 0.4
 
 class LiouvilleToggles:
@@ -109,7 +108,7 @@ class LiouvilleToggles:
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [700]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [700, 2*stl.Re]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
