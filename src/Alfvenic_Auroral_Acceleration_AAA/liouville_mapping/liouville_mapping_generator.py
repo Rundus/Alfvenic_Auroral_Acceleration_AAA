@@ -53,8 +53,16 @@ def liouville_mapping_generator():
             'B_perp_obs': [B_perp_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'T', 'LABLAXIS': 'B!B&perp;!N', 'VAR_TYPE': 'data'}],
             'E_perp_obs': [E_perp_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&perp;!N', 'VAR_TYPE': 'data'}],
             'E_mu_obs': [E_mu_obs, {'DEPEND_0': 'time_waves', 'UNITS': 'V/m', 'LABLAXIS': 'E!B&mu;!N', 'VAR_TYPE': 'data'}],
-            'z_obs':[np.array([z_obs]),{'DEPEND_0': None, 'UNITS': 'km', 'LABLAXIS': 'Observation Altitude', 'VAR_TYPE': 'support_data'}]
+            'z_obs':[np.array([z_obs]),{'DEPEND_0': None, 'UNITS': 'km', 'LABLAXIS': 'Observation Altitude', 'VAR_TYPE': 'support_data'}],
         }
+
+        if LiouvilleToggles.use_invertedV_bool:
+            data_dict_output.update(
+                {
+                    'E_inV':[mapping_object.inV_E_interp(data_dict_spatial['mu'][0]),{'DEPEND_0':'alt','UNITS':'V/m'}],
+                    'alt':data_dict_spatial['alt'].copy()
+                 }
+            )
 
         if RunToggles.store_output:
             outputPath = rf'{RunToggles.sim_data_output_path}/liouville_mapping/liouville_mapping_{z_obs}km.cdf'

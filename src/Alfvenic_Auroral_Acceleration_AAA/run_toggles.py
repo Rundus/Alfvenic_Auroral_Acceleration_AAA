@@ -5,12 +5,13 @@
 
 import spaceToolsLib as stl
 import numpy as np
+import math
 import os
 
 class RunToggles:
 
     # --- Run Identification ---
-    run_number = 0
+    run_number = 2
 
     # --- FILE I/O ---
     store_output = True
@@ -121,15 +122,22 @@ class LiouvilleToggles:
     # --- RK45 solver toggles ---
     #############################
     RK45_method = 'RK45' # 'LSODA'
-    RK45_rtol = 1E-4  # controls the relative accuracy.
-    RK45_atol = 1E-5  # controls the absolute accuracy
+    RK45_rtol = 1E-5  # controls the relative accuracy.
+    RK45_atol = 1E-6  # controls the absolute accuracy
+
+    ##############################
+    # --- FORCES ---
+    #############################
+    use_invertedV_bool = True
+    use_alfven_wave_bool = False
+    use_magnetic_mirror_bool = True
 
     ##############################
     # --- PARTICLE OBSERVATION ---
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [700, 2*stl.Re]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [700]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
@@ -143,10 +151,17 @@ class LiouvilleToggles:
     energy_range_obs = np.logspace(E_min_obs, E_max_obs, N_energy_space_points)
 
     # --- ESA particle sampling ---
-    time_rez = 0.01 # in seconds
+    time_rez = 0.2 # in seconds
     time_obs_start = 0  # in seconds
     time_obs_end = 6 # in seconds
     N_obs_points = int(time_obs_end/time_rez)+1 # number of particle observation points
+
+    ############################
+    # --- INVERTED-V EFFECTS ---
+    ############################
+    inV_S_bot = 1.5*stl.Re # [km] lower boundary for inverted-V potential, long the field line
+    inV_S_top = inV_S_bot+stl.Re # [km] upper boundary for inverted-V potential, along the field line
+    inV_potential = -10000 # [V] voltage of inverted-V at bottom boundary. Note, if you want to accelerate electrons, make == -1*value
 
     ###########################
     # --- WAVE OBSERVATIONS ---
