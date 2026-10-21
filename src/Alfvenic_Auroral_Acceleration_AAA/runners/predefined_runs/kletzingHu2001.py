@@ -7,13 +7,19 @@ import spaceToolsLib as stl
 import numpy as np
 import os
 
+class RunToggles:
+    # --- Run Identification ---
+    run_number = 'kletzingHu2001'
+
+    sim_root_path = r'C:/Users/conno/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
+    sim_data_output_path = rf'C:/data/alfvenic_auroral_acceleration_AAA/run_{run_number}'
 
 class EnvironmentExpressionsToggles:
 
     environment_density_dict ={
-            'chaston2006':False,
-            'shroeder2021':True, # Note this is EXACTLY the Kletzing & Torbert Model
-            'chaston2003_nightside':False,
+            'chaston2006': False,
+            'shroeder2021': True, # Note this is EXACTLY the Kletzing & Torbert Model
+            'chaston2003_nightside': False,
             'chaston2003_cusp': False,
         }
 
@@ -28,7 +34,8 @@ class SpatialGridToggles:
     # DEFINE SIMULATION EXTENT in terms of geophysical parameters
     L_Shell = 8.5
     s_para_min = 100 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
-    s_para_max = 3.4*stl.Re # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+    s_para_max = 2.6 * stl.Re  # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+    # s_para_max = 3.4*stl.Re # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
 
     ######################
     # --- MU-Dimension ---
@@ -58,7 +65,7 @@ class WavePotentialsToggles:
     # === WAVE TOGGLES ===
     # ====================
     # Initial Electric Wave Field Strength - At the initial position
-    Phi_0 = -1*2*100  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
+    Phi_0 = -1*2*500  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
     # from the conversion between a CHARACTERISTIC and ACTUAL potential. On RHS boundary: Φ = Z (W⁺ − W⁻)/2
     # which we specify W⁺ =0, W⁻ = W⁻ = −Φ₀/(v_A \sqrt{1+\lambda k_{\perp}}^{2}), so Φ = Z · (0 + Φ₀/Z)/2 = Φ₀/2
     # Note: The -1* out front is to flip from parallel electric field to modified dipole coordinate electric field
@@ -144,15 +151,6 @@ class DetectorFluxToggles:
     esa_deadtime = 674E-9 # [seconds]
     esa_acqusition_time = 0.9E-3 # [seconds]
 
-# class FPCToggles:
-#
-#     # --- velocity space ---
-#     N_vel_space = 500
-#     # para_space_temp = np.linspace(np.sqrt(2 * stl.q0 * np.power(10,DistributionToggles.E_min) / stl.m_e), np.sqrt(2 * stl.q0 * np.power(10,DistributionToggles.E_max) / stl.m_e), N_vel_space)
-#     para_space_temp = np.linspace(0, np.sqrt(2 * stl.q0 * np.power(10, DistributionToggles.E_max_obs) / stl.m_e), N_vel_space)
-#     v_para_space = np.append(-1*para_space_temp[::-1], para_space_temp[1:])
-#     v_perp_space = np.linspace(0, np.sqrt(2 * stl.q0 * np.power(10,DistributionToggles.E_max_obs) / stl.m_e), N_vel_space)
-#
-#     # --- File I/O ---
-#     from src.Alfvenic_Auroral_Acceleration_AAA.runners.sim_toggles import SimToggles
-#     outputFolder = f'{SimToggles.sim_data_output_path}/field_particle_correlation'
+class FPCToggles:
+
+    test = 5

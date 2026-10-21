@@ -15,15 +15,15 @@ def run_AAA_simulation(dict_executable):
     warnings.filterwarnings("ignore")
     start_time = time.time()
 
+    # Update the toggles if for predefined runs
+    ExecutableClasses().load_preset_run()
+    ExecutableClasses().print_run_toggles()
+
     # Generate the directories for this run
     ExecutableClasses().generate_run_directories()
 
     # Generate the Configuration File for this run
     ExecutableClasses().generate_run_JSON()
-
-    # Update the toggles if for predefined runs
-    ExecutableClasses().load_preset_run()
-    ExecutableClasses().print_run_toggles()
 
 
     # ---------------------------

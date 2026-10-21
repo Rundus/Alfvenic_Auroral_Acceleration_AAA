@@ -8,6 +8,7 @@ from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_e
 envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
 from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
 from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_classes import PlasmaEnvironmentClasses
+from src.Alfvenic_Auroral_Acceleration_AAA.runners.executable_classes import ExecutableClasses
 import math
 import multiprocessing as mp
 import matplotlib.pyplot as plt
@@ -15,13 +16,16 @@ from tqdm import tqdm
 from scipy.interpolate import RegularGridInterpolator
 from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import LiouvilleToggles,PlasmaEnvironmentToggles
 
-_WORKER = {}
 
-def _init_worker(mapping_alt):
-    _WORKER['obj'] = LiouvilleMapping(mapping_alt)
+
+_WORKER = {}
 
 def _map_one_time(tmeIdx):
     return tmeIdx, _WORKER['obj'].map_single_time(tmeIdx)
+
+def _init_worker(mapping_alt, toggle_snapshot):
+    ExecutableClasses().apply_toggles(toggle_snapshot)
+    _WORKER['obj'] = LiouvilleMapping(mapping_alt)
 
 class LiouvilleMapping:
 
@@ -93,8 +97,9 @@ class LiouvilleMapping:
             self.E_inV = self.E0*(1- np.square(np.tanh((data_dict_spatial['S_para'][0]/stl.m_to_km-self.h)/self.q)))/stl.m_to_km # [V/m] the /m_to_km is to convert to V/m instead of V/km
 
             S_para = data_dict_spatial['S_para'][0].copy()
-            mask = (S_para < LiouvilleToggles.inV_S_bot*stl.m_to_km) & (S_para > LiouvilleToggles.inV_S_top*stl.m_to_km)
-            self.E_inV[mask] = 0 # clamp any values outside the inverted-V
+            mask = (S_para < LiouvilleToggles.inV_S_bot*stl.m_to_km) | (S_para > LiouvilleToggles.inV_S_top*stl.m_to_km)
+            print(mask)
+            self.E_inV[mask] = 0 # clamp any E_parallel values outside the inverted-V to zero
 
             # print(scipy.integrate.simpson(self.E_inV,x=S_para)) # verify the electrostatic potential is == inV_potential
             # fig, ax =plt.subplots()
@@ -109,7 +114,6 @@ class LiouvilleMapping:
         return lambda x_new: np.interp(x_new, x, y, left=0, right=0)
 
 
-
     def liouville_mapper(self):
 
         N_time = len(self.observation_times)
@@ -118,7 +122,10 @@ class LiouvilleMapping:
         Distribution = np.zeros((N_time, N_ptch, N_engy))
         # particle_traj_mu = np.zeros((N_time, N_ptch, N_engy, N_time))
 
-        with mp.Pool(processes=LiouvilleToggles.processes_count, initializer=_init_worker, initargs=(self.mapping_alt,)) as pool:
+        toggle_snapshot = ExecutableClasses().snapshot_toggles()
+        with mp.Pool(processes=LiouvilleToggles.processes_count, initializer=_init_worker, initargs=(self.mapping_alt, toggle_snapshot)) as pool:
+
+        # with mp.Pool(processes=LiouvilleToggles.processes_count, initializer=_init_worker, initargs=(self.mapping_alt,)) as pool:
             for tmeIdx, block in tqdm(pool.imap_unordered(_map_one_time, range(N_time)), total=N_time):
                 Distribution[tmeIdx] = block
         return Distribution
@@ -141,7 +148,7 @@ class LiouvilleMapping:
             s0 = [self.mu_obs, self.chi_obs, v_mu, vperp]  # the -1 on vpara is to convert to modified dipole coordinates
             t_obs = self.observation_times[tmeIdx]
 
-            T, p_mu, p_chi, p_vel_mu, p_vel_chi = self.rk45_solver(t_span=[0, -t_obs], s0=s0, deltaT=t_obs, uB=uB)
+            T, p_mu, p_chi, p_vel_mu, p_vel_chi = self.rk45_solver(t_span=[t_obs, 0], s0=s0, uB=uB)
 
             # Collect the mapped particle properties
             mapped_mu = p_mu[-1]
@@ -154,10 +161,9 @@ class LiouvilleMapping:
             E_src = 0.5 * stl.m_e * (mapped_v_perp**2 + mapped_v_mu**2)  # [J] kinetic energy at the end point
             block[ptchIdx][engyIdx] = self.f_plasma_sheet(E_src, uB) + self.f_cold(mapped_mu, mapped_chi, E_src)
 
-
         return block
 
-    def equations_of_motion(self, t, S, deltaT, uB):
+    def equations_of_motion(self, t, S, uB):
         # State Vector - [mu, chi, vel_mu, vel_chi]
 
         # --- Position ---
@@ -175,8 +181,8 @@ class LiouvilleMapping:
         # magnetic mirroring - the sign on this is CONFIRMED correct! needs the negative sign to ensure the force points in positive mu-direction
         DvmuDt += -(uB/stl.m_e) * (self.dB_dipole_dmu(S[0],S[1])/self.h_factors[0](S[0],S[1])) if LiouvilleToggles.use_magnetic_mirror_bool else 0
 
-        # EM Field - the sign on this is CONFIRMED correct! needs the negative sign due to the electron charge
-        DvmuDt +=  - (stl.q0 / stl.m_e) * self.Emu_interp(np.array([[deltaT + t, S[0]]]))[0] if LiouvilleToggles.use_alfven_wave_bool else 0
+        # Alfven Wave - the sign on this is CONFIRMED correct! needs the negative sign due to the electron charge
+        DvmuDt +=  - (stl.q0 / stl.m_e) * self.Emu_interp(np.array([[t, S[0]]]))[0] if LiouvilleToggles.use_alfven_wave_bool else 0
 
         # inverted-V - the sign is correct: needs a negative due to the electron charge
         DvmuDt += -(stl.q0 / stl.m_e) * self.inV_E_interp(S[0]) if LiouvilleToggles.use_invertedV_bool else 0
@@ -187,7 +193,7 @@ class LiouvilleMapping:
         return [DmuDt, DchiDt, DvmuDt, DvchiDt]
 
     # An event is a function where the RK45 method determines event(t,y)=0
-    def escaped_upper(self, t, S, deltaT, uB):
+    def escaped_upper(self, t, S,  uB):
 
         # top boundary checker
         top_boundary_checker = S[0] - self.mu_top
@@ -195,7 +201,7 @@ class LiouvilleMapping:
         return top_boundary_checker
     escaped_upper.terminal = True
 
-    def escaped_lower(self, t, S, deltaT, uB):
+    def escaped_lower(self, t, S, uB):
 
         # lower boundary
         lower_boundary_checker =S[0]-self.plasma_environment_object.mu_lost # TODO: Think about this more
@@ -206,7 +212,7 @@ class LiouvilleMapping:
     #####################
     # --- RK45 SOLVER ---
     #####################
-    def rk45_solver(self, t_span, s0, deltaT, uB):
+    def rk45_solver(self, t_span, s0, uB):
         from scipy.integrate import solve_ivp
 
         soln = solve_ivp(fun=self.equations_of_motion,
@@ -216,7 +222,7 @@ class LiouvilleMapping:
                          rtol=LiouvilleToggles.RK45_rtol,
                          atol=LiouvilleToggles.RK45_atol,
                          events=[self.escaped_lower, self.escaped_upper],
-                         args=tuple([deltaT, uB])
+                         args=tuple([uB])
                          )
         T = soln.t
         particle_mu = soln.y[0, :]
@@ -243,18 +249,17 @@ class LiouvilleMapping:
         B_perp_obs = interp_bperp(eval_points)
 
         return E_mu_obs, E_perp_obs,B_perp_obs, obs_waves_times
-
-    def Kappa(self, mass, Vperp,Vpara,charge ,n, Te, vpara, vperp, kappa):
+    def f_kappa(self, mass, Vperp,Vpara,charge ,n, Te, vpara, vperp, kappa):
         # Input: density [cm^-3], Temperature [eV], Velocities [m/s]
         # output: the distribution function in SI units [s^3 m^-6]
         Emag = (0.5 * mass * (Vperp ** 2 + Vpara ** 2)) / charge
         Ek = Te * (1 - 3 / (2 * kappa))
         return (1E6) * n * np.power(mass / (2 * np.pi * kappa * stl.q0 * Ek), 3 / 2) * (gamma(kappa + 1) / gamma(kappa - 0.5)) * np.power(1 + Emag / (kappa * Ek), -(kappa + 1))
 
-    def maxwellian(self,E_eV, n0, Te):
+    def f_maxwellian(self,E_eV, n0, Te):
         return n0 * np.power(stl.m_e / (2 * np.pi * Te * stl.q0), 1.5) * np.exp(-E_eV/ Te)
 
-    def dist_secondaries(self, E_eV):
+    def f_secondaries(self, E_eV):
         # calculated using the chen data for JE, specifically a constant value of JE
         jE_const =  1E9 #[eV-cm^-2-s^-1-st^-1-eV^-1]
 
@@ -262,12 +267,12 @@ class LiouvilleMapping:
         dist_nonSI = (stl.m_e**2)/(2*(E_eV**2))*jE_const
         return  dist_nonSI*(stl.cm_to_m/stl.q0)**2
 
-    def dist_backscatter(self, E_eV, n0, Te):
+    def f_backscatter(self, E_eV, n0, Te):
         # Backscatter curve - just the same maxwellian as the primary beam, but in the opposite direction
         dist = n0 * np.power(stl.m_e / (2 * np.pi * Te * stl.q0), 1.5) * np.exp(-(E_eV) / Te)
         return dist
 
-    def inV_dist(self, mu, chi, E_src, uB):
+    def f_inV(self, mu, chi, E_src, uB):
 
         # Plasma parameters
         Te = PlasmaEnvironmentToggles.Te_PS

@@ -23,7 +23,6 @@ class ExecutableClasses:
             if not os.path.exists(target_path):
                 os.makedirs(target_path)
 
-
     def check_density_model(self):
         # Determine which density model was used to generate the pickle files
         folder_path = f'{RunToggles.sim_data_output_path}'
@@ -92,11 +91,8 @@ class ExecutableClasses:
         override_settings = {cls_name: self.load_class_toggle_data(val) for cls_name, val in dict_overrides.items()}
 
         for class_name, cls_obj in dict_current.items():
-
-            if class_name !='RunToggles': # DONT update the FileIO toggles
-
-                for attr, val in override_settings[class_name].items():
-                    self.update_toggle(module,class_name,attr,val)
+            for attr, val in override_settings[class_name].items():
+                self.update_toggle(module,class_name,attr,val)
 
     def load_preset_run(self):
         from src.Alfvenic_Auroral_Acceleration_AAA import run_toggles
@@ -105,20 +101,18 @@ class ExecutableClasses:
         if not RunToggles.dict_run_settings['custom']:
 
              # Load the toggles if predefined
-            if RunToggles.dict_run_settings['Kletzing&Hu_2001']:
+            if RunToggles.dict_run_settings['kletzing&Hu2001']:
                 from src.Alfvenic_Auroral_Acceleration_AAA.runners.predefined_runs import kletzingHu2001
                 module_predefined = kletzingHu2001
+            elif RunToggles.dict_run_settings['chaston2003_cusp']:
+                 from src.Alfvenic_Auroral_Acceleration_AAA.runners.predefined_runs import chaston2003_cusp
+                 module_predefined = chaston2003_cusp
+            elif RunToggles.dict_run_settings['chaston2003_nightside']:
+                from src.Alfvenic_Auroral_Acceleration_AAA.runners.predefined_runs import chaston2003_nightside
+                module_predefined = chaston2003_nightside
 
              # update the toggles for the run
             self.update_class_toggles(run_toggles, module_predefined)
-
-    # def print_run_toggles(self):
-    #     from src.Alfvenic_Auroral_Acceleration_AAA import run_toggles
-    #     dict = self.load_class_toggles(run_toggles)
-    #     settings = {cls_name: self.load_class_toggle_data(val) for cls_name, val in dict.items()}
-    #     for key, val in settings.items():
-    #         print(key)
-    #         print(val)
 
     def print_run_toggles(self):
         import numpy as np
@@ -150,3 +144,14 @@ class ExecutableClasses:
         if not os.path.exists(json_path):
             with open(json_path, 'w') as outfile:
                 json.dump(config_dict, outfile, indent=3)
+
+    def snapshot_toggles(self):
+        from src.Alfvenic_Auroral_Acceleration_AAA import run_toggles
+        return {name: self.load_class_toggle_data(cls) for name, cls in self.load_class_toggles(run_toggles).items()}
+
+    def apply_toggles(self, snapshot):
+        from src.Alfvenic_Auroral_Acceleration_AAA import run_toggles
+        for class_name, attrs in snapshot.items():
+            cls = getattr(run_toggles, class_name)
+            for attr, val in attrs.items():
+                setattr(cls, attr, val)
