@@ -106,13 +106,15 @@ class WaveFieldsClasses: # for parallel and perp only
             Pf[1:-1] = (ZR * a + ZL * b) / (ZL + ZR)
 
             # Left-side boundary (Ionosphere)
-            g = stl.u0 * sigma_P * Z[0]  # = Sigma_P / Sigma_A
+            W_minus = Phi[0] - Z[0] * A[0]  # outgoing (down-going) invariant from the interior
             if WavePotentialsToggles.absorbing_ionosphere_bool:
-                Pf[0] = 0
-                Af[0] = 0
+                # W+ = 0: nothing re-enters from below
+                Pf[0] = 0.5 * W_minus
+                Af[0] = -0.5 * W_minus / Z[0]
             else:
-                Pf[0] = (Phi[0] - Z[0] * A[0]) / (1.0 + g)  # only W^- reaches this face
-                Af[0] = -1 * stl.u0 * sigma_P * Pf[0]
+                g = stl.u0 * sigma_P * Z[0]  # Sigma_P / Sigma_A
+                Pf[0] = W_minus / (1.0 + g)
+                Af[0] = -stl.u0 * sigma_P * Pf[0]
 
             # Right-side Boundary (Magnetosphere driver)
             d = drive(t)  # matched -> transparent

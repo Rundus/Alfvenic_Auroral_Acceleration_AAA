@@ -48,6 +48,8 @@ def plasma_environment_generator():
                         'Te_cold':[[], {'DEPEND_0': 'alt', 'UNITS': 'eV', 'LABLAXIS': 'T!Be!N', 'VAR_TYPE': 'data'}],
                         'Te_PS': [[], {'DEPEND_0': 'alt', 'UNITS': 'eV', 'LABLAXIS': 'T!Be!N', 'VAR_TYPE': 'data'}],
                         'loss_cone': [[], {'DEPEND_0': 'alt', 'UNITS': 'degrees', 'LABLAXIS': '&alpha;!BL!N', 'VAR_TYPE': 'data'}],
+                        'Te_total':[[], {'DEPEND_0': 'alt', 'UNITS': 'eV', 'LABLAXIS': 'T!Be!N', 'VAR_TYPE': 'data'}],
+                        'beta': [[], {'DEPEND_0': 'alt', 'UNITS': None, 'LABLAXIS': '&beta;', 'VAR_TYPE': 'data'}],
                         }
 
     #################################################
@@ -82,6 +84,12 @@ def plasma_environment_generator():
 
     # Use loss cone angle to get hot plasma density from zero-th moment of plasma distribution
     data_dict_output['n_density_PS'][0] = plasma_environ_object.n_density_PS_loss_cone(data_dict_output['loss_cone'][0])
+
+    # calculate the total temperature
+    data_dict_output['Te_total'][0] = (data_dict_output['n_density_cold'][0]*data_dict_output['Te_cold'][0] + data_dict_output['n_density_PS'][0]*data_dict_output['Te_PS'][0])/(data_dict_output['n_density_cold'][0] + data_dict_output['n_density_PS'][0])
+
+    # Calculate the beta parameter
+    data_dict_output['beta'][0] = ((data_dict_output['n_density_cold'][0] + data_dict_output['n_density_PS'][0])*stl.q0*data_dict_output['Te_total'][0])/(np.square(data_dict_output['B_dipole'][0])/(2*stl.u0))
 
     ################
     # --- OUTPUT ---

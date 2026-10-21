@@ -11,8 +11,11 @@ class RunToggles:
     # --- Run Identification ---
     run_number = 'kletzingHu2001'
 
-    sim_root_path = r'C:/Users/conno/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
-    sim_data_output_path = rf'C:/data/alfvenic_auroral_acceleration_AAA/run_{run_number}'
+    sim_root_path = r'/home/connor/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
+    sim_data_output_path = rf'/home/connor/Data/MODELS/alfvenic_auroral_acceleration_AAA/run_{run_number}'
+
+    # sim_root_path = r'C:/Users/conno/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
+    # sim_data_output_path = rf'C:/data/alfvenic_auroral_acceleration_AAA/run_{run_number}'
 
 class EnvironmentExpressionsToggles:
 
@@ -34,8 +37,8 @@ class SpatialGridToggles:
     # DEFINE SIMULATION EXTENT in terms of geophysical parameters
     L_Shell = 8.5
     s_para_min = 100 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
-    s_para_max = 2.6 * stl.Re  # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
-    # s_para_max = 3.4*stl.Re # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+    # s_para_max = 2.4 * stl.Re  # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+    s_para_max = 3.4*stl.Re # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
 
     ######################
     # --- MU-Dimension ---
@@ -87,7 +90,7 @@ class WavePotentialsToggles:
     # === BOUNDARY CONDITIONS ===
     # ===========================
     SIGMA_P = 0.13 # [S] Pedersen Conductance in Ionosphere
-    absorbing_ionosphere_bool = False
+    absorbing_ionosphere_bool = True
 
     # =============================
     # === RK45 Time Integration ===
@@ -107,15 +110,15 @@ class LiouvilleToggles:
     # --- RK45 solver toggles ---
     #############################
     RK45_method = 'RK45' # 'LSODA'
-    RK45_rtol = 1E-8  # controls the relative accuracy.
-    RK45_atol = 1E-9  # controls the absolute accuracy
+    RK45_rtol = 1E-4  # controls the relative accuracy.
+    RK45_atol = 1E-5  # controls the absolute accuracy
 
     ##############################
     # --- PARTICLE OBSERVATION ---
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [700, 2*stl.Re]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [700, 1*stl.Re]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
