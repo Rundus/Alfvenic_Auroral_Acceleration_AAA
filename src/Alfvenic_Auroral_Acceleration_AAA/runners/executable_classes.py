@@ -105,7 +105,7 @@ class ExecutableClasses:
                 from src.Alfvenic_Auroral_Acceleration_AAA.runners.predefined_runs import kletzingHu2001
                 module_predefined = kletzingHu2001
             elif RunToggles.dict_run_settings['chaston2003_cusp']:
-                 from src.Alfvenic_Auroral_Acceleration_AAA.runners.predefined_runs import chaston2003_cusp
+                 from src.Alfvenic_Auroral_Acceleration_AAA.runners.predefined_runs import chaston2003_dayboundary
                  module_predefined = chaston2003_cusp
             elif RunToggles.dict_run_settings['chaston2003_nightside']:
                 from src.Alfvenic_Auroral_Acceleration_AAA.runners.predefined_runs import chaston2003_nightside

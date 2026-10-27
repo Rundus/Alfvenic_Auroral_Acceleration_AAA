@@ -27,7 +27,7 @@ class RunToggles:
 
     # --- Pre-defined Run configuration ---
     dict_run_settings = {
-        'custom':False,
+        'custom':True,
         'kletzing&Hu2001': False,
         'chaston2003_nightside':True,
         'chaston2003_cusp':False
@@ -37,7 +37,7 @@ class EnvironmentExpressionsToggles:
 
     environment_density_dict ={
             'chaston2006':False,
-            'shroeder2021':True, # Note this is EXACTLY the Kletzing & Torbert Model
+            'shroeder2021':False, # Note this is EXACTLY the Kletzing & Torbert Model
             'chaston2003_nightside':True,
             'chaston2003_cusp': False,
         }
@@ -141,14 +141,14 @@ class LiouvilleToggles:
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [700,4000, 10000]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [700, 4000, 10000]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
     # --- ESA ENERGY/PITCH COORDINATES ---
     N_energy_space_points = 75
     # E_max_obs = 3.6  # the POWER of 10^E_max for the maximum energy
-    E_max_obs = 3.6  # the POWER of 10^E_max for the maximum energy
+    E_max_obs = 4.3  # the POWER of 10^E_max for the maximum energy
     E_min_obs = 1  # the POWER of 10^E_min for the minimum energy
     pitch_range_obs = np.linspace(5, 175, 10+1)
     # pitch_range_obs = np.linspace(0, 180, 18 + 1)

@@ -39,7 +39,7 @@ class SpatialGridToggles:
     # DEFINE SIMULATION EXTENT in terms of geophysical parameters
     L_Shell = 8.5
     s_para_min = 100 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
-    s_para_max = 3.4*stl.Re # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+    s_para_max = 4.7185*stl.Re # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
     # s_para_max = 2.5 * stl.Re  # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
 
     ######################
@@ -50,13 +50,13 @@ class SpatialGridToggles:
 class PlasmaEnvironmentToggles:
 
     # Plasma Sheet (Hot)
-    Te_PS = 200  # [eV] Temperature of the isotropic Plasma Sheet Distribution
+    Te_PS = 30  # [eV] Temperature of the isotropic Plasma Sheet Distribution
     n0_PS = 0.5  # [cm^-3] Density of the plasma sheet population at the dipole geomagnetic equator
     Emin_PS = 0 # [eV]
     Emax_PS = 1E5  # [eV]
 
     # Ionosphere/Plasmasphere/Exosphere (Cold)
-    Te_cold = 2.5 # [eV] Temperature of the cold ionospheric plasma up to 20,000 km
+    Te_cold = 2 # [eV] Temperature of the cold ionospheric plasma up to 20,000 km
     Emin_cold = 0  # [eV]
     Emax_cold = 1E5  # [eV]
 
@@ -70,16 +70,16 @@ class WavePotentialsToggles:
     # === WAVE TOGGLES ===
     # ====================
     # Initial Electric Wave Field Strength - At the initial position
-    Phi_0 = -1*2*500  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
+    Phi_0 = -1*2*1800  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
     # from the conversion between a CHARACTERISTIC and ACTUAL potential. On RHS boundary: Φ = Z (W⁺ − W⁻)/2
     # which we specify W⁺ =0, W⁻ = W⁻ = −Φ₀/(v_A \sqrt{1+\lambda k_{\perp}}^{2}), so Φ = Z · (0 + Φ₀/Z)/2 = Φ₀/2
     # Note: The -1* out front is to flip from parallel electric field to modified dipole coordinate electric field
 
     # Perpendicular Scale at The Ionosphere
-    Lambda_perp0 = 4 # [km] Perpendicular scale of wave at Z_min (ionosphere). Mapping using flux tube scaling.
+    Lambda_perp0 = 5 # [km] Perpendicular scale of wave at Z_min (ionosphere). Mapping using flux tube scaling.
 
     # Wave Frequeuency
-    f_0 = 4 # [Hz] Frequency of injected wave
+    f_0 = 2 # [Hz] Frequency of injected wave
 
     driver_dict = {
         'gaussian_pulse':0,
@@ -91,7 +91,7 @@ class WavePotentialsToggles:
     # ===========================
     # === BOUNDARY CONDITIONS ===
     # ===========================
-    SIGMA_P = 0.13 # [S] Pedersen Conductance in Ionosphere
+    SIGMA_P = 1 # [S] Pedersen Conductance in Ionosphere
     absorbing_ionosphere_bool = False
 
     # =============================
@@ -127,7 +127,7 @@ class LiouvilleToggles:
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [700,4000, 10000]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [700,1700, 6000]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
