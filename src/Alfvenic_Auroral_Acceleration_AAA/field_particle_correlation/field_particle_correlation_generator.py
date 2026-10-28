@@ -28,7 +28,6 @@ def field_particle_correlation_generator():
     # loop over distribution function files
     for i in tqdm(range(len(dist_files))):
 
-
         # Load the file-specific data
         data_dict = stl.loadDictFromFile(dist_files[i])
 
@@ -45,8 +44,8 @@ def field_particle_correlation_generator():
         time_waves = data_dict['time_waves'][0].copy()
         time = data_dict['time'][0].copy()
 
-        df_dE = np.gradient(distribution,energy,axis=2, edge_order=2)
-        df_dalpha = np.gradient(distribution,np.radians(pitch_angle),axis=1, edge_order=2)
+        df_dE = np.gradient(distribution,energy, axis=2, edge_order=2)
+        df_dalpha = np.gradient(distribution,np.radians(pitch_angle), axis=1, edge_order=2)
 
         # --- Determine the correlation interval ---
         E_mu_obs = data_dict['E_mu_obs'][0].copy()
@@ -70,18 +69,19 @@ def field_particle_correlation_generator():
         #TODO: Find a way to calculate the correlation window
 
         # --- Calculate the instantaneous FPC ---
-        alpha = np.radians(pitch_angle[None,:, None])
-        E = energy[None,None,:]
-        E_mu = E_mu_obs_particle_timebase[:,None,None]
+        alpha = np.radians(pitch_angle[None, :, None])
+        E = energy[None, None, :]
+        E_mu = E_mu_obs_particle_timebase[:, None, None]
         FPC_instant = E_mu*(stl.q0 * 0.5*np.square(np.cos(alpha)) * np.sqrt(2*E/stl.m_e) * (2*E*df_dE - np.sin(alpha)*df_dalpha))
 
-
         # --- Calculate the total FPC ---
-        low_idx = np.abs(time-1.9).argmin()
-        high_idx = np.abs(time-2.7).argmin()
+
+        low_idx = np.abs(time-0).argmin()
+        high_idx = np.abs(time-time[-1]).argmin()
+
+
         deltaT = time[high_idx] - time[low_idx]
         FPC = np.asarray((1/deltaT)*np.sum(FPC_instant[low_idx:high_idx+1],axis=0))
-        print(low_idx,high_idx)
 
         ################
         # --- OUTPUT ---

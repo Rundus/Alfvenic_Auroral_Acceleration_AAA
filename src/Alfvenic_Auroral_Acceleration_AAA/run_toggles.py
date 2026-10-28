@@ -11,7 +11,7 @@ import os
 class RunToggles:
 
     # --- Run Identification ---
-    run_number = 0
+    run_number = 1
 
     # --- FILE I/O ---
     store_output = True
@@ -29,7 +29,7 @@ class RunToggles:
     dict_run_settings = {
         'custom':True,
         'kletzing&Hu2001': False,
-        'chaston2003_nightside':True,
+        'chaston2003_nightside':False,
         'chaston2003_cusp':False
     }
 
@@ -37,8 +37,8 @@ class EnvironmentExpressionsToggles:
 
     environment_density_dict ={
             'chaston2006':False,
-            'shroeder2021':False, # Note this is EXACTLY the Kletzing & Torbert Model
-            'chaston2003_nightside':True,
+            'shroeder2021':True, # Note this is EXACTLY the Kletzing & Torbert Model
+            'chaston2003_nightside':False,
             'chaston2003_cusp': False,
         }
 
@@ -54,7 +54,7 @@ class SpatialGridToggles:
     L_Shell = 8.5
     s_para_min = 100 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
     # s_para_max = 3.4*stl.Re # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
-    s_para_max = 2.5 * stl.Re  # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+    s_para_max = 3 * stl.Re  # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
 
     ######################
     # --- MU-Dimension ---
@@ -64,8 +64,8 @@ class SpatialGridToggles:
 class PlasmaEnvironmentToggles:
 
     # Plasma Sheet (Hot)
-    Te_PS = 200  # [eV] Temperature of the isotropic Plasma Sheet Distribution
-    n0_PS = 0.5  # [cm^-3] Density of the plasma sheet population at the dipole geomagnetic equator
+    Te_PS = 30  # [eV] Temperature of the isotropic Plasma Sheet Distribution
+    n0_PS = 1  # [cm^-3] Density of the plasma sheet population at the dipole geomagnetic equator
     Emin_PS = 0 # [eV]
     Emax_PS = 1E5  # [eV]
 
@@ -84,7 +84,7 @@ class WavePotentialsToggles:
     # === WAVE TOGGLES ===
     # ====================
     # Initial Electric Wave Field Strength - At the initial position
-    Phi_0 = -1*2*500  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
+    Phi_0 = -1*2*350  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
     # from the conversion between a CHARACTERISTIC and ACTUAL potential. On RHS boundary: Φ = Z (W⁺ − W⁻)/2
     # which we specify W⁺ =0, W⁻ = W⁻ = −Φ₀/(v_A \sqrt{1+\lambda k_{\perp}}^{2}), so Φ = Z · (0 + Φ₀/Z)/2 = Φ₀/2
     # Note: The -1* out front is to flip from parallel electric field to modified dipole coordinate electric field
@@ -105,13 +105,13 @@ class WavePotentialsToggles:
     # ===========================
     # === BOUNDARY CONDITIONS ===
     # ===========================
-    SIGMA_P = 0.13 # [S] Pedersen Conductance in Ionosphere
+    SIGMA_P = 3 # [S] Pedersen Conductance in Ionosphere
     absorbing_ionosphere_bool = False
 
     # =============================
     # === RK45 Time Integration ===
     # =============================
-    t_start, t_end = 0.0, 8 #[seconds] Time from z_max the wave is allowed to propogate
+    t_start, t_end = 0.0, 10 #[seconds] Time from z_max the wave is allowed to propogate
     n_out = 700  # number of time-points to store for output
     cfl = 0.4
 
@@ -126,8 +126,8 @@ class LiouvilleToggles:
     # --- RK45 solver toggles ---
     #############################
     RK45_method = 'RK45' # 'LSODA'
-    RK45_rtol = 1E-5  # controls the relative accuracy.
-    RK45_atol = 1E-6  # controls the absolute accuracy
+    RK45_rtol = 1E-4  # controls the relative accuracy.
+    RK45_atol = 1E-5  # controls the absolute accuracy
 
     ################
     # --- FORCES ---
@@ -141,12 +141,12 @@ class LiouvilleToggles:
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [700, 4000, 10000]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [500, 5000, 10000]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
     # --- ESA ENERGY/PITCH COORDINATES ---
-    N_energy_space_points = 75
+    N_energy_space_points = 70
     # E_max_obs = 3.6  # the POWER of 10^E_max for the maximum energy
     E_max_obs = 4.3  # the POWER of 10^E_max for the maximum energy
     E_min_obs = 1  # the POWER of 10^E_min for the minimum energy
@@ -175,7 +175,7 @@ class LiouvilleToggles:
     time_rez_waves = 0.001 # [seconds] deltaT sample rate for the waves
 
     # --- Injected Wave ---
-    injected_wave_time_delay = 0 # [seconds] Time delay added to the wave data to cause it to inject later. Defaults to 0 if set to <=0
+    injected_wave_time_delay = 5 # [seconds] Time delay added to the wave data to cause it to inject later. Defaults to 0 if set to <=0
 
 
 class DetectorFluxToggles:
