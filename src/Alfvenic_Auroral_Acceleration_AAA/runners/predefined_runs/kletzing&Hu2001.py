@@ -8,9 +8,6 @@ class EnvironmentExpressionsToggles:
             'shroeder2021': True, # Note this is EXACTLY the Kletzing & Torbert Model
         }
 
-    # FILE I/O
-    wDenModel_key = next(key for key,val in environment_density_dict.items() if val)
-
 class SpatialGridToggles:
 
     ##################################
@@ -19,8 +16,7 @@ class SpatialGridToggles:
     # DEFINE SIMULATION EXTENT in terms of geophysical parameters
     L_Shell = 8.5
     s_para_min = 100 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
-    # s_para_max = 2.4 * stl.Re  # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
-    s_para_max = 3.4*stl.Re # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+    s_para_max = 2 * stl.Re  # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
 
     ######################
     # --- MU-Dimension ---
@@ -50,7 +46,7 @@ class WavePotentialsToggles:
     # === WAVE TOGGLES ===
     # ====================
     # Initial Electric Wave Field Strength - At the initial position
-    Phi_0 = -1*2*500  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
+    Phi_0 = -1*2*400  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
     # from the conversion between a CHARACTERISTIC and ACTUAL potential. On RHS boundary: Φ = Z (W⁺ − W⁻)/2
     # which we specify W⁺ =0, W⁻ = W⁻ = −Φ₀/(v_A \sqrt{1+\lambda k_{\perp}}^{2}), so Φ = Z · (0 + Φ₀/Z)/2 = Φ₀/2
     # Note: The -1* out front is to flip from parallel electric field to modified dipole coordinate electric field
@@ -107,7 +103,7 @@ class LiouvilleToggles:
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [700, 1*stl.Re]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [700, 4000, 10000]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
@@ -120,7 +116,7 @@ class LiouvilleToggles:
     energy_range_obs = np.logspace(E_min_obs, E_max_obs, N_energy_space_points)
 
     # --- ESA particle sampling ---
-    time_rez = 0.025 # in seconds
+    time_rez = 0.025 # [in seconds] the time resolution of the simulation
     time_obs_start = 0  # in seconds
     time_obs_end = 4 # in seconds
     N_obs_points = int(time_obs_end/time_rez)+1 # number of particle observation points
@@ -133,7 +129,7 @@ class LiouvilleToggles:
     time_rez_waves = 0.001 # [seconds] deltaT sample rate for the waves
 
     # --- Injected Wave ---
-    injected_wave_time_delay = 0 # [seconds] Time delay added to the wave data to cause it to inject later. Defaults to 0 if set to <=0
+    injected_wave_time_delay = 2 # [seconds] Time delay added to the wave data to cause it to inject later. Defaults to 0 if set to <=0
 
 class DetectorFluxToggles:
 

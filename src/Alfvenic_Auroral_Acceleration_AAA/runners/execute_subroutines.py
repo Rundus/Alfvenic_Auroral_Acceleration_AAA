@@ -10,10 +10,9 @@ def run_AAA(dict_run_settings, dict_subroutines):
     import time
     import spaceToolsLib as stl
     import warnings
-    from Alfvenic_Auroral_Acceleration_AAA.runners.executable_classes import ExecutableClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.runners.executable_classes import ExecutableClasses
     warnings.filterwarnings("ignore")
     start_time = time.time()
-
 
     # Determine the Simulation Run Model Configuration
     ExecutableClasses().determine_configuration_key(dict_run_settings)
@@ -54,17 +53,17 @@ def run_AAA(dict_run_settings, dict_subroutines):
 
     if dict_subroutines['regen_wave_potentials']==1:
         print('\n--- Calculating Wave Potentials ---',end='\n')
-        from Alfvenic_Auroral_Acceleration_AAA.wave_potentials.wave_potentials_generator import wave_potentials_generator
+        from src.Alfvenic_Auroral_Acceleration_AAA.wave_potentials.wave_potentials_generator import wave_potentials_generator
         wave_potentials_generator()
 
     if dict_subroutines['animate_wave_potentials']==1:
         print('\n--- Animating Wave Potentials ---',end='\n')
-        from Alfvenic_Auroral_Acceleration_AAA.wave_potentials.wave_potentials_animator import animate_wave_potentials_generator
+        from src.Alfvenic_Auroral_Acceleration_AAA.wave_potentials.wave_potentials_animator import animate_wave_potentials_generator
         animate_wave_potentials_generator()
 
     if dict_subroutines['regen_liouville_mapping'] == 1:
         print('\n--- Calculating Liouville Mapping ---',end='\n')
-        from Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_generator import liouville_mapping_generator
+        from src.Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_generator import liouville_mapping_generator
         liouville_mapping_generator()
 
     if dict_subroutines['regen_detector_flux'] ==1:

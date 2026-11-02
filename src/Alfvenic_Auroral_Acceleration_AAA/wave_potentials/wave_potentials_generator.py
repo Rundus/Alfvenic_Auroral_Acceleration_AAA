@@ -68,15 +68,19 @@ def wave_potentials_generator():
     # ==================================================
     # 1. CHOOSE THE WAVE DRIVER
     # ==================================================
-    inputs = (WavePotentialsToggles.Phi_0, WavePotentialsToggles.f_0)
-    if WavePotentialsToggles.driver_dict['gaussian_pulse'] == 1:
-        driver = WaveFieldsClasses().gaussian_pulse(*inputs)
-    elif WavePotentialsToggles.driver_dict['gaussian_wavepacket'] == 1:
-        driver = WaveFieldsClasses().gaussian_wavepacket(*inputs)
-    elif WavePotentialsToggles.driver_dict['tapered_half_sine_pulse'] == 1:
-        driver = WaveFieldsClasses().tapered_half_sine_pulse(*inputs)
-    elif WavePotentialsToggles.driver_dict['tapered_sine_pulse'] == 1:
-        driver = WaveFieldsClasses().tapered_sine(*inputs)
+    ddict = WavePotentialsToggles.driver_dict
+    drivers = {
+        'gaussian_pulse': WaveFieldsClasses().gaussian_pulse,
+        'gaussian_wavepacket': WaveFieldsClasses().gaussian_wavepacket,
+        'tapered_half_sine_pulse':WaveFieldsClasses().tapered_half_sine_pulse,
+        'tapered_sine_pulse':WaveFieldsClasses().tapered_sine
+
+    }
+
+    for key, val in ddict.items():
+        if val[0]: # If one of the drivers is == True
+            driver = drivers[key](*val[1])
+
 
     # ==================================================
     # 2. SOLVE HYPERBOLIC PDEs

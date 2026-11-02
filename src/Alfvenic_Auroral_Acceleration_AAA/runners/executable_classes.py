@@ -56,14 +56,19 @@ class ExecutableClasses:
 
         if FileIOClass.key_run_config == 'custom_0':
             path_run_module += 'custom_runs.custom_run_0'
+
         elif FileIOClass.key_run_config == 'custom_1':
             path_run_module += 'custom_runs.custom_run_1'
+
         elif FileIOClass.key_run_config == 'kletzing&Hu2001':
-            path_run_module += 'predefined_runs.kletzingHu2001'
+            path_run_module += 'predefined_runs.kletzing&Hu2001'
+
         elif FileIOClass.key_run_config == 'chaston2003_nightside':
             path_run_module += 'predefined_runs.chaston2003_nightside'
+
         elif FileIOClass.key_run_config == 'chaston2003_sunlit_boundary':
             path_run_module += 'predefined_runs.chaston2003_sunlit_boundary'
+
         elif FileIOClass.key_run_config == 'tanaka2005':
             path_run_module += 'predefined_runs.Tanaka2005'
 

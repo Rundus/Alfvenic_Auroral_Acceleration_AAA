@@ -51,7 +51,7 @@ class WavePotentialsToggles:
     # === WAVE TOGGLES ===
     # ====================
     # Initial Electric Wave Field Strength - At the initial position
-    Phi_0 = -1*2*350  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
+    Phi_0 = -1*3600  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
     # from the conversion between a CHARACTERISTIC and ACTUAL potential. On RHS boundary: Φ = Z (W⁺ − W⁻)/2
     # which we specify W⁺ =0, W⁻ = W⁻ = −Φ₀/(v_A \sqrt{1+\lambda k_{\perp}}^{2}), so Φ = Z · (0 + Φ₀/Z)/2 = Φ₀/2
     # Note: The -1* out front is to flip from parallel electric field to modified dipole coordinate electric field
@@ -63,10 +63,10 @@ class WavePotentialsToggles:
     f_0 = 4 # [Hz] Frequency of injected wave
 
     driver_dict = {
-        'gaussian_pulse':0,
-        'gaussian_wavepacket':0,
-        'tapered_half_sine_pulse':1,
-        'tapered_sine_pulse':0
+        'gaussian_pulse':[True, [Lambda_perp0, f_0]],
+        'gaussian_wavepacket':[False, [Phi_0, f_0]],
+        'tapered_half_sine_pulse':[False, [Phi_0, f_0]],
+        'tapered_sine_pulse':[False, [Phi_0, f_0]]
     }
 
     # ===========================
@@ -79,8 +79,8 @@ class WavePotentialsToggles:
     # === RK45 Time Integration ===
     # =============================
     t_start, t_end = 0.0, 0.25 #[seconds] Time from z_max the wave is allowed to propogate
-    n_out = 700  # number of time-points to store for output
-    cfl = 0.4
+    n_out = 100  # number of time-points to store for output
+    cfl = 0.5
 
 class LiouvilleToggles:
 
@@ -108,7 +108,7 @@ class LiouvilleToggles:
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [500,1000]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [500]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
