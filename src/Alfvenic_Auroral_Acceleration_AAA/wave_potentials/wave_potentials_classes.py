@@ -42,15 +42,24 @@ class WaveFieldsClasses: # for parallel and perp only
 
         return drive
 
-    def gaussian_pulse(self,Phi_0: float,  f_0: float, t_centre: Optional[float] = None) -> Callable[[float], float]:
-        """Unipolar Gaussian pulse of 1-sigma duration `width_s`.
+    def gaussian_pulse_fwhm(self,
+                            Phi_0: float,
+                            fwhm: float,
+                            t_centre: Optional[float] = None,
+                            n_sigma: float = 5.0) -> Callable[[float], float]:
+        """Unipolar Gaussian pulse with a specified full width at half maximum.
 
-        Useful for clean travel-time and reflection-coefficient diagnostics, since
-        it has a single unambiguous extremum.  `t_centre` defaults to 4*width_s so
-        the pulse starts from (numerically) zero.
+        Parameters
+        ----------
+        Phi_0    : peak amplitude of the drive
+        fwhm     : [s] full width at half maximum of drive(t)
+        t_centre : [s] time of the peak. Defaults to n_sigma * sigma, so the
+                   pulse starts from (numerically) zero at t = 0.
+        n_sigma  : how many sigmas before the peak the pulse starts.
+                   5 gives drive(0)/Phi_0 ~ 4e-6; 4 gives ~3e-4.
         """
-        t_c = 3 / (2.0 * f_0)
-        sigma = 3 / (4.0 * f_0)
+        sigma = fwhm / (2.0 * np.sqrt(2.0 * np.log(2.0)))
+        t_c = n_sigma * sigma if t_centre is None else t_centre
 
         def drive(t: float) -> float:
             return Phi_0 * np.exp(-0.5 * ((t - t_c) / sigma) ** 2)
