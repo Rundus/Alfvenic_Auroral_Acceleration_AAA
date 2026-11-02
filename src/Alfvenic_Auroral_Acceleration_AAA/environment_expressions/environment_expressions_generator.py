@@ -1,14 +1,14 @@
 # scale_length_Sympy_expression_Generator
 # Description: Use sympy to generate analytic expressions for the AAA runners
-from timebudget import timebudget
-import json
-from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import EnvironmentExpressionsToggles
-from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
+import os.path
 
+from timebudget import timebudget
 @timebudget
-def environment_expressions_generator():
+
+def environment_expressions_generator(key_run_config, path_sim_output):
 
     # --- IMPORTS ---
+    import json
     import spaceToolsLib as stl
     import sympy as sp
     import time
@@ -16,6 +16,11 @@ def environment_expressions_generator():
     dill.settings['recurse'] = True
     from sympy import lambdify
     start_time = time.time()
+
+    from src.Alfvenic_Auroral_Acceleration_AAA.runners.executable_classes import ExecutableClasses
+    run_module = ExecutableClasses().load_configuration_module(key_run_config)
+    EnvironmentExpressionsToggles = run_module.EnvironmentExpressionsToggles
+
 
     ####################################
     # --- Define the Sympy Variables ---
@@ -284,9 +289,17 @@ def environment_expressions_generator():
     ###################
     # PICKLE EVERYTHING
     ###################
-    folder = rf'{RunToggles.sim_root_path}/environment_expressions/pickled_expressions/'
+    pkl_folder = rf'{path_sim_output}/plasma_environment/pickled_expressions/'
     for key, funct in funcs.items():
-        file = open(folder+f'{key}.pkl','wb')
+
+        pkl_path = pkl_folder+f'{key}.pkl'
+
+        # If a pkl file already exists, delete it
+        if os.path.exists(pkl_path):
+            os.remove(pkl_path)
+
+        # Create new pkl file
+        file = open(pkl_folder+f'{key}.pkl','wb')
         dill.dump(funct, file)
         file.close()
 
@@ -297,7 +310,6 @@ def environment_expressions_generator():
     # create a JSON file that specifies which density model was used to generate the pickle files
     which_density_model = [key for key in EnvironmentExpressionsToggles().environment_density_dict.keys() if EnvironmentExpressionsToggles().environment_density_dict[key]][0]
     config_dict = {'density_model':which_density_model}
-    folder_path = f'{RunToggles.sim_root_path}/environment_expressions/pickled_expressions/'
-    outpath = f'{folder_path}/model_config.json'
+    outpath = f'{pkl_folder}/model_config.json'
     with open(outpath, 'w') as outfile:
         json.dump(config_dict, outfile, indent=3)

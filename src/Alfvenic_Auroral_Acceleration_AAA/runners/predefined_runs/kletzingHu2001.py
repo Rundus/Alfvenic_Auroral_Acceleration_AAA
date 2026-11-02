@@ -1,29 +1,12 @@
-# kletzingHu2001.py
-"""
-    This is where the run-level toggles are stored
-"""
-
 import spaceToolsLib as stl
 import numpy as np
 import os
 
-class RunToggles:
-    # --- Run Identification ---
-    run_number = 'kletzingHu2001'
-
-    sim_root_path = r'/home/connor/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
-    sim_data_output_path = rf'/home/connor/Data/MODELS/alfvenic_auroral_acceleration_AAA/run_{run_number}'
-
-    # sim_root_path = r'C:/Users/conno/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
-    # sim_data_output_path = rf'C:/data/alfvenic_auroral_acceleration_AAA/run_{run_number}'
 
 class EnvironmentExpressionsToggles:
 
     environment_density_dict ={
-            'chaston2006': False,
             'shroeder2021': True, # Note this is EXACTLY the Kletzing & Torbert Model
-            'chaston2003_nightside': False,
-            'chaston2003_cusp': False,
         }
 
     # FILE I/O

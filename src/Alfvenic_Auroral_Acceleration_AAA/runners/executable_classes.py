@@ -1,125 +1,42 @@
 import json
 import os
-from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles,EnvironmentExpressionsToggles
-import inspect
+import numpy as np
+
 
 class ExecutableClasses:
 
-    def generate_run_directories(self):
+    def determine_configuration_key(self,dict_run_settings):
+
+        for key, val in dict_run_settings.items():
+            if val:
+                return key
+
+        raise Exception('No run configuration was chosen. Go to main.py and set "True" for a case in dict_run_settings.')
+
+    def generate_run_directories(self, path_sim_output):
 
         folders_paths = [
             'spatial_grid',
             'plasma_environment',
+            'plasma_environment/pickled_expressions',
             'wave_potentials',
             'liouville_mapping',
             'field_particle_correlation',
             'detector_flux',
-            'field_particle_correlation',
-            'pre_defined_runs'
         ]
 
         for path in folders_paths:
-            target_path = f'{RunToggles.sim_data_output_path}/{path}/'
+            target_path = f'{path_sim_output}/{path}/'
             if not os.path.exists(target_path):
                 os.makedirs(target_path)
 
-    def check_density_model(self):
-        # Determine which density model was used to generate the pickle files
-        folder_path = f'{RunToggles.sim_data_output_path}'
-        model_config_path = f'{folder_path}/run_config.json'
+    def print_run_toggles(self, path_sim_output, key_run_config):
 
-        with open(model_config_path,'r') as configFile:
-            config_dict = json.load(configFile)
-            if EnvironmentExpressionsToggles().wDenModel_key != config_dict['expression_generator']['density_model']:
-                raise Exception('Pickled model does not match runners configuration. Try re-generating pickle files.')
+        run_module = self.load_configuration_module(key_run_config)
+        config_dict = self.load_configuration_dict(run_module)
 
-    def update_run_JSON(self, dict_update):
-        import numpy as np
-        import tempfile
-
-        def _to_jsonable(obj):
-            if isinstance(obj, np.ndarray):
-                return obj.tolist()
-            if isinstance(obj, np.integer):
-                return int(obj)
-            if isinstance(obj, np.floating):
-                return float(obj)
-            if isinstance(obj, np.bool_):
-                return bool(obj)
-            raise TypeError(f'{type(obj).__name__} is not JSON serializable')
-
-        file_path = f'{RunToggles.sim_data_output_path}/run_config.json'
-
-        with open(file_path, 'r') as f:
-            data = json.load(f)
-        data.update(dict_update)
-
-        # serialize fully in memory — if this raises, the file on disk is untouched
-        text = json.dumps(data, indent=3, default=_to_jsonable)
-
-        folder = os.path.dirname(file_path)
-        fd, tmp_path = tempfile.mkstemp(dir=folder, suffix='.tmp')
-        try:
-            with os.fdopen(fd, 'w') as f:
-                f.write(text)
-                f.flush()
-                os.fsync(f.fileno())
-            os.replace(tmp_path, file_path)   # atomic on Windows and POSIX
-        except BaseException:
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
-            raise
-
-    def update_toggle(self,module,class_name,attr,value):
-        classes = {name: cls for name, cls in inspect.getmembers(module, inspect.isclass) if cls.__module__ == module.__name__}
-        cls = classes[class_name]
-        setattr(cls, attr, value)
-
-    def load_class_toggles(self,module):
-        return {name: cls for name, cls in inspect.getmembers(module, inspect.isclass) if cls.__module__ == module.__name__}
-
-    def load_class_toggle_data(self, cls):
-        return {k: v for k, v in vars(cls).items() if not k.startswith('__') and not callable(v)}
-
-    def update_class_toggles(self, module, module_overrides):
-
-        # load the current class info
-        dict_overrides = self.load_class_toggles(module_overrides)
-        dict_current = self.load_class_toggles(module)
-
-        # load the overrides data
-        override_settings = {cls_name: self.load_class_toggle_data(val) for cls_name, val in dict_overrides.items()}
-
-        for class_name, cls_obj in dict_current.items():
-            for attr, val in override_settings[class_name].items():
-                self.update_toggle(module,class_name,attr,val)
-
-    def load_preset_run(self):
-        from src.Alfvenic_Auroral_Acceleration_AAA import run_toggles
-
-        # find which pre-defined classes to load and update the toggles
-        if not RunToggles.dict_run_settings['custom']:
-
-             # Load the toggles if predefined
-            if RunToggles.dict_run_settings['kletzing&Hu2001']:
-                from src.Alfvenic_Auroral_Acceleration_AAA.runners.predefined_runs import kletzingHu2001
-                module_predefined = kletzingHu2001
-            elif RunToggles.dict_run_settings['chaston2003_cusp']:
-                 from src.Alfvenic_Auroral_Acceleration_AAA.runners.predefined_runs import chaston2003_dayboundary
-                 module_predefined = chaston2003_cusp
-            elif RunToggles.dict_run_settings['chaston2003_nightside']:
-                from src.Alfvenic_Auroral_Acceleration_AAA.runners.predefined_runs import chaston2003_nightside
-                module_predefined = chaston2003_nightside
-
-             # update the toggles for the run
-            self.update_class_toggles(run_toggles, module_predefined)
-
-    def print_run_toggles(self):
-        import numpy as np
-        from src.Alfvenic_Auroral_Acceleration_AAA import run_toggles
-
-        for name, cls in self.load_class_toggles(run_toggles).items():
-            data = self.load_class_toggle_data(cls)
+        for name, cls in config_dict.items():
+            data = cls
             width = max(map(len, data), default=0)
             print(f"── {name} " + "─" * max(0, 60 - len(name)))
             for key, val in data.items():
@@ -131,27 +48,61 @@ class ExecutableClasses:
                     val = f"{val:.6g}"
                 print(f"  {key:<{width}} = {val}")
 
-    def generate_run_JSON(self):
+    def load_configuration_module(self, key_run_config):
 
-        # Determine the Density model used
-        config_dict = {}
+        import importlib
+        path_run_module = f'src.Alfvenic_Auroral_Acceleration_AAA.runners.'
 
-        # JSON I/O
-        folder_path = f'{RunToggles.sim_data_output_path}'
-        json_path = f'{folder_path}/run_config.json'
+        if key_run_config == 'custom_0':
+            path_run_module += 'custom_runs.custom_run_0'
+        elif key_run_config == 'custom_1':
+            path_run_module += 'custom_runs.custom_run_1'
+        elif key_run_config == 'kletzing&Hu2001':
+            path_run_module += 'predefined_runs.kletzingHu2001'
+        elif key_run_config == 'chaston2003_nightside':
+            path_run_module += 'predefined_runs.chaston2003_nightside'
+        elif key_run_config == 'chaston2003_sunlit_boundary':
+            path_run_module += 'predefined_runs.chaston2003_sunlit_boundary'
+        elif key_run_config == 'tanaka2005':
+            path_run_module += 'predefined_runs.Tanaka2005'
 
-        # check if folder exists, if not create it
-        if not os.path.exists(json_path):
-            with open(json_path, 'w') as outfile:
-                json.dump(config_dict, outfile, indent=3)
+        run_module = importlib.import_module(path_run_module)
 
-    def snapshot_toggles(self):
-        from src.Alfvenic_Auroral_Acceleration_AAA import run_toggles
-        return {name: self.load_class_toggle_data(cls) for name, cls in self.load_class_toggles(run_toggles).items()}
+        return run_module
 
-    def apply_toggles(self, snapshot):
-        from src.Alfvenic_Auroral_Acceleration_AAA import run_toggles
-        for class_name, attrs in snapshot.items():
-            cls = getattr(run_toggles, class_name)
-            for attr, val in attrs.items():
-                setattr(cls, attr, val)
+    def load_configuration_dict(self,run_module):
+        '''
+            Returns the values in the configuration file as a dictionary
+        '''
+        # collect all the variables held within the classes of the configuration file
+        run_config_dict = {}
+        for class_name, cls in vars(run_module).items():
+            # keep only classes defined in this run file (skips stl, np, os and any imported classes)
+            if not isinstance(cls, type) or cls.__module__ != run_module.__name__:
+                continue
+            # keep only the values: skip __dunder__ entries and any methods
+            run_config_dict[class_name] = {
+                name: val for name, val in vars(cls).items()
+                if not name.startswith('_')
+                   and not callable(val)
+                   and not isinstance(val, (staticmethod, classmethod, property))
+            }
+        return run_config_dict
+
+    def generate_run_JSON(self, path_sim_output, key_run_config):
+
+        # Load the configuration module
+        run_module = self.load_configuration_module(key_run_config)
+        run_config_dict = self.load_configuration_dict(run_module)
+
+        # Write out the configuration dict to a JSON file
+        def to_json_safe(obj):  # json.dump calls this for anything it can't write itself
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()  # pitch_range_obs, energy_range_obs
+            if isinstance(obj, np.generic):
+                return obj.item()  # np.float64, np.bool_, etc.
+            return str(obj)
+
+        with open(f'{path_sim_output}/run_config.json', 'w') as outfile:
+            json.dump(run_config_dict, outfile, indent=3, default=to_json_safe)
+

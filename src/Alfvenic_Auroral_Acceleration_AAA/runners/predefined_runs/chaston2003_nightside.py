@@ -1,35 +1,11 @@
-# run_toggles.py
-"""
-    This is where the run-level toggles are stored
-"""
-
 import spaceToolsLib as stl
 import numpy as np
-import math
 import os
 
-class RunToggles:
-
-    # --- Run Identification ---
-    run_number = 'chaston2003_nightside'
-
-    sim_root_path = r'/home/connor/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
-    sim_data_output_path = rf'/home/connor/Data/MODELS/alfvenic_auroral_acceleration_AAA/run_{run_number}'
-
-    # sim_root_path = r'C:/Users/conno/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/Alfvenic_Auroral_Acceleration_AAA'
-    # sim_data_output_path = rf'C:/data/alfvenic_auroral_acceleration_AAA/run_{run_number}'
-
 class EnvironmentExpressionsToggles:
-
     environment_density_dict ={
-            'chaston2006':False,
-            'shroeder2021':False, # Note this is EXACTLY the Kletzing & Torbert Model
             'chaston2003_nightside':True,
-            'chaston2003_cusp': False,
         }
-
-    # FILE I/O
-    wDenModel_key = next(key for key,val in environment_density_dict.items() if val)
 
 class SpatialGridToggles:
 
