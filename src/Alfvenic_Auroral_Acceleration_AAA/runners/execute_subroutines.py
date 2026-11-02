@@ -2,7 +2,7 @@
 # --- Author: C. Feltman ---
 # DESCRIPTION: execute the AAA code
 
-def run_AAA(path_code_src, path_sim_output, dict_run_settings, dict_subroutines):
+def run_AAA(dict_run_settings, dict_subroutines):
 
     #################
     # --- IMPORTS ---
@@ -14,20 +14,18 @@ def run_AAA(path_code_src, path_sim_output, dict_run_settings, dict_subroutines)
     warnings.filterwarnings("ignore")
     start_time = time.time()
 
-    # determine which configuration was chosen
-    key_run_config = ExecutableClasses().determine_configuration_key(dict_run_settings)
 
-    # Build the output path of the simulation
-    path_sim_output += f'/run_{key_run_config}/'
+    # Determine the Simulation Run Model Configuration
+    ExecutableClasses().determine_configuration_key(dict_run_settings)
 
     # Generate the directories for this run
-    ExecutableClasses().generate_run_directories(path_sim_output)
+    ExecutableClasses().generate_run_directories()
 
     # Generate the Configuration File for this run
-    ExecutableClasses().generate_run_JSON(path_sim_output,key_run_config)
+    ExecutableClasses().generate_run_JSON()
 
-    # Print the Configuration File
-    ExecutableClasses().print_run_toggles(path_sim_output,key_run_config)
+    # Print the Configuration File to Console
+    ExecutableClasses().print_run_toggles()
 
     # ---------------------------
     # --- EXECUTE SUBROUTINES ---
@@ -42,12 +40,12 @@ def run_AAA(path_code_src, path_sim_output, dict_run_settings, dict_subroutines)
     if dict_subroutines['regen_environment_expressions']==1:
         print('\n--- Regenerating Environment Equation Expressions ---',end='\n')
         from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_generator import environment_expressions_generator
-        environment_expressions_generator(key_run_config, path_sim_output)
+        environment_expressions_generator()
 
     if dict_subroutines['regen_spatial_grid'] == 1:
         print('\n--- Regenerating Spatial Environment ---', end='\n')
         from src.Alfvenic_Auroral_Acceleration_AAA.spatial_grid.spatial_grid_generator import spatial_grid_generator
-        spatial_grid_generator(key_run_config, path_sim_output)
+        spatial_grid_generator()
 
     if dict_subroutines['regen_plasma_environment']==1:
         print('\n--- Evaluating Plasma Environment ---',end='\n')

@@ -15,15 +15,16 @@ def field_particle_correlation_generator():
     import matplotlib.pyplot as plt
     from tqdm import tqdm
     from scipy.stats import binned_statistic
-    from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.runners.FileIO import FileIOClass
+
 
     # --- Delete the old FPC Files ---
-    old_files = glob(f'{RunToggles.sim_data_output_path}/field_particle_correlation/*.cdf*')
+    old_files = glob(f'{FileIOClass.path_sim_output}/field_particle_correlation/*.cdf*')
     for old_file in old_files:
         os.remove(old_file)
 
     # --- Load the liouville mapped data ---
-    dist_files = glob(rf'{RunToggles.sim_data_output_path}/liouville_mapping/*.cdf*')
+    dist_files = glob(rf'{FileIOClass.path_sim_output}/liouville_mapping/*.cdf*')
 
     # loop over distribution function files
     for i in tqdm(range(len(dist_files))):
@@ -58,7 +59,6 @@ def field_particle_correlation_generator():
         d = np.diff(np.concatenate(([0],nz,[0])))
         starts = np.flatnonzero(d==1) # first index of each wave "block"
         ends = np.flatnonzero(d==-1) - 1 # last index of each wave "block"
-        correlation_window_wave_timebase = time_waves[starts[0]:ends[0]+1]
 
         # (b) bin-average the wave data onto the particle data
         mid = 0.5 * (time[1:] + time[:-1]) # get bins by calculating the deltaT/2 from the particle timestamps
@@ -98,13 +98,10 @@ def field_particle_correlation_generator():
         }
 
         data_dict_output['E_mu_obs_particle_timebase'][1]['DEPEND_0'] = 'time'
-
-        if RunToggles.store_output:
-
-            # save the results
-            mapping_alt = int(re.search(r'_(\d+)km', dist_files[i]).group(1))
-            outputPath = rf'{RunToggles.sim_data_output_path}/field_particle_correlation/FPC_{mapping_alt}km.cdf'
-            stl.outputDataDict(outputPath, data_dict_output)
+        # save the results
+        mapping_alt = int(re.search(r'_(\d+)km', dist_files[i]).group(1))
+        outputPath = rf'{FileIOClass.path_sim_output}/field_particle_correlation/FPC_{mapping_alt}km.cdf'
+        stl.outputDataDict(outputPath, data_dict_output)
 
     # ################################
     # # --- CALCULATE CORRELATION ----

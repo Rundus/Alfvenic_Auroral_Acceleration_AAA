@@ -2,7 +2,6 @@ import spaceToolsLib as stl
 import numpy as np
 import os
 
-
 class EnvironmentExpressionsToggles:
 
     environment_density_dict ={
@@ -95,6 +94,13 @@ class LiouvilleToggles:
     RK45_method = 'RK45' # 'LSODA'
     RK45_rtol = 1E-4  # controls the relative accuracy.
     RK45_atol = 1E-5  # controls the absolute accuracy
+
+    ################
+    # --- FORCES ---
+    ################
+    use_invertedV_bool = False
+    use_alfven_wave_bool = True
+    use_magnetic_mirror_bool = True
 
     ##############################
     # --- PARTICLE OBSERVATION ---

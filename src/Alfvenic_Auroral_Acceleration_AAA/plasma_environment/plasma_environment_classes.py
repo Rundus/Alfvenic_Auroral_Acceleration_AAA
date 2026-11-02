@@ -1,7 +1,10 @@
 import spaceToolsLib as stl
-from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import PlasmaEnvironmentToggles,RunToggles
 from glob import glob
 import numpy as np
+from src.Alfvenic_Auroral_Acceleration_AAA.runners.FileIO import FileIOClass
+from src.Alfvenic_Auroral_Acceleration_AAA.runners.executable_classes import ExecutableClasses
+run_module = ExecutableClasses().load_configuration_module()
+PlasmaEnvironmentToggles = run_module.PlasmaEnvironmentToggles
 
 class PlasmaEnvironmentClasses:
 
@@ -9,7 +12,7 @@ class PlasmaEnvironmentClasses:
         from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
         envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
         self.B_dipole = envDict['B_dipole']
-        data_dict_spatial = stl.loadDictFromFile(glob(rf'{RunToggles.sim_data_output_path}//spatial_grid/*.cdf*')[0])
+        data_dict_spatial = stl.loadDictFromFile(glob(rf'{FileIOClass.path_sim_output}//spatial_grid/*.cdf*')[0])
 
         # --- Exobase (loss altitude) on this field line ---
         # determine the equatorial loss cone angle

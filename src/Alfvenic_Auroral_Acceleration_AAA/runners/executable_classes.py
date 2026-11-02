@@ -1,7 +1,7 @@
 import json
 import os
 import numpy as np
-
+from src.Alfvenic_Auroral_Acceleration_AAA.runners.FileIO import FileIOClass
 
 class ExecutableClasses:
 
@@ -9,11 +9,12 @@ class ExecutableClasses:
 
         for key, val in dict_run_settings.items():
             if val:
+                FileIOClass.set_run(key) # for the ENTIRE simulation run, set the model key e.g. custom_1, kletzingHu2001 etc
                 return key
 
         raise Exception('No run configuration was chosen. Go to main.py and set "True" for a case in dict_run_settings.')
 
-    def generate_run_directories(self, path_sim_output):
+    def generate_run_directories(self):
 
         folders_paths = [
             'spatial_grid',
@@ -26,13 +27,13 @@ class ExecutableClasses:
         ]
 
         for path in folders_paths:
-            target_path = f'{path_sim_output}/{path}/'
+            target_path = f'{FileIOClass.path_sim_output}/{path}/'
             if not os.path.exists(target_path):
                 os.makedirs(target_path)
 
-    def print_run_toggles(self, path_sim_output, key_run_config):
+    def print_run_toggles(self):
 
-        run_module = self.load_configuration_module(key_run_config)
+        run_module = self.load_configuration_module()
         config_dict = self.load_configuration_dict(run_module)
 
         for name, cls in config_dict.items():
@@ -48,22 +49,22 @@ class ExecutableClasses:
                     val = f"{val:.6g}"
                 print(f"  {key:<{width}} = {val}")
 
-    def load_configuration_module(self, key_run_config):
+    def load_configuration_module(self):
 
         import importlib
         path_run_module = f'src.Alfvenic_Auroral_Acceleration_AAA.runners.'
 
-        if key_run_config == 'custom_0':
+        if FileIOClass.key_run_config == 'custom_0':
             path_run_module += 'custom_runs.custom_run_0'
-        elif key_run_config == 'custom_1':
+        elif FileIOClass.key_run_config == 'custom_1':
             path_run_module += 'custom_runs.custom_run_1'
-        elif key_run_config == 'kletzing&Hu2001':
+        elif FileIOClass.key_run_config == 'kletzing&Hu2001':
             path_run_module += 'predefined_runs.kletzingHu2001'
-        elif key_run_config == 'chaston2003_nightside':
+        elif FileIOClass.key_run_config == 'chaston2003_nightside':
             path_run_module += 'predefined_runs.chaston2003_nightside'
-        elif key_run_config == 'chaston2003_sunlit_boundary':
+        elif FileIOClass.key_run_config == 'chaston2003_sunlit_boundary':
             path_run_module += 'predefined_runs.chaston2003_sunlit_boundary'
-        elif key_run_config == 'tanaka2005':
+        elif FileIOClass.key_run_config == 'tanaka2005':
             path_run_module += 'predefined_runs.Tanaka2005'
 
         run_module = importlib.import_module(path_run_module)
@@ -89,10 +90,10 @@ class ExecutableClasses:
             }
         return run_config_dict
 
-    def generate_run_JSON(self, path_sim_output, key_run_config):
+    def generate_run_JSON(self):
 
         # Load the configuration module
-        run_module = self.load_configuration_module(key_run_config)
+        run_module = self.load_configuration_module()
         run_config_dict = self.load_configuration_dict(run_module)
 
         # Write out the configuration dict to a JSON file
@@ -103,6 +104,6 @@ class ExecutableClasses:
                 return obj.item()  # np.float64, np.bool_, etc.
             return str(obj)
 
-        with open(f'{path_sim_output}/run_config.json', 'w') as outfile:
+        with open(f'{FileIOClass.path_sim_output}/run_config.json', 'w') as outfile:
             json.dump(run_config_dict, outfile, indent=3, default=to_json_safe)
 

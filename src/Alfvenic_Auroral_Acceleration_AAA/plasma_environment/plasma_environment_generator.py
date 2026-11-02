@@ -12,12 +12,14 @@ def plasma_environment_generator():
     # --- File-specific imports ---
     from glob import glob
     from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
-    from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import PlasmaEnvironmentToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_classes import PlasmaEnvironmentClasses
-    from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.runners.FileIO import FileIOClass
+    from src.Alfvenic_Auroral_Acceleration_AAA.runners.executable_classes import ExecutableClasses
+    run_module = ExecutableClasses().load_configuration_module()
+    PlasmaEnvironmentToggles = run_module.PlasmaEnvironmentToggles
 
     # --- Load the wave runners data ---
-    data_dict_spatial = stl.loadDictFromFile(glob(rf'{RunToggles.sim_data_output_path}//spatial_grid/*.cdf*')[0])
+    data_dict_spatial = stl.loadDictFromFile(glob(rf'{FileIOClass.path_sim_output}//spatial_grid/*.cdf*')[0])
 
     # prepare the output
     data_dict_output = {
@@ -95,6 +97,5 @@ def plasma_environment_generator():
     # --- OUTPUT ---
     ################
 
-    if RunToggles.store_output:
-        outputPath = rf'{RunToggles.sim_data_output_path}/plasma_environment/plasma_environment.cdf'
-        stl.outputDataDict(outputPath, data_dict_output)
+    outputPath = rf'{FileIOClass.path_sim_output}/plasma_environment/plasma_environment.cdf'
+    stl.outputDataDict(outputPath, data_dict_output)

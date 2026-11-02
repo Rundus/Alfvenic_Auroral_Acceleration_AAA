@@ -1,21 +1,21 @@
 # Simulation Imports
-import scipy.integrate
 from scipy.special import gamma
 import numpy as np
 import spaceToolsLib as stl
 from itertools import product
-from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
-envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
-from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
-from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_classes import PlasmaEnvironmentClasses
-from src.Alfvenic_Auroral_Acceleration_AAA.runners.executable_classes import ExecutableClasses
 import math
 import multiprocessing as mp
-import matplotlib.pyplot as plt
 from tqdm import tqdm
 from scipy.interpolate import RegularGridInterpolator
-from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import LiouvilleToggles,PlasmaEnvironmentToggles
 
+from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
+envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
+from src.Alfvenic_Auroral_Acceleration_AAA.plasma_environment.plasma_environment_classes import PlasmaEnvironmentClasses
+from src.Alfvenic_Auroral_Acceleration_AAA.runners.FileIO import FileIOClass
+from src.Alfvenic_Auroral_Acceleration_AAA.runners.executable_classes import ExecutableClasses
+run_module = ExecutableClasses().load_configuration_module()
+LiouvilleToggles = run_module.LiouvilleToggles
+PlasmaEnvironmentToggles = run_module.PlasmaEnvironmentToggles
 
 
 _WORKER = {}
@@ -23,16 +23,15 @@ _WORKER = {}
 def _map_one_time(tmeIdx):
     return tmeIdx, _WORKER['obj'].map_single_time(tmeIdx)
 
-def _init_worker(mapping_alt, toggle_snapshot):
-    ExecutableClasses().apply_toggles(toggle_snapshot)
+def _init_worker(mapping_alt):
     _WORKER['obj'] = LiouvilleMapping(mapping_alt)
 
 class LiouvilleMapping:
 
     def __init__(self,mapping_alt):
         # form the regular grid interpolator for E-parallel
-        data_dict_potentials = stl.loadDictFromFile(f'{RunToggles.sim_data_output_path}/wave_potentials/wave_potentials.cdf')
-        data_dict_spatial = stl.loadDictFromFile(f'{RunToggles.sim_data_output_path}/spatial_grid/spatial_grid.cdf')
+        data_dict_potentials = stl.loadDictFromFile(f'{FileIOClass.path_sim_output}/wave_potentials/wave_potentials.cdf')
+        data_dict_spatial = stl.loadDictFromFile(f'{FileIOClass.path_sim_output}/spatial_grid/spatial_grid.cdf')
 
         # Define the Simulation Boundary Info
         self.mu_top = data_dict_spatial['mu'][0][-1]
@@ -113,19 +112,14 @@ class LiouvilleMapping:
         # Creates an interpolation object for 1D arrays
         return lambda x_new: np.interp(x_new, x, y, left=0, right=0)
 
-
     def liouville_mapper(self):
 
         N_time = len(self.observation_times)
         N_ptch = len(LiouvilleToggles.pitch_range_obs)
         N_engy = len(LiouvilleToggles.energy_range_obs)
         Distribution = np.zeros((N_time, N_ptch, N_engy))
-        # particle_traj_mu = np.zeros((N_time, N_ptch, N_engy, N_time))
 
-        toggle_snapshot = ExecutableClasses().snapshot_toggles()
-        with mp.Pool(processes=LiouvilleToggles.processes_count, initializer=_init_worker, initargs=(self.mapping_alt, toggle_snapshot)) as pool:
-
-        # with mp.Pool(processes=LiouvilleToggles.processes_count, initializer=_init_worker, initargs=(self.mapping_alt,)) as pool:
+        with mp.Pool(processes=LiouvilleToggles.processes_count, initializer=_init_worker, initargs=(self.mapping_alt,)) as pool:
             for tmeIdx, block in tqdm(pool.imap_unordered(_map_one_time, range(N_time)), total=N_time):
                 Distribution[tmeIdx] = block
         return Distribution
@@ -204,7 +198,7 @@ class LiouvilleMapping:
     def escaped_lower(self, t, S, uB):
 
         # lower boundary
-        lower_boundary_checker =S[0]-self.plasma_environment_object.mu_lost # TODO: Think about this more
+        lower_boundary_checker =S[0]-self.plasma_environment_object.mu_lost
 
         return lower_boundary_checker
     escaped_lower.terminal = True

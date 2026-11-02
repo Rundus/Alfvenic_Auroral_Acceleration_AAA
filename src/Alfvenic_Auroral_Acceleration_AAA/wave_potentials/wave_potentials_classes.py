@@ -2,7 +2,9 @@ import numpy as np
 from typing import Callable, Optional
 import spaceToolsLib as stl
 from tqdm import tqdm
-from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import WavePotentialsToggles
+from src.Alfvenic_Auroral_Acceleration_AAA.runners.executable_classes import ExecutableClasses
+run_module = ExecutableClasses().load_configuration_module()
+WavePotentialsToggles = run_module.WavePotentialsToggles
 
 class WaveFieldsClasses: # for parallel and perp only
 

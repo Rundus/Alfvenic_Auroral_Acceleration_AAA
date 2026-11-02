@@ -26,15 +26,20 @@ section 1 below.
 
 import matplotlib
 
-from Alfvenic_Auroral_Acceleration_AAA.run_toggles import LiouvilleToggles
+
 
 matplotlib.use("Agg")  # headless: render frames without a display
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.animation import FFMpegWriter, FuncAnimation
 import spaceToolsLib as stl
-from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles
-from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import WavePotentialsToggles
+
+from src.Alfvenic_Auroral_Acceleration_AAA.runners.FileIO import FileIOClass
+from src.Alfvenic_Auroral_Acceleration_AAA.runners.executable_classes import ExecutableClasses
+run_module = ExecutableClasses().load_configuration_module()
+WavePotentialsToggles = run_module.WavePotentialsToggles
+LiouvilleToggles = run_module.LiouvilleToggles
+
 
 # =============================================================================
 # 1. LOAD YOUR DATA HERE
@@ -55,12 +60,12 @@ from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import WavePotentialsTogg
 # in section 3 below.
 
 
-data_dict_output = stl.loadDictFromFile(f'{RunToggles.sim_data_output_path}/wave_potentials/wave_potentials.cdf')
+data_dict_output = stl.loadDictFromFile(f'{FileIOClass.path_sim_output}/wave_potentials/wave_potentials.cdf')
 
 # =============================================================================
 # 2. OUTPUT SETTINGS
 # =============================================================================
-OUTPUT_PATH = f'{RunToggles.sim_data_output_path}/wave_potentials/wave_potentials.mp4'
+OUTPUT_PATH = f'{FileIOClass.path_sim_output}/wave_potentials/wave_potentials.mp4'
 FPS = 20                   # display frame rate of the .mp4 (not a physical rate)
 DPI = 150
 FIGSIZE = (9, 12)

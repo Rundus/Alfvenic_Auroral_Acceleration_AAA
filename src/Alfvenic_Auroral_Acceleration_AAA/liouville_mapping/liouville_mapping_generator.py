@@ -1,6 +1,6 @@
 from timebudget import timebudget
-@timebudget
 
+@timebudget
 def liouville_mapping_generator():
 
     # --- general imports ---
@@ -10,19 +10,20 @@ def liouville_mapping_generator():
     import os
 
     # --- File-specific imports ---
-    from scipy.interpolate import RegularGridInterpolator
-    from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import LiouvilleToggles, RunToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.runners.FileIO import FileIOClass
+    from src.Alfvenic_Auroral_Acceleration_AAA.runners.executable_classes import ExecutableClasses
+    run_module = ExecutableClasses().load_configuration_module()
+    LiouvilleToggles = run_module.LiouvilleToggles
+
     from src.Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_classes import LiouvilleMapping
 
     # --- Delete any old/previous files ---
-    old_files = glob(f'{RunToggles.sim_data_output_path}/liouville_mapping/*.cdf*')
+    old_files = glob(f'{FileIOClass.path_sim_output}/liouville_mapping/*.cdf*')
     for old_file in old_files:
         os.remove(old_file)
 
     # --- Load in some simulated data ---
-    data_dict_potentials = stl.loadDictFromFile(f'{RunToggles.sim_data_output_path}/wave_potentials/wave_potentials.cdf')
-    data_dict_spatial = stl.loadDictFromFile(f'{RunToggles.sim_data_output_path}/spatial_grid/spatial_grid.cdf')
-    mu_grid = data_dict_spatial['mu'][0]
+    data_dict_spatial = stl.loadDictFromFile(f'{FileIOClass.path_sim_output}/spatial_grid/spatial_grid.cdf')
 
     for z_obs in LiouvilleToggles.mapping_alts:
 
@@ -64,9 +65,8 @@ def liouville_mapping_generator():
                  }
             )
 
-        if RunToggles.store_output:
-            outputPath = rf'{RunToggles.sim_data_output_path}/liouville_mapping/liouville_mapping_{z_obs}km.cdf'
-            stl.outputDataDict(outputPath, data_dict_output)
+        outputPath = rf'{FileIOClass.path_sim_output}/liouville_mapping/liouville_mapping_{z_obs}km.cdf'
+        stl.outputDataDict(outputPath, data_dict_output)
 
 
 

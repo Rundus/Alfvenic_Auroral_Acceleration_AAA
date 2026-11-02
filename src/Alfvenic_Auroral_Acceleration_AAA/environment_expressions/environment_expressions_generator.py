@@ -5,7 +5,7 @@ import os.path
 from timebudget import timebudget
 @timebudget
 
-def environment_expressions_generator(key_run_config, path_sim_output):
+def environment_expressions_generator():
 
     # --- IMPORTS ---
     import json
@@ -18,7 +18,8 @@ def environment_expressions_generator(key_run_config, path_sim_output):
     start_time = time.time()
 
     from src.Alfvenic_Auroral_Acceleration_AAA.runners.executable_classes import ExecutableClasses
-    run_module = ExecutableClasses().load_configuration_module(key_run_config)
+    from src.Alfvenic_Auroral_Acceleration_AAA.runners.FileIO import FileIOClass
+    run_module = ExecutableClasses().load_configuration_module()
     EnvironmentExpressionsToggles = run_module.EnvironmentExpressionsToggles
 
 
@@ -44,14 +45,15 @@ def environment_expressions_generator(key_run_config, path_sim_output):
     ########################################
 
     # PLASMA NUMBER DENSITY
-    if EnvironmentExpressionsToggles().environment_density_dict['chaston2006']:
+    wModel = [key for key,val in EnvironmentExpressionsToggles().environment_density_dict.items() if val][0]
+    if wModel == 'chaston2006':
         n_Hp_density = (stl.cm_to_m**3)*(0.1 + 10*sp.sqrt(stl.Re/(400*z)) + 100*(z)*sp.exp(-z/280)) # for z in km
         n_Op_density = (stl.cm_to_m**3)*(400*stl.Re*z*sp.exp(-z/175)) # for z in km
-    elif EnvironmentExpressionsToggles().environment_density_dict['shroeder2021']:
+    elif wModel == 'shroeder2021':
         n_e = (stl.cm_to_m**3)*((6E4)*sp.exp(-(z-318)/383) + (1.34E7)*(z**(-1.55)))
         n_Op_density = n_e*0.5*(1 - sp.tanh((z-2370)/1800))
         n_Hp_density = n_e - n_Op_density
-    elif EnvironmentExpressionsToggles().environment_density_dict['chaston2003_nightside']:
+    elif wModel == 'chaston2003_nightside':
         # parameters for [Oxygen+, H+]
         nM = [0, 1]
         gamma_ = [0,0.5]
@@ -74,7 +76,7 @@ def environment_expressions_generator(key_run_config, path_sim_output):
         n_E = nE[i] * sp.exp(-1 * (z - Ealt[i]) ** 2 / (wE[i] ** 2))
         n_F = nF[i] * (z - F0[i]) * sp.exp(-1 * ((z - F0[i]) / alpha_[i]) ** (eta[i]))
         n_Hp_density = (stl.cm_to_m ** 3) * (n_mag + n_E + n_F)
-    elif EnvironmentExpressionsToggles().environment_density_dict['chaston2003_cusp']:
+    elif wModel == 'chaston2003_sunlit_boundary':
         # parameters for [Oxygen+, H+]
         nM = [0, 1]
         gamma_ = [0, 0.5]
@@ -289,7 +291,7 @@ def environment_expressions_generator(key_run_config, path_sim_output):
     ###################
     # PICKLE EVERYTHING
     ###################
-    pkl_folder = rf'{path_sim_output}/plasma_environment/pickled_expressions/'
+    pkl_folder = rf'{FileIOClass.path_sim_output}/plasma_environment/pickled_expressions/'
     for key, funct in funcs.items():
 
         pkl_path = pkl_folder+f'{key}.pkl'

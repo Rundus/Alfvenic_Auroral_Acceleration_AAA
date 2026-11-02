@@ -1,12 +1,12 @@
-
+from src.Alfvenic_Auroral_Acceleration_AAA.runners.FileIO import FileIOClass
 
 class EnvironmentExpressionsClasses:
 
-    def loadPickleFunctions(self, path_sim_output):
+    def loadPickleFunctions(self):
         from glob import glob
         import dill
 
-        pickle_files = glob(rf'{path_sim_output}/plasma_environment/pickled_expressions/*.pkl')
+        pickle_files = glob(rf'{FileIOClass.path_sim_output}/plasma_environment/pickled_expressions/*.pkl')
 
         for file_nam in pickle_files:
             func = dill.load(open(file_nam, 'rb'))

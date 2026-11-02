@@ -13,16 +13,20 @@ def detector_flux_generator():
     # --- File-specific imports ---
     from glob import glob
     from itertools import product
-    from src.Alfvenic_Auroral_Acceleration_AAA.run_toggles import RunToggles, DetectorFluxToggles
+
+    from src.Alfvenic_Auroral_Acceleration_AAA.runners.FileIO import FileIOClass
+    from src.Alfvenic_Auroral_Acceleration_AAA.runners.executable_classes import ExecutableClasses
+    run_module = ExecutableClasses().load_configuration_module()
+    DetectorFluxToggles = run_module.DetectorFluxToggles
     from tqdm import tqdm
 
     # --- Delete the old Flux Files ---
-    old_files = glob(f'{RunToggles.sim_data_output_path}/detector_flux/*.cdf*')
+    old_files = glob(f'{FileIOClass.path_sim_output}/detector_flux/*.cdf*')
     for old_file in old_files:
         os.remove(old_file)
 
     # --- Load the liouville mapped data ---
-    liouville_files = glob(rf'{RunToggles.sim_data_output_path}/liouville_mapping/*.cdf*')
+    liouville_files = glob(rf'{FileIOClass.path_sim_output}/liouville_mapping/*.cdf*')
 
     for i in tqdm(range(len(liouville_files))):
 
@@ -90,8 +94,7 @@ def detector_flux_generator():
             'JN_thresh' : [JN_thresh,{'DEPEND_0':'energy','UNITS':'cm!U-2!N str!U-1!N s!U-1!N eV!U-1!N','LABLAXIS': 'Threshold Differential_Number_Flux','VAR_TYPE':'data'}]
         }
 
-        if RunToggles.store_output:
-            # save the results
-            mapping_alt = int(re.search(r'_(\d+)km', file_name).group(1))
-            outputPath = rf'{RunToggles.sim_data_output_path}/detector_flux/detector_flux_{mapping_alt}km.cdf'
-            stl.outputDataDict(outputPath, data_dict_output)
+        # save the results
+        mapping_alt = int(re.search(r'_(\d+)km', file_name).group(1))
+        outputPath = rf'{FileIOClass.path_sim_output}/detector_flux/detector_flux_{mapping_alt}km.cdf'
+        stl.outputDataDict(outputPath, data_dict_output)

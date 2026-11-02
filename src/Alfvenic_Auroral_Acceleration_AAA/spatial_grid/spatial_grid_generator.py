@@ -1,15 +1,16 @@
 from timebudget import timebudget
 @timebudget
 
-def spatial_grid_generator(key_run_config, path_sim_output):
+def spatial_grid_generator():
 
     import numpy as np
     import spaceToolsLib as stl
     from src.Alfvenic_Auroral_Acceleration_AAA.runners.executable_classes import ExecutableClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.spatial_grid.spatial_classes import SpatialClasses
     from src.Alfvenic_Auroral_Acceleration_AAA.environment_expressions.environment_expressions_classes import EnvironmentExpressionsClasses
+    from src.Alfvenic_Auroral_Acceleration_AAA.runners.FileIO import FileIOClass
 
-    run_module = ExecutableClasses().load_configuration_module(key_run_config)
+    run_module = ExecutableClasses().load_configuration_module()
     SpatialGridToggles = run_module.SpatialGridToggles
     envDict = EnvironmentExpressionsClasses().loadPickleFunctions()
 
@@ -48,5 +49,5 @@ def spatial_grid_generator(key_run_config, path_sim_output):
         'S_para':[s_para,{'UNITS':'m','LABLAXIS':'Field-aligned Distance'}]
     }
 
-    outputPath = rf'{path_sim_output}/spatial_grid/spatial_grid.cdf'
+    outputPath = rf'{FileIOClass.path_sim_output}/spatial_grid/spatial_grid.cdf'
     stl.outputDataDict(outputPath, data_dict_output)
