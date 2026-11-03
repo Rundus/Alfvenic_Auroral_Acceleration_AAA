@@ -63,7 +63,7 @@ class WavePotentialsToggles:
     f_0 = 4 # [Hz] Frequency of injected wave
 
     driver_dict = {
-        'gaussian_pulse':[True, [Lambda_perp0, f_0]],
+        'gaussian_pulse':[True, [Lambda_perp0, 1]],
         'gaussian_wavepacket':[False, [Phi_0, f_0]],
         'tapered_half_sine_pulse':[False, [Phi_0, f_0]],
         'tapered_sine_pulse':[False, [Phi_0, f_0]]
@@ -72,14 +72,14 @@ class WavePotentialsToggles:
     # ===========================
     # === BOUNDARY CONDITIONS ===
     # ===========================
-    SIGMA_P = 3 # [S] Pedersen Conductance in Ionosphere
+    SIGMA_P = 1 # [S] Pedersen Conductance in Ionosphere
     absorbing_ionosphere_bool = False
 
     # =============================
     # === RK45 Time Integration ===
     # =============================
-    t_start, t_end = 0.0, 0.25 #[seconds] Time from z_max the wave is allowed to propogate
-    n_out = 100  # number of time-points to store for output
+    t_start, t_end = 0.0,14 #[seconds] Time from z_max the wave is allowed to propogate
+    n_out = 400  # number of time-points to store for output
     cfl = 0.5
 
 class LiouvilleToggles:
@@ -108,12 +108,12 @@ class LiouvilleToggles:
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [500]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [500, 5000]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
     # --- ESA ENERGY/PITCH COORDINATES ---
-    N_energy_space_points = 8
+    N_energy_space_points = 50
     # E_max_obs = 3.6  # the POWER of 10^E_max for the maximum energy
     E_max_obs = 4.3  # the POWER of 10^E_max for the maximum energy
     E_min_obs = 1  # the POWER of 10^E_min for the minimum energy
@@ -122,9 +122,9 @@ class LiouvilleToggles:
     energy_range_obs = np.logspace(E_min_obs, E_max_obs, N_energy_space_points)
 
     # --- ESA particle sampling ---
-    time_rez = 0.1 # in seconds
+    time_rez = 0.05 # in seconds
     time_obs_start = 0  # in seconds
-    time_obs_end = 1 # in seconds
+    time_obs_end = 5 # in seconds
     N_obs_points = int(time_obs_end/time_rez)+1 # number of particle observation points
 
     ############################

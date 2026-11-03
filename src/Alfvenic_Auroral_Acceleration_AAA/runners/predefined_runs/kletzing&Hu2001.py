@@ -16,7 +16,7 @@ class SpatialGridToggles:
     # DEFINE SIMULATION EXTENT in terms of geophysical parameters
     L_Shell = 8.5
     s_para_min = 100 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
-    s_para_max = 2 * stl.Re  # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+    s_para_max = 2.5 * stl.Re  # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
 
     ######################
     # --- MU-Dimension ---
@@ -58,16 +58,16 @@ class WavePotentialsToggles:
     f_0 = 4 # [Hz] Frequency of injected wave
 
     driver_dict = {
-        'gaussian_pulse':0,
-        'gaussian_wavepacket':0,
-        'tapered_half_sine_pulse':1,
-        'tapered_sine_pulse':0
+        'gaussian_pulse': [False, [Lambda_perp0, 1]],
+        'gaussian_wavepacket': [False, [Phi_0, f_0]],
+        'tapered_half_sine_pulse': [True, [Phi_0, f_0]],
+        'tapered_sine_pulse': [False, [Phi_0, f_0]]
     }
 
     # ===========================
     # === BOUNDARY CONDITIONS ===
     # ===========================
-    SIGMA_P = 0.13 # [S] Pedersen Conductance in Ionosphere
+    SIGMA_P = 1 # [S] Pedersen Conductance in Ionosphere
     absorbing_ionosphere_bool = True
 
     # =============================
@@ -103,15 +103,15 @@ class LiouvilleToggles:
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [700, 4000, 10000]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [700,1000,2000,3000, 4000, 5000,6000,7000,8000,9000, 10000]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
     # --- ESA ENERGY/PITCH COORDINATES ---
-    N_energy_space_points = 100
+    N_energy_space_points = 70
     E_max_obs = 3.6  # the POWER of 10^E_max for the maximum energy
     E_min_obs = 1  # the POWER of 10^E_min for the minimum energy
-    pitch_range_obs = np.linspace(5, 175, 10+1)
+    pitch_range_obs = np.linspace(5, 175, 17+1)
     # pitch_range_obs = np.linspace(0, 180, 18 + 1)
     energy_range_obs = np.logspace(E_min_obs, E_max_obs, N_energy_space_points)
 

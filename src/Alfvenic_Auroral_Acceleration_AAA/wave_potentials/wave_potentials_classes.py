@@ -42,7 +42,7 @@ class WaveFieldsClasses: # for parallel and perp only
 
         return drive
 
-    def gaussian_pulse_fwhm(self,
+    def gaussian_pulse(self,
                             Phi_0: float,
                             fwhm: float,
                             t_centre: Optional[float] = None,
