@@ -61,6 +61,7 @@ def wave_potentials_generator():
     data_dict_output['k_perp'][0] = k_perp
     data_dict_output['inertial_term'][0] = np.sqrt(1 + np.square(k_perp * data_dict_plasma['lambda_e'][0]))
     data_dict_output['DAW_velocity'][0] = data_dict_plasma['V_A'][0] / data_dict_output['inertial_term'][0]
+    data_dict_output['DAW_velocity_eV'][0] = (0.5*stl.m_e/stl.q0)*np.square(data_dict_output['DAW_velocity'][0].copy())
     data_dict_output['alpha'][0] = data_dict_plasma['V_A'][0]
     data_dict_output['beta'][0] = 1/data_dict_output['inertial_term'][0].copy()
     data_dict_output['SIGMA_A'][0] = 1/(stl.u0*data_dict_plasma['V_A'][0]*data_dict_output['inertial_term'][0])

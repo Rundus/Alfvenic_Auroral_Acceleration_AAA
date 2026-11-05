@@ -70,10 +70,10 @@ def run_AAA(dict_run_settings, dict_subroutines):
         print('\n--- Calculating Detector Differential Flux ---',end='\n')
         from src.Alfvenic_Auroral_Acceleration_AAA.detector_flux.detector_flux_generator import detector_flux_generator
         detector_flux_generator()
-
-    if dict_subroutines['plot_detector_flux'] ==1:
-        print('\n--- Plotting Detector Differential Flux ---',end='\n')
-        from src.Alfvenic_Auroral_Acceleration_AAA.detector_flux import detector_flux_plotter
+    #
+    # if dict_subroutines['plot_detector_flux'] ==1:
+    #     print('\n--- Plotting Detector Differential Flux ---',end='\n')
+    #     from src.Alfvenic_Auroral_Acceleration_AAA.detector_flux import detector_flux_plotter
 
     if dict_subroutines['regen_field_particle_correlation'] == 1:
         print('\n--- Calculating Field-Particle Correlation ---', end='\n')

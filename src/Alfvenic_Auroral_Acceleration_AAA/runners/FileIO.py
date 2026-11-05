@@ -4,12 +4,12 @@ import os
 class FileIOClass:
 
     # Laptop
-    # path_code_src = r'C:/Users/conno/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/'
-    # path_sim_data = rf'C:/data/alfvenic_auroral_acceleration_AAA/'
+    path_code_src = r'C:/Users/conno/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/'
+    path_sim_data = rf'C:/data/alfvenic_auroral_acceleration_AAA/'
 
     # Linux PC
-    path_code_src = r'/home/connor/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/'
-    path_sim_data = rf'/home/connor/Data/MODELS/alfvenic_auroral_acceleration_AAA/'
+    # path_code_src = r'/home/connor/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/'
+    # path_sim_data = rf'/home/connor/Data/MODELS/alfvenic_auroral_acceleration_AAA/'
 
     # Home PC
     # path_code_src = r'C:/Users/conno/PycharmProjects/Alfvenic_Auroral_Acceleration_AAA/src/'

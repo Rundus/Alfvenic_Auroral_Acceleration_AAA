@@ -16,7 +16,7 @@ class SpatialGridToggles:
     # DEFINE SIMULATION EXTENT in terms of geophysical parameters
     L_Shell = 8.5
     s_para_min = 100 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
-    s_para_max = 2.5 * stl.Re  # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+    s_para_max = 3.4 * stl.Re  # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
 
     ######################
     # --- MU-Dimension ---
@@ -73,7 +73,7 @@ class WavePotentialsToggles:
     # =============================
     # === RK45 Time Integration ===
     # =============================
-    t_start, t_end = 0.0, 4 #[seconds] Time from z_max the wave is allowed to propogate
+    t_start, t_end = 0.0, 5 #[seconds] Time from z_max the wave is allowed to propogate
     n_out = 1000  # number of time-points to store for output
     cfl = 0.4
 
@@ -103,22 +103,22 @@ class LiouvilleToggles:
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [700,1000,2000,3000, 4000, 5000,6000,7000,8000,9000, 10000]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [700, 1000, 2000,3000, 4000, 5000,6000,7000,8000,9000, 10000]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
     # --- ESA ENERGY/PITCH COORDINATES ---
-    N_energy_space_points = 70
-    E_max_obs = 3.6  # the POWER of 10^E_max for the maximum energy
+    N_energy_space_points = 50
+    E_max_obs = 4  # the POWER of 10^E_max for the maximum energy
     E_min_obs = 1  # the POWER of 10^E_min for the minimum energy
     pitch_range_obs = np.linspace(5, 175, 17+1)
     # pitch_range_obs = np.linspace(0, 180, 18 + 1)
     energy_range_obs = np.logspace(E_min_obs, E_max_obs, N_energy_space_points)
 
     # --- ESA particle sampling ---
-    time_rez = 0.025 # [in seconds] the time resolution of the simulation
+    time_rez = 0.05 # [in seconds] the time resolution of the simulation
     time_obs_start = 0  # in seconds
-    time_obs_end = 4 # in seconds
+    time_obs_end = 5 # in seconds
     N_obs_points = int(time_obs_end/time_rez)+1 # number of particle observation points
 
     ###########################
@@ -126,7 +126,7 @@ class LiouvilleToggles:
     ###########################
 
     # --- Observation Wave-Sampling ---
-    time_rez_waves = 0.001 # [seconds] deltaT sample rate for the waves
+    time_rez_waves = 1/256 # [seconds] deltaT sample rate for the waves
 
     # --- Injected Wave ---
     injected_wave_time_delay = 2 # [seconds] Time delay added to the wave data to cause it to inject later. Defaults to 0 if set to <=0

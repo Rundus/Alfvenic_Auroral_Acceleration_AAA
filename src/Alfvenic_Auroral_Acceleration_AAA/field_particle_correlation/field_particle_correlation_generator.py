@@ -16,6 +16,10 @@ def field_particle_correlation_generator():
     from tqdm import tqdm
     from scipy.stats import binned_statistic
     from src.Alfvenic_Auroral_Acceleration_AAA.runners.FileIO import FileIOClass
+    from src.Alfvenic_Auroral_Acceleration_AAA.runners.executable_classes import ExecutableClasses
+    run_module = ExecutableClasses().load_configuration_module()
+    PlasmaEnvironmentToggles = run_module.PlasmaEnvironmentToggles
+    from src.Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_classes import LiouvilleMapping
 
 
     # --- Delete the old FPC Files ---
@@ -26,11 +30,19 @@ def field_particle_correlation_generator():
     # --- Load the liouville mapped data ---
     dist_files = glob(rf'{FileIOClass.path_sim_output}/liouville_mapping/*.cdf*')
 
+    # --- load the plasma environment data ---
+    data_dict_plasma = stl.loadDictFromFile(glob(rf'{FileIOClass.path_sim_output}/plasma_environment/*.cdf*')[0])
+    dist_obj = LiouvilleMapping(1000) # altitude doesn't matter here
+
     # loop over distribution function files
     for i in tqdm(range(len(dist_files))):
 
         # Load the file-specific data
         data_dict = stl.loadDictFromFile(dist_files[i])
+
+        # determine which altitude is in the file
+        match = re.search(r"_(\d+(?:\.\d+)?)km\.cdf$", dist_files[i])
+        alt_val = float(match.group(1))  # [km] altitude
 
         # --- calculate the velocity grid ---
         Ntimes = len(data_dict['time'][0])
@@ -38,13 +50,28 @@ def field_particle_correlation_generator():
         Nengy = len(data_dict['energy'][0])
         sizes = [Ntimes, Nptchs, Nengy]
 
-        # --- Calculate the derivatives ---
         distribution = data_dict['distribution_function'][0].copy()
         energy = data_dict['energy'][0].copy()
         pitch_angle = data_dict['pitch_angle'][0].copy()
         time_waves = data_dict['time_waves'][0].copy()
         time = data_dict['time'][0].copy()
 
+        # --- calculate the delta_f0 term ---
+        # the FPC is more clear if you subtract the ambient plasma distribution
+        # get the cold density from the altitude
+        X,Y = np.meshgrid(pitch_angle,energy)
+        f_0_PS = dist_obj.f_maxwellian(E_eV=Y.T,
+                                            n0=PlasmaEnvironmentToggles.n0_PS*(stl.cm_to_m**3),
+                                            Te=PlasmaEnvironmentToggles.Te_PS)
+        n_density_cold_idx = np.abs(data_dict_plasma['alt'][0] - alt_val*stl.m_to_km).argmin()
+        f_0_cold = dist_obj.f_maxwellian(E_eV=Y.T,
+                                            n0=data_dict_plasma['n_density_cold'][0][n_density_cold_idx],
+                                            Te=PlasmaEnvironmentToggles.Te_cold)
+        f_0 = f_0_PS + f_0_cold
+        f_0 = f_0[None, :, :]
+        distribution = distribution - f_0 # calculate delta_f0
+
+        # --- Calculate the derivatives ---
         df_dE = np.gradient(distribution,energy, axis=2, edge_order=2)
         df_dalpha = np.gradient(distribution,np.radians(pitch_angle), axis=1, edge_order=2)
 
@@ -68,20 +95,33 @@ def field_particle_correlation_generator():
         # (c) calculate the correlation interval
         #TODO: Find a way to calculate the correlation window
 
-        # --- Calculate the instantaneous FPC ---
-        alpha = np.radians(pitch_angle[None, :, None])
-        E = energy[None, None, :]
-        E_mu = E_mu_obs_particle_timebase[:, None, None]
-        FPC_instant = E_mu*(stl.q0 * 0.5*np.square(np.cos(alpha)) * np.sqrt(2*E/stl.m_e) * (2*E*df_dE - np.sin(alpha)*df_dalpha))
-
-        # --- Calculate the total FPC ---
-
         low_idx = np.abs(time-0).argmin()
         high_idx = np.abs(time-time[-1]).argmin()
 
+        ##################################################
+        # --- CALCULATE THE FPC (DETECTOR COORDINATES) ---
+        ##################################################
 
-        deltaT = time[high_idx] - time[low_idx]
-        FPC = np.asarray((1/deltaT)*np.sum(FPC_instant[low_idx:high_idx+1],axis=0))
+        # --- Calculate the instantaneous FPC (detector coordinates) ---
+        alpha = np.radians(pitch_angle[None, :, None])
+        E = energy[None, None, :]
+        E_mu = E_mu_obs_particle_timebase[:, None, None]
+        FPC_instant = 2*np.pi*E_mu*(stl.q0 * 0.5*np.square(np.cos(alpha)) * np.sqrt(2*E/stl.m_e) * (2*E*df_dE - np.sin(alpha)*df_dalpha))
+
+        # --- Calculate the total FPC (detector coordinates) ---
+        n = high_idx - low_idx # time-integrate. Note: since the particle DeltaT = constant, we only divided by 1/num_points
+        FPC = 2*np.pi*np.asarray((1/n)*np.sum(FPC_instant[low_idx:high_idx+1],axis=0)) # note: the 2*pi comes from integrating over cylindrical velocity space
+
+        ###########################################################
+        # --- CALCULATE THE ALTERNATE FPC (DETECTOR COORDINATES ---
+        ###########################################################
+        v_para = -1*np.sqrt(2*stl.q0*E/stl.m_e)*np.cos(alpha) # add new axis along time dimension. Flip sign to account for modified dipole coordinates
+
+        # --- calcualte the instant FPC alternate value ---
+        FPC_instant_alternate = 2*np.pi*stl.q0*v_para*E_mu*distribution
+
+        # --- Calculate the FPC value over the correlation window ---
+        FPC_alternate = 2*np.pi*np.asarray((1/n)*np.sum(FPC_instant_alternate[low_idx:high_idx+1],axis=0))
 
         ################
         # --- OUTPUT ---
@@ -89,7 +129,9 @@ def field_particle_correlation_generator():
         data_dict_output = {
             'time': data_dict['time'].copy(),
             'FPC_total': [np.array(FPC), {'VAR_TYPE': 'data','DEPEND_0': 'pitch_angle','DEPEND_1': 'energy'}],
+            'FPC_total_alternate': [np.array(FPC_alternate), {'VAR_TYPE': 'data', 'DEPEND_0': 'pitch_angle', 'DEPEND_1': 'energy'}],
             'FPC_instant': [np.array(FPC_instant), {'DEPEND_0': 'time','DEPEND_1': 'pitch_angle','DEPEND_2': 'energy', 'VAR_TYPE': 'data'}],
+            'FPC_instant_alternate': [np.array(FPC_instant_alternate), {'DEPEND_0': 'time', 'DEPEND_1': 'pitch_angle', 'DEPEND_2': 'energy', 'VAR_TYPE': 'data'}],
             'E_mu_obs_particle_timebase' : [E_mu_obs_particle_timebase,data_dict['E_mu_obs'][1].copy()],
             'df_dE':[df_dE,{'DEPEND_0': 'time','DEPEND_0': 'pitch_angle','DEPEND_2': 'energy',}],
             'df_dalpha':[df_dalpha,{'DEPEND_0': 'time','DEPEND_0': 'pitch_angle','DEPEND_2': 'energy',}],
