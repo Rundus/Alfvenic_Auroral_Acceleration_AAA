@@ -3,24 +3,87 @@ import numpy as np
 import spaceToolsLib as stl
 
 class FPCClasses:
-    def to_Vel(self, Energy_eV):
-        return np.sqrt(2 * Energy_eV * stl.q0 / stl.m_e)
 
     def to_EeV(self, Vel):
         return (0.5 * stl.m_e * np.square(Vel)) / stl.q0
 
-    def speed(self,energy_eV, mass=stl.m_e):
+    def to_Vel(self,energy_eV, mass=stl.m_e):
         """Particle speed (m/s) from kinetic energy (eV), non-relativistic."""
         return np.sqrt(2.0 * np.asarray(energy_eV) * stl.q0 / mass)
 
-    def pa_energy_to_vpar_vperp(self, pitch_deg, energy_eV, mass=stl.m_e):
+    def to_vpar_vperp(self, pitch_deg, energy_eV, mass=stl.m_e):
         """Velocity coordinates of each bin centre.
 
         Returns v_par, v_perp in m/s, each shaped (n_pitch, n_energy).
         """
         a = np.radians(np.asarray(pitch_deg))[:, None]
-        v = self.speed(energy_eV, mass)[None, :]
+        v = self.to_Vel(energy_eV, mass)[None, :]
         return v * np.cos(a), v * np.sin(a)
+
+    def instant_FPC_detector_coords(self,energies,pitch_angle,distribution, Epara, mass=stl.m_e):
+        '''
+        param energies [energy]
+        param pitch_angle [pitch]
+        param distribution [time, pitch, energy]
+        param Epara - time series of E_parallel, downsampled onto ESA timebase  [time]
+        Returns C_E_parallel(E,pitch,t)
+        '''
+
+        # --- Adjust dimensions of inputs ---
+        alpha = np.radians(pitch_angle[None, :, None])
+        Engy = energies[None, None, :]
+        E_para = Epara[:, None, None]
+
+        # --- Calculate the derivatives ---
+        Vmag = np.sqrt(2*Engy*stl.q0/mass)
+        df_dE = np.gradient(distribution, energies, axis=2, edge_order=2)
+        df_dalpha = np.gradient(distribution, np.radians(pitch_angle), axis=1, edge_order=2)
+        df_dvpara = - (1/Vmag) * np.sin(alpha) * df_dalpha + stl.m_e * Vmag * np.cos(alpha) * df_dE
+
+        # --- Calculate the instantaneous FPC (detector coordinates) ---
+        vparas = Vmag*np.cos(alpha)
+        FPC_instant =  -1*(-1*stl.q0)*(vparas**2/2)*df_dvpara*E_para
+        return FPC_instant
+
+    def instant_alternate_FPC_detector_coords(self,energies,pitch_angle,distribution, Epara, mass=stl.m_e):
+        '''
+                param energies [energy]
+                param pitch_angle [pitch]
+                param distribution [time, pitch, energy]
+                param Epara - time series of E_parallel, downsampled onto ESA timebase  [time]
+                Returns C_E_parallel(E,pitch,t)
+                '''
+
+        # --- Adjust dimensions of inputs ---
+        alpha = np.radians(pitch_angle[None, :, None])
+        Engy = energies[None, None, :]
+        E_para = Epara[:, None, None]
+
+        # --- Calculate the Vmags ---
+        Vmag = np.sqrt(2 * Engy * stl.q0 / mass)
+
+        # --- Calculate the instantaneous FPC (detector coordinates) ---
+        vparas = Vmag * np.cos(alpha)
+        FPC_alternate_instant = (-1 * stl.q0) * vparas * distribution * E_para
+        return FPC_alternate_instant
+
+    def FPC_detector_coords(self, FPC_instant, time_obs):
+        '''
+            param FPC_instant - [time, pitch, energy] - instanteous FPC value over time
+            param time_obs - [time] - observation times of the detector
+        '''
+
+        # Set the correlation window
+        low_idx = np.abs(time_obs - 2.25).argmin()
+        high_idx = np.abs(time_obs - 3.5).argmin()
+
+        # Calculate the total FPC (detector coordinates). NOTE: assumes the deltaT between points is constant, DeltaT = constant, thus we only divided by 1/num_points
+        n = high_idx - low_idx
+        FPC = np.asarray((1 / n) * np.sum(FPC_instant[low_idx:high_idx + 1], axis=0))  # note: the 2*pi comes from integrating over cylindrical velocity space
+
+        return FPC
+
+
 
     def _lin_edges(self, c):
         """Edges halfway between linearly spaced centres."""
@@ -34,7 +97,7 @@ class FPCClasses:
         mid = 0.5 * (lc[1:] + lc[:-1])
         return 10 ** np.concatenate([[2 * lc[0] - mid[0]], mid, [2 * lc[-1] - mid[-1]]])
 
-    def velocity_wedge_mesh(self, pitch_deg, energy_eV, values, mass=stl.m_e,
+    def velocity_wedge_mesh(self,pitch_deg, energy_eV, values, mass=stl.m_e,
                             pitch_edges=None, energy_edges=None,
                             sub=12, v_unit=1.0):
         """Mesh for plotting (pitch, energy) data as wedges in (v_par, v_perp).
@@ -65,99 +128,21 @@ class FPCClasses:
                              f"({pitch_deg.size}, {energy_eV.size})")
 
         a_edges = (np.asarray(pitch_edges, dtype=float) if pitch_edges is not None
-                   else np.clip(_lin_edges(pitch_deg), 0.0, 180.0))
+                   else np.clip(self._lin_edges(pitch_deg), 0.0, 180.0))
         e_edges = (np.asarray(energy_edges, dtype=float) if energy_edges is not None
-                   else _log_edges(energy_eV))
+                   else self._log_edges(energy_eV))
 
         # Split each pitch-angle bin into `sub` steps so its arc is smooth
-        a_fine = np.concatenate(
-            [np.linspace(a_edges[i], a_edges[i + 1], sub, endpoint=False)
-             for i in range(pitch_deg.size)] + [[a_edges[-1]]])
+        a_fine = np.concatenate( [np.linspace(a_edges[i], a_edges[i + 1], sub, endpoint=False) for i in range(pitch_deg.size)] + [[a_edges[-1]]])
 
-        v_edges = speed(e_edges, mass) / v_unit
+        v_edges = self.to_Vel(e_edges, mass) / v_unit
         A, V = np.meshgrid(np.radians(a_fine), v_edges)  # (n_E+1, n_a_fine)
         X = V * np.cos(A)  # v_par
         Y = V * np.sin(A)  # v_perp
         C = np.repeat(values.T, sub, axis=1)  # (n_E, n_pitch*sub)
         return X, Y, C
 
-    E_CHARGE = 1.602176634e-19  # C
-    M_ELECTRON = 9.1093837015e-31  # kg
-    M_PROTON = 1.67262192369e-27  # kg
-
-    def speed(self, energy_eV, mass=M_ELECTRON):
-        """Particle speed (m/s) from kinetic energy (eV), non-relativistic."""
-        return np.sqrt(2.0 * np.asarray(energy_eV) * E_CHARGE / mass)
-
-    def pa_energy_to_vpar_vperp(self, pitch_deg, energy_eV, mass=M_ELECTRON):
-        """Velocity coordinates of each bin centre.
-
-        Returns v_par, v_perp in m/s, each shaped (n_pitch, n_energy).
-        """
-        a = np.radians(np.asarray(pitch_deg))[:, None]
-        v = speed(energy_eV, mass)[None, :]
-        return v * np.cos(a), v * np.sin(a)
-
-    def _lin_edges(self, c):
-        """Edges halfway between linearly spaced centres."""
-        c = np.asarray(c, dtype=float)
-        mid = 0.5 * (c[1:] + c[:-1])
-        return np.concatenate([[2 * c[0] - mid[0]], mid, [2 * c[-1] - mid[-1]]])
-
-    def _log_edges(c):
-        """Edges at geometric midpoints between log-spaced centres."""
-        lc = np.log10(np.asarray(c, dtype=float))
-        mid = 0.5 * (lc[1:] + lc[:-1])
-        return 10 ** np.concatenate([[2 * lc[0] - mid[0]], mid, [2 * lc[-1] - mid[-1]]])
-
-    def velocity_wedge_mesh(pitch_deg, energy_eV, values, mass=M_ELECTRON,
-                            pitch_edges=None, energy_edges=None,
-                            sub=12, v_unit=1.0):
-        """Mesh for plotting (pitch, energy) data as wedges in (v_par, v_perp).
-
-        Parameters
-        ----------
-        pitch_deg, energy_eV : 1-D bin centres (deg, eV)
-        values       : 2-D array shaped (n_pitch, n_energy); transpose first if
-                       yours is (n_energy, n_pitch)
-        pitch_edges  : optional n_pitch+1 bin edges (deg). Default: midpoints
-                       between centres, clipped to [0, 180].
-        energy_edges : optional n_energy+1 bin edges (eV). Default: geometric
-                       midpoints (for log-spaced energy bins).
-        sub          : sub-steps per pitch-angle bin, so the arcs draw smoothly
-        v_unit       : divide velocities by this (e.g. 1e7 for units of 10^4 km/s)
-
-        Returns
-        -------
-        X, Y, C  ready for  ax.pcolormesh(X, Y, C, shading="flat")
-                 X = v_par, Y = v_perp, both shaped (n_energy+1, n_pitch*sub+1);
-                 C shaped (n_energy, n_pitch*sub).
-        """
-        pitch_deg = np.asarray(pitch_deg, dtype=float)
-        energy_eV = np.asarray(energy_eV, dtype=float)
-        values = np.asarray(values)
-        if values.shape != (pitch_deg.size, energy_eV.size):
-            raise ValueError(f"values shape {values.shape} != (n_pitch, n_energy) = "
-                             f"({pitch_deg.size}, {energy_eV.size})")
-
-        a_edges = (np.asarray(pitch_edges, dtype=float) if pitch_edges is not None
-                   else np.clip(_lin_edges(pitch_deg), 0.0, 180.0))
-        e_edges = (np.asarray(energy_edges, dtype=float) if energy_edges is not None
-                   else _log_edges(energy_eV))
-
-        # Split each pitch-angle bin into `sub` steps so its arc is smooth
-        a_fine = np.concatenate(
-            [np.linspace(a_edges[i], a_edges[i + 1], sub, endpoint=False)
-             for i in range(pitch_deg.size)] + [[a_edges[-1]]])
-
-        v_edges = speed(e_edges, mass) / v_unit
-        A, V = np.meshgrid(np.radians(a_fine), v_edges)  # (n_E+1, n_a_fine)
-        X = V * np.cos(A)  # v_par
-        Y = V * np.sin(A)  # v_perp
-        C = np.repeat(values.T, sub, axis=1)  # (n_E, n_pitch*sub)
-        return X, Y, C
-
-    def _vperp_integral(vp, a_edges, v_edges, values, measure):
+    def _vperp_integral(self,vp, a_edges, v_edges, values, measure):
         """Exact integral over v_perp at each v_par in `vp` (1-D, m/s).
 
         At fixed v_par, the wedge of bin (i, j) covers v_perp in [u1, u2], bounded
@@ -182,7 +167,8 @@ class FPCClasses:
         wt = np.pi * (u2 ** 2 - u1 ** 2) if measure == "cylindrical" else (u2 - u1)
         return np.einsum("nae,ae->n", wt, values)
 
-    def reduce_to_vpar(pitch_deg, energy_eV, values, mass=M_ELECTRON,
+
+    def reduce_to_vpar(self, pitch_deg, energy_eV, values, mass=stl.m_e,
                        pitch_edges=None, energy_edges=None,
                        vpar_edges=None, n_vpar=400, measure="cylindrical"):
         """Integrate (pitch, energy) data over v_perp to get a reduced C(v_par).
@@ -221,9 +207,9 @@ class FPCClasses:
             raise ValueError(f"values shape {values.shape} != (n_pitch, n_energy)")
 
         a_edges = (np.asarray(pitch_edges, dtype=float) if pitch_edges is not None
-                   else np.clip(_lin_edges(pitch_deg), 0.0, 180.0))
-        v_edges = speed(np.asarray(energy_edges, dtype=float) if energy_edges is not None
-                        else _log_edges(energy_eV), mass)
+                   else np.clip(self._lin_edges(pitch_deg), 0.0, 180.0))
+        v_edges = self.to_Vel(np.asarray(energy_edges, dtype=float) if energy_edges is not None
+                        else self._log_edges(energy_eV), mass)
         vmax = v_edges[-1]
         if vpar_edges is None:
             vpar_edges = np.linspace(-vmax, vmax, n_vpar + 1)
@@ -236,7 +222,7 @@ class FPCClasses:
 
         lo, hi = pts[:-1], pts[1:]
         mid = 0.5 * (lo + hi)
-        f = _vperp_integral(np.concatenate([lo, mid, hi]), a_edges, v_edges, values, measure)
+        f = self._vperp_integral(np.concatenate([lo, mid, hi]), a_edges, v_edges, values, measure)
         n = lo.size
         piece = (hi - lo) / 6.0 * (f[:n] + 4.0 * f[n:2 * n] + f[2 * n:])  # Simpson per piece
 
@@ -245,15 +231,15 @@ class FPCClasses:
         C_par = C_par[:vpar_edges.size - 1] / np.diff(vpar_edges)
         return 0.5 * (vpar_edges[1:] + vpar_edges[:-1]), C_par
 
-    def total_integral(pitch_deg, energy_eV, values, mass=M_ELECTRON,
+    def total_integral(self,pitch_deg, energy_eV, values, mass=stl.m_e,
                        pitch_edges=None, energy_edges=None):
         """Exact integral of the binned data over all 3-D velocity space,
         sum_ij C_ij * 2 pi (v_hi^3 - v_lo^3)/3 * (cos a_lo - cos a_hi).
         Use it to check reduce_to_vpar: sum(C_par * dv_par) should match."""
         a_edges = np.radians(np.asarray(pitch_edges, dtype=float) if pitch_edges is not None
-                             else np.clip(_lin_edges(pitch_deg), 0.0, 180.0))
-        v_edges = speed(np.asarray(energy_edges, dtype=float) if energy_edges is not None
-                        else _log_edges(energy_eV), mass)
+                             else np.clip(self._lin_edges(pitch_deg), 0.0, 180.0))
+        v_edges = self.to_Vel(np.asarray(energy_edges, dtype=float) if energy_edges is not None
+                        else self._log_edges(energy_eV), mass)
         d_ang = np.cos(a_edges[:-1]) - np.cos(a_edges[1:])  # (n_pitch,)
         d_rad = (v_edges[1:] ** 3 - v_edges[:-1] ** 3) / 3.0  # (n_energy,)
         return 2 * np.pi * np.sum(np.asarray(values) * d_ang[:, None] * d_rad[None, :])

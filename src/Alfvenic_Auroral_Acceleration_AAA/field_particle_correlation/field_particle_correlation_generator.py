@@ -12,7 +12,6 @@ def field_particle_correlation_generator():
     import re
 
     # --- File-specific imports ---
-    import matplotlib.pyplot as plt
     from tqdm import tqdm
     from scipy.stats import binned_statistic
     from src.Alfvenic_Auroral_Acceleration_AAA.runners.FileIO import FileIOClass
@@ -20,7 +19,7 @@ def field_particle_correlation_generator():
     run_module = ExecutableClasses().load_configuration_module()
     PlasmaEnvironmentToggles = run_module.PlasmaEnvironmentToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_classes import LiouvilleMapping
-
+    from src.Alfvenic_Auroral_Acceleration_AAA.field_particle_correlation.field_particle_correlation_classes import FPCClasses
 
     # --- Delete the old FPC Files ---
     old_files = glob(f'{FileIOClass.path_sim_output}/field_particle_correlation/*.cdf*')
@@ -37,6 +36,10 @@ def field_particle_correlation_generator():
     # loop over distribution function files
     for i in tqdm(range(len(dist_files))):
 
+        ##########################
+        # --- PREPARE THE DATA ---
+        ##########################
+
         # Load the file-specific data
         data_dict = stl.loadDictFromFile(dist_files[i])
 
@@ -44,13 +47,8 @@ def field_particle_correlation_generator():
         match = re.search(r"_(\d+(?:\.\d+)?)km\.cdf$", dist_files[i])
         alt_val = float(match.group(1))  # [km] altitude
 
-        # --- calculate the velocity grid ---
-        Ntimes = len(data_dict['time'][0])
-        Nptchs = len(data_dict['pitch_angle'][0])
-        Nengy = len(data_dict['energy'][0])
-        sizes = [Ntimes, Nptchs, Nengy]
-
-        distribution = data_dict['distribution_function'][0].copy()
+        # get the Liouville Mapping Data
+        f = data_dict['distribution_function'][0].copy()
         energy = data_dict['energy'][0].copy()
         pitch_angle = data_dict['pitch_angle'][0].copy()
         time_waves = data_dict['time_waves'][0].copy()
@@ -60,190 +58,87 @@ def field_particle_correlation_generator():
         # the FPC is more clear if you subtract the ambient plasma distribution
         # get the cold density from the altitude
         X,Y = np.meshgrid(pitch_angle,energy)
-        f_0_PS = dist_obj.f_maxwellian(E_eV=Y.T,
-                                            n0=PlasmaEnvironmentToggles.n0_PS*(stl.cm_to_m**3),
-                                            Te=PlasmaEnvironmentToggles.Te_PS)
+        f_0_PS = dist_obj.f_maxwellian(E_eV=Y.T, n0=PlasmaEnvironmentToggles.n0_PS*(stl.cm_to_m**3), Te=PlasmaEnvironmentToggles.Te_PS)
+
         n_density_cold_idx = np.abs(data_dict_plasma['alt'][0] - alt_val*stl.m_to_km).argmin()
-        f_0_cold = dist_obj.f_maxwellian(E_eV=Y.T,
-                                            n0=data_dict_plasma['n_density_cold'][0][n_density_cold_idx],
-                                            Te=PlasmaEnvironmentToggles.Te_cold)
+        f_0_cold = dist_obj.f_maxwellian(E_eV=Y.T, n0=data_dict_plasma['n_density_cold'][0][n_density_cold_idx], Te=PlasmaEnvironmentToggles.Te_cold)
         f_0 = f_0_PS + f_0_cold
         f_0 = f_0[None, :, :]
-        distribution = distribution - f_0 # calculate delta_f0
+        deltaf0 = f.copy() - f_0 # calculate delta_f0
 
-        # --- Calculate the derivatives ---
-        df_dE = np.gradient(distribution,energy, axis=2, edge_order=2)
-        df_dalpha = np.gradient(distribution,np.radians(pitch_angle), axis=1, edge_order=2)
-
-        # --- Determine the correlation interval ---
-        E_mu_obs = data_dict['E_mu_obs'][0].copy()
-        mask = np.where(np.abs(E_mu_obs) < 1E-9)
-        E_mu_obs[mask] = 0
-
-        # find the time "blocks" where waves occur.
-        # (a) pad a zero on each end
-        nz = (E_mu_obs !=0) # Find where the non-zero values are
-        d = np.diff(np.concatenate(([0],nz,[0])))
-        starts = np.flatnonzero(d==1) # first index of each wave "block"
-        ends = np.flatnonzero(d==-1) - 1 # last index of each wave "block"
-
-        # (b) bin-average the wave data onto the particle data
-        mid = 0.5 * (time[1:] + time[:-1]) # get bins by calculating the deltaT/2 from the particle timestamps
+        # ---- bin-average the wave data onto the particle data ---
+        E_para_obs = -1 * data_dict['E_mu_obs'][0].copy()  # put a -1 sign since we're using parallel coordinates
+        mask = np.where(np.abs(E_para_obs) < 1E-9)
+        E_para_obs[mask] = 0
+        mid = 0.5 * (time[1:] + time[:-1])  # get bins by calculating the deltaT/2 from the particle timestamps
         edges = np.concatenate(([2 * time[0] - mid[0]], mid, [2 * time[-1] - mid[-1]]))
-        E_mu_obs_particle_timebase,_,_ = binned_statistic(time_waves, data_dict['E_mu_obs'][0].copy(), bins=edges)
+        E_para_FPC, _, _ = binned_statistic(time_waves, E_para_obs.copy(), bins=edges)
 
-        # (c) calculate the correlation interval
-        #TODO: Find a way to calculate the correlation window
+        ##############################################
+        # --- CALCULATE FPC (DETECTOR COORDINATES) ---
+        ##############################################
 
-        low_idx = np.abs(time-0).argmin()
-        high_idx = np.abs(time-time[-1]).argmin()
+        distribution = deltaf0.copy()
 
-        ##################################################
-        # --- CALCULATE THE FPC (DETECTOR COORDINATES) ---
-        ##################################################
+        # --- Calculate the instant FPC in detector coordinates, C_Epara(r, v, t) ---
+        FPC_instant = FPCClasses().instant_FPC_detector_coords(energies=energy,
+                                                               pitch_angle=pitch_angle,
+                                                               distribution=distribution,
+                                                               Epara=E_para_FPC)
 
-        # --- Calculate the instantaneous FPC (detector coordinates) ---
-        alpha = np.radians(pitch_angle[None, :, None])
-        E = energy[None, None, :]
-        E_mu = E_mu_obs_particle_timebase[:, None, None]
-        FPC_instant = 2*np.pi*E_mu*(stl.q0 * 0.5*np.square(np.cos(alpha)) * np.sqrt(2*E/stl.m_e) * (2*E*df_dE - np.sin(alpha)*df_dalpha))
+        FPC_alternate = FPCClasses().instant_alternate_FPC_detector_coords(energies=energy,
+                                                                           pitch_angle=pitch_angle,
+                                                                           distribution=distribution,
+                                                                           Epara=E_para_FPC)
 
-        # --- Calculate the total FPC (detector coordinates) ---
-        n = high_idx - low_idx # time-integrate. Note: since the particle DeltaT = constant, we only divided by 1/num_points
-        FPC = 2*np.pi*np.asarray((1/n)*np.sum(FPC_instant[low_idx:high_idx+1],axis=0)) # note: the 2*pi comes from integrating over cylindrical velocity space
+        # --- Calculate the time-integrated FPC, C_Epara(r, v) ---
+        FPC = FPCClasses().FPC_detector_coords(FPC_instant=FPC_instant,
+                                               time_obs=time)
 
-        ###########################################################
-        # --- CALCULATE THE ALTERNATE FPC (DETECTOR COORDINATES ---
-        ###########################################################
-        v_para = -1*np.sqrt(2*stl.q0*E/stl.m_e)*np.cos(alpha) # add new axis along time dimension. Flip sign to account for modified dipole coordinates
+        # --- Calculate the FPC collapsed over Vperp ---
 
-        # --- calcualte the instant FPC alternate value ---
-        FPC_instant_alternate = 2*np.pi*stl.q0*v_para*E_mu*distribution
+        vparas, FPC_vpara = FPCClasses().reduce_to_vpar(pitch_deg=pitch_angle,
+                                                        energy_eV=energy,
+                                                        values=FPC)
 
-        # --- Calculate the FPC value over the correlation window ---
-        FPC_alternate = 2*np.pi*np.asarray((1/n)*np.sum(FPC_instant_alternate[low_idx:high_idx+1],axis=0))
+        # --- Calculate the FPC collapsed over Vperp integral but NOT time ---
+        vparas = []
+        FPC_vpara_instant = []
+        for idx in range(len(time)):
+            vpar, vals = FPCClasses().reduce_to_vpar(pitch_deg=pitch_angle,
+                                                     energy_eV=energy,
+                                                     values=FPC_instant[idx])
+            vparas = vpar
+            FPC_vpara_instant.append(vals)
 
+        vparas = np.array(vparas)
+        FPC_vpara_instant = np.array(FPC_vpara_instant)
 
-        ######################################################
-        # --- CALCULATE THE VELOCITY-INTEGRATED QUANTITIES ---
-        ######################################################
-
+        # --- Calculate the FPC over collapsed Vperp and Vpar coordinates ---
+        FPC_total = FPCClasses().total_integral(pitch_deg=pitch_angle,
+                                                energy_eV=energy,
+                                                values=FPC_instant)
 
         ################
         # --- OUTPUT ---
         ################
         data_dict_output = {
             'time': data_dict['time'].copy(),
-            'FPC_total': [np.array(FPC), {'VAR_TYPE': 'data','DEPEND_0': 'pitch_angle','DEPEND_1': 'energy'}],
-            'FPC_total_alternate': [np.array(FPC_alternate), {'VAR_TYPE': 'data', 'DEPEND_0': 'pitch_angle', 'DEPEND_1': 'energy'}],
-            'FPC_instant': [np.array(FPC_instant), {'DEPEND_0': 'time','DEPEND_1': 'pitch_angle','DEPEND_2': 'energy', 'VAR_TYPE': 'data'}],
-            'FPC_instant_alternate': [np.array(FPC_instant_alternate), {'DEPEND_0': 'time', 'DEPEND_1': 'pitch_angle', 'DEPEND_2': 'energy', 'VAR_TYPE': 'data'}],
-            'E_mu_obs_particle_timebase' : [E_mu_obs_particle_timebase,data_dict['E_mu_obs'][1].copy()],
-            'df_dE':[df_dE,{'DEPEND_0': 'time','DEPEND_0': 'pitch_angle','DEPEND_2': 'energy',}],
-            'df_dalpha':[df_dalpha,{'DEPEND_0': 'time','DEPEND_0': 'pitch_angle','DEPEND_2': 'energy',}],
+            'FPC': [np.array(FPC), {'VAR_TYPE': 'data','DEPEND_0': 'pitch_angle','DEPEND_1': 'energy'}],
+            'FPC_total': [np.array([FPC_total]), {'VAR_TYPE': 'data'}],
+            'FPC_instant': [np.array(FPC_instant), {'DEPEND_0': 'time','DEPEND_1': 'pitch_angle','DEPEND_2': 'energy', 'VAR_TYPE': 'data','LABLAXIS':'FPC instant'}],
+            'FPC_alternate_instant': [np.array(FPC_alternate), {'DEPEND_0': 'time', 'DEPEND_1': 'pitch_angle', 'DEPEND_2': 'energy', 'VAR_TYPE': 'data','LABLAXIS':'FPC alternate instant'}],
+            'FPC_vpara': [np.array(FPC_vpara), {'DEPEND_0': 'vparas','VAR_TYPE': 'data','LABLAXIS':'FPC Vpara'}],
+            'FPC_vpara_instant':[np.array(FPC_vpara_instant),{'DEPEND_0':'time','DEPEND_1':'vparas','VAR_TYPE': 'data','LABLAXIS':'FPC Vpara instant'}],
+            'vparas':[np.array(vparas),{'UNITS':'m/s'}],
+            'E_para_FPC' : [E_para_FPC,data_dict['E_mu_obs'][1].copy()],
             'pitch_angle':data_dict['pitch_angle'].copy(),
             'energy': data_dict['energy'].copy(),
+            'delta_f0':[distribution,{'DEPEND_0': 'time','DEPEND_1': 'pitch_angle','DEPEND_2': 'energy', 'VAR_TYPE': 'data','UNITS': 'm!A-6!Ns!A-3!N', 'LABLAXIS': '&delta;f!B0!N'}]
         }
 
-        data_dict_output['E_mu_obs_particle_timebase'][1]['DEPEND_0'] = 'time'
+        data_dict_output['E_para_FPC'][1]['DEPEND_0'] = 'time'
         # save the results
         mapping_alt = int(re.search(r'_(\d+)km', dist_files[i]).group(1))
         outputPath = rf'{FileIOClass.path_sim_output}/field_particle_correlation/FPC_{mapping_alt}km.cdf'
         stl.outputDataDict(outputPath, data_dict_output)
-
-    # ################################
-    # # --- CALCULATE CORRELATION ----
-    # ################################
-    # parallel_velocity_grid = np.zeros_like(data_dict_flux['Differential_Energy_Flux'][0])
-    # perp_velocity_grid = np.zeros_like(data_dict_flux['Differential_Energy_Flux'][0])
-    # for tmeIdx, ptchIdx, engyIdx in itertools.product(*[range(item) for item in sizes]):
-    #     parallel_velocity_grid[tmeIdx][ptchIdx][engyIdx] = np.sqrt(2*stl.q0*DistributionToggles.energy_range_obs[engyIdx]/stl.m_e)*np.cos(np.radians(DistributionToggles.pitch_range_obs[ptchIdx]))
-    #     perp_velocity_grid[tmeIdx][ptchIdx][engyIdx] = np.sqrt(2 * stl.q0 * DistributionToggles.energy_range_obs[engyIdx] / stl.m_e) * np.sin(np.radians(DistributionToggles.pitch_range_obs[ptchIdx]))
-    #
-    # # --- interpolate distribution function onto velocity space ---
-    # sizes_vspace = [len(FPCToggles.v_perp_space), len(FPCToggles.v_para_space)]
-    # Distribution_interp = np.zeros(shape=(len(data_dict_flux['time'][0]), sizes_vspace[0], sizes_vspace[1]))
-    #
-    # X, Y = np.meshgrid(FPCToggles.v_perp_space, FPCToggles.v_para_space)
-    # for tmeIdx in tqdm(range(sizes[0])):
-    #     xData = perp_velocity_grid[tmeIdx].flatten()
-    #     yData = parallel_velocity_grid[tmeIdx].flatten()
-    #     zData = np.array(deepcopy(data_dict_distribution['Distribution_Function'][0][tmeIdx])).flatten()
-    #     interp = LinearNDInterpolator(list(zip(xData,yData)), zData)
-    #     Distribution_interp[tmeIdx] = interp(X,Y).T
-    #
-    # Distribution_interp[np.isnan(Distribution_interp)]  = 0
-    #
-    # # --- calculate the distribution function velocity space gradient ---
-    # df_dvE = np.zeros_like(Distribution_interp)
-    # print(f'\n {sizes[0]*sizes_vspace[0]} Number of Iterations')
-    # for tmeIdx, perpIdx in tqdm(itertools.product(*[range(sizes[0]),range(sizes_vspace[0])])):
-    #     df_dvE[tmeIdx, perpIdx] = (stl.q0*np.square(FPCToggles.v_para_space)/2)*np.gradient(Distribution_interp[tmeIdx, perpIdx], FPCToggles.v_para_space)
-    #
-    # # Calculate the un-perturbed distribution function in velocity space
-    # f0 = np.zeros(shape=(len(data_dict_flux['time'][0]), sizes_vspace[0], sizes_vspace[1]))
-    #
-    # for idx1, vperpVal in enumerate(FPCToggles.v_perp_space):
-    #     for idx2, vparaVal in enumerate(FPCToggles.v_para_space):
-    #         f0[0][idx1][idx2] = DistributionClasses().mapped_distribution(DistributionToggles.u0_obs,DistributionToggles.chi0_obs, vperpVal, vparaVal)
-    #
-    # # calculate the gradient in f0
-    # f0_df_dvE = np.zeros_like(f0)
-    # for perpIdx in range(sizes_vspace[0]):
-    #     f0_df_dvE[0, perpIdx] = (stl.q0*np.square(FPCToggles.v_para_space)/2)*np.gradient(f0[0][perpIdx], FPCToggles.v_para_space)
-    #
-    # # Fill in the rest of the times with the f0
-    # for tme in range(1, len(data_dict_flux['time'][0])):
-    #     f0[tme] = f0[0]
-    #     f0_df_dvE[tme] = f0_df_dvE[0]
-    #
-    # # --- correlate the results ---
-    # instant_correlation = np.zeros(shape=(Ntimes ,sizes_vspace[0], sizes_vspace[1]))
-    # instant_correlation_f0 = np.zeros(shape=(Ntimes, sizes_vspace[0], sizes_vspace[1]))
-    # FPC = np.zeros(shape=(sizes_vspace))
-    # FPC_f0 = np.zeros(shape=(sizes_vspace))
-    # FPC_residual = np.zeros(shape=(sizes_vspace))
-    #
-    # # 1 interpolate the E-Field data onto the particle data timebase
-    # E_mu_corr = np.interp(deepcopy(data_dict_distribution['time'][0]), data_dict_flux['time_waves'][0], data_dict_flux['E_mu_obs'][0])
-    # B_perp_corr = np.interp(deepcopy(data_dict_distribution['time'][0]), data_dict_flux['time_waves'][0], data_dict_flux['B_perp_obs'][0])
-    # E_perp_corr = np.interp(deepcopy(data_dict_distribution['time'][0]), data_dict_flux['time_waves'][0], data_dict_flux['E_perp_obs'][0])
-    #
-    # # 2 Determine the period of the wave in the data
-    # grad = np.gradient(E_mu_corr)
-    # finder = np.where(np.abs(grad) > 0)[0]
-    # low_idx = finder[0]
-    # high_idx = finder[-1]
-    # corr_times = deepcopy(data_dict_distribution['time'][0][low_idx:high_idx + 1])
-    # tau = corr_times[-1] - corr_times[0]
-    #
-    # print(f'\n{sizes_vspace[0] * sizes_vspace[1]} Number of Iterations')
-    # for perpIdx, paraIdx in tqdm(itertools.product(*[range(thing) for thing in sizes_vspace])):
-    #
-    #     # 2 cross-correlate the E-Field timeseries
-    #     A_term = deepcopy(df_dvE[low_idx:high_idx+1,perpIdx,paraIdx])
-    #     A_term_f0 = deepcopy(f0_df_dvE[low_idx:high_idx + 1, perpIdx, paraIdx])
-    #     A_term_residual = deepcopy(df_dvE[low_idx:high_idx+1,perpIdx,paraIdx] - f0_df_dvE[low_idx:high_idx + 1, perpIdx, paraIdx])
-    #     B_term = -1*E_mu_corr[low_idx:high_idx+1]
-    #
-    #     instant_correlation[:, perpIdx, paraIdx] = df_dvE[:,perpIdx,paraIdx] * (-1*E_mu_corr)
-    #     instant_correlation_f0[:,perpIdx, paraIdx] = f0_df_dvE[:, perpIdx, paraIdx] * (-1 * E_mu_corr)
-    #
-    #     FPC[perpIdx, paraIdx] = (1/tau)*simpson(y=A_term*B_term,x=corr_times)
-    #     FPC_f0[perpIdx, paraIdx] = (1 / tau) * simpson(y=A_term_f0 * B_term, x=corr_times)
-    #     FPC_residual[perpIdx,paraIdx] = (1 / tau) * simpson(y=A_term_residual * B_term, x=corr_times)
-    #
-    # # integrate over Perpendicular Velocity space to get the J dot E for a given inital electron energy
-    # FPC_vpara_int = np.zeros(shape=(sizes_vspace[1]))
-    # FPC_vpara_int_f0 = np.zeros(shape=(sizes_vspace[1]))
-    # FPC_vpara_int_residual = np.zeros(shape=(sizes_vspace[1]))
-    #
-    # for idx in range(sizes_vspace[1]):
-    #     FPC_vpara_int[idx] = simpson(FPC[:,idx], FPCToggles.v_perp_space)
-    #     FPC_vpara_int_f0[idx] = simpson(FPC_f0[:, idx], FPCToggles.v_perp_space)
-    #     FPC_vpara_int_residual[idx] = simpson(FPC_residual[:, idx], FPCToggles.v_perp_space)
-    #
-    # # Integrate over v_perp to get the total FPC and add 2pi to cover all other v_perp directions (assuming gyrotropy)
-    # FPC_total = 2*np.pi*simpson(FPC_vpara_int,FPCToggles.v_para_space)
-    # FPC_total_f0 = 2*np.pi*simpson(FPC_vpara_int_f0, FPCToggles.v_para_space)
-    # FPC_total_residual = 2*np.pi*simpson(FPC_vpara_int_residual, FPCToggles.v_para_space)

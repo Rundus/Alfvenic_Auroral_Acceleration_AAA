@@ -20,7 +20,6 @@ dict_subroutines = {
     'animate_wave_potentials': 0,
     'regen_liouville_mapping': 0,
     'regen_detector_flux': 0,
-    'plot_detector_flux': 0,
     'regen_field_particle_correlation': 1,
 }
 
