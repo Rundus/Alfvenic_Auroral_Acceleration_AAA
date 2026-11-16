@@ -50,7 +50,7 @@ def environment_expressions_generator():
         n_Hp_density = (stl.cm_to_m**3)*(0.1 + 10*sp.sqrt(stl.Re/(400*z)) + 100*(z)*sp.exp(-z/280)) # for z in km
         n_Op_density = (stl.cm_to_m**3)*(400*stl.Re*z*sp.exp(-z/175)) # for z in km
     elif wModel == 'shroeder2021':
-        n_e = (stl.cm_to_m**3)*((6E4)*sp.exp(-(z-318)/383) + (1.34E7)*(z**(-1.55)))
+        n_e = 0.5*(stl.cm_to_m**3)*((6E4)*sp.exp(-(z-318)/383) + (1.34E7)*(z**(-1.55)))
         n_Op_density = n_e*0.5*(1 - sp.tanh((z-2370)/1800))
         n_Hp_density = n_e - n_Op_density
     elif wModel == 'chaston2003_nightside':

@@ -123,6 +123,12 @@ def field_particle_correlation_generator():
         # --- Calculate the FPC value over the correlation window ---
         FPC_alternate = 2*np.pi*np.asarray((1/n)*np.sum(FPC_instant_alternate[low_idx:high_idx+1],axis=0))
 
+
+        ######################################################
+        # --- CALCULATE THE VELOCITY-INTEGRATED QUANTITIES ---
+        ######################################################
+
+
         ################
         # --- OUTPUT ---
         ################
