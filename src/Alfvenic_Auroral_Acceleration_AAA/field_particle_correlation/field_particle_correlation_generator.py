@@ -29,6 +29,9 @@ def field_particle_correlation_generator():
     # --- Load the liouville mapped data ---
     dist_files = glob(rf'{FileIOClass.path_sim_output}/liouville_mapping/*.cdf*')
 
+    # --- Load the wave environment data ---
+    data_dict_waves = stl.loadDictFromFile(glob(rf'{FileIOClass.path_sim_output}/wave_potentials/*.cdf*')[0])
+
     # --- load the plasma environment data ---
     data_dict_plasma = stl.loadDictFromFile(glob(rf'{FileIOClass.path_sim_output}/plasma_environment/*.cdf*')[0])
     dist_obj = LiouvilleMapping(1000) # altitude doesn't matter here
@@ -86,14 +89,18 @@ def field_particle_correlation_generator():
                                                                distribution=distribution,
                                                                Epara=E_para_FPC)
 
-        FPC_alternate = FPCClasses().instant_alternate_FPC_detector_coords(energies=energy,
+        FPC_alternate_instant = FPCClasses().instant_alternate_FPC_detector_coords(energies=energy,
                                                                            pitch_angle=pitch_angle,
                                                                            distribution=distribution,
                                                                            Epara=E_para_FPC)
 
+
         # --- Calculate the time-integrated FPC, C_Epara(r, v) ---
         FPC = FPCClasses().FPC_detector_coords(FPC_instant=FPC_instant,
                                                time_obs=time)
+
+        FPC_alternate = FPCClasses().FPC_detector_coords(FPC_instant=FPC_alternate_instant,
+                                                         time_obs=time)
 
         # --- Calculate the FPC collapsed over Vperp ---
 
@@ -119,6 +126,12 @@ def field_particle_correlation_generator():
                                                 energy_eV=energy,
                                                 values=FPC_instant)
 
+
+
+        # --- get the DAW velocity for comparison ---
+        DAW_idx = np.abs(data_dict_waves['alt'][0] - alt_val*stl.m_to_km).argmin()
+        DAW_vel_obs = np.array([data_dict_waves['DAW_velocity'][0][DAW_idx]])
+
         ################
         # --- OUTPUT ---
         ################
@@ -127,14 +140,16 @@ def field_particle_correlation_generator():
             'FPC': [np.array(FPC), {'VAR_TYPE': 'data','DEPEND_0': 'pitch_angle','DEPEND_1': 'energy'}],
             'FPC_total': [np.array([FPC_total]), {'VAR_TYPE': 'data'}],
             'FPC_instant': [np.array(FPC_instant), {'DEPEND_0': 'time','DEPEND_1': 'pitch_angle','DEPEND_2': 'energy', 'VAR_TYPE': 'data','LABLAXIS':'FPC instant'}],
-            'FPC_alternate_instant': [np.array(FPC_alternate), {'DEPEND_0': 'time', 'DEPEND_1': 'pitch_angle', 'DEPEND_2': 'energy', 'VAR_TYPE': 'data','LABLAXIS':'FPC alternate instant'}],
+            'FPC_alternate_instant': [np.array(FPC_alternate_instant), {'DEPEND_0': 'time', 'DEPEND_1': 'pitch_angle', 'DEPEND_2': 'energy', 'VAR_TYPE': 'data','LABLAXIS':'FPC alternate instant'}],
+            'FPC_alternate': [np.array(FPC_alternate), {'DEPEND_0': 'pitch_angle', 'DEPEND_1': 'energy', 'VAR_TYPE': 'data', 'LABLAXIS': 'FPC alternate'}],
             'FPC_vpara': [np.array(FPC_vpara), {'DEPEND_0': 'vparas','VAR_TYPE': 'data','LABLAXIS':'FPC Vpara'}],
-            'FPC_vpara_instant':[np.array(FPC_vpara_instant),{'DEPEND_0':'time','DEPEND_1':'vparas','VAR_TYPE': 'data','LABLAXIS':'FPC Vpara instant'}],
+            'FPC_vpara_instant':[np.array(FPC_vpara_instant).T,{'DEPEND_1':'time','DEPEND_0':'vparas','VAR_TYPE': 'data','LABLAXIS':'FPC Vpara instant'}],
             'vparas':[np.array(vparas),{'UNITS':'m/s'}],
             'E_para_FPC' : [E_para_FPC,data_dict['E_mu_obs'][1].copy()],
             'pitch_angle':data_dict['pitch_angle'].copy(),
             'energy': data_dict['energy'].copy(),
-            'delta_f0':[distribution,{'DEPEND_0': 'time','DEPEND_1': 'pitch_angle','DEPEND_2': 'energy', 'VAR_TYPE': 'data','UNITS': 'm!A-6!Ns!A-3!N', 'LABLAXIS': '&delta;f!B0!N'}]
+            'delta_f0':[distribution,{'DEPEND_0': 'time','DEPEND_1': 'pitch_angle','DEPEND_2': 'energy', 'VAR_TYPE': 'data','UNITS': 'm!A-6!Ns!A-3!N', 'LABLAXIS': '&delta;f!B0!N'}],
+            'DAW_vel_obs':[DAW_vel_obs,{'UNITS':'m/s','VAR_TYPE':'data','LABLAXIS':'DAW Velocity Observed'}]
         }
 
         data_dict_output['E_para_FPC'][1]['DEPEND_0'] = 'time'

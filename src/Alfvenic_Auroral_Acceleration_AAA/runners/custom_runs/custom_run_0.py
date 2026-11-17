@@ -108,15 +108,15 @@ class LiouvilleToggles:
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [300, 700, 1000, 1500,2000,2500, 3000, 3500,4000, 4500, 5000,5500,6000,6500, 7000,7500,8000,8500,9000,10000,10500,11000]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [700, 1000,2000, 3000,4000, 5000,6000, 7000,8000,9000,10000]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
     # --- ESA ENERGY/PITCH COORDINATES ---
-    N_energy_space_points = 50
+    N_energy_space_points = 120
     E_max_obs = 4  # the POWER of 10^E_max for the maximum energy
     E_min_obs = 1  # the POWER of 10^E_min for the minimum energy
-    pitch_range_obs = np.linspace(5, 175, 17+1)
+    pitch_range_obs = np.linspace(5, 175, 34+1)
     # pitch_range_obs = np.linspace(0, 180, 18 + 1)
     energy_range_obs = np.logspace(E_min_obs, E_max_obs, N_energy_space_points)
 

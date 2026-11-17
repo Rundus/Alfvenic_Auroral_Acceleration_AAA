@@ -1,5 +1,7 @@
 
 import numpy as np
+import scipy.integrate
+from scipy.integrate import simpson
 import spaceToolsLib as stl
 
 class FPCClasses:
@@ -74,8 +76,10 @@ class FPCClasses:
         '''
 
         # Set the correlation window
-        low_idx = np.abs(time_obs - 2.25).argmin()
-        high_idx = np.abs(time_obs - 3.5).argmin()
+        # low_idx = np.abs(time_obs - 2.25).argmin()
+        # high_idx = np.abs(time_obs - 3.5).argmin()
+        low_idx = np.abs(time_obs - 0).argmin()
+        high_idx = np.abs(time_obs - time_obs[-1]).argmin()
 
         # Calculate the total FPC (detector coordinates). NOTE: assumes the deltaT between points is constant, DeltaT = constant, thus we only divided by 1/num_points
         n = high_idx - low_idx
@@ -99,7 +103,7 @@ class FPCClasses:
 
     def velocity_wedge_mesh(self,pitch_deg, energy_eV, values, mass=stl.m_e,
                             pitch_edges=None, energy_edges=None,
-                            sub=12, v_unit=1.0):
+                            sub=1, v_unit=1.0):
         """Mesh for plotting (pitch, energy) data as wedges in (v_par, v_perp).
 
         Parameters
@@ -137,10 +141,10 @@ class FPCClasses:
 
         v_edges = self.to_Vel(e_edges, mass) / v_unit
         A, V = np.meshgrid(np.radians(a_fine), v_edges)  # (n_E+1, n_a_fine)
-        X = V * np.cos(A)  # v_par
-        Y = V * np.sin(A)  # v_perp
+        v_par_mesh = V * np.cos(A)  # v_par
+        v_perp_mesh = V * np.sin(A)  # v_perp
         C = np.repeat(values.T, sub, axis=1)  # (n_E, n_pitch*sub)
-        return X, Y, C
+        return v_par_mesh, v_perp_mesh, C
 
     def _vperp_integral(self,vp, a_edges, v_edges, values, measure):
         """Exact integral over v_perp at each v_par in `vp` (1-D, m/s).
@@ -166,7 +170,6 @@ class FPCClasses:
         u2 = np.where(good, u2, 0.0)
         wt = np.pi * (u2 ** 2 - u1 ** 2) if measure == "cylindrical" else (u2 - u1)
         return np.einsum("nae,ae->n", wt, values)
-
 
     def reduce_to_vpar(self, pitch_deg, energy_eV, values, mass=stl.m_e,
                        pitch_edges=None, energy_edges=None,
@@ -230,6 +233,29 @@ class FPCClasses:
         C_par = np.bincount(which, weights=piece, minlength=vpar_edges.size - 1)
         C_par = C_par[:vpar_edges.size - 1] / np.diff(vpar_edges)
         return 0.5 * (vpar_edges[1:] + vpar_edges[:-1]), C_par
+
+    def vperp_integral(self, pitch_deg, energy_eV, FPC,mass=stl.m_e):
+        '''
+            pitch_deg [1D]
+            energy_eV [1D]
+            FPC [2D], [pitch, energy]
+        '''
+
+        alpha_mesh, energy_mesh_eV = np.meshgrid(pitch_deg, energy_eV)
+
+        energy_mesh = energy_mesh_eV*stl.q0
+
+        # get the chain rule expansion terms
+        term1 = np.sin(np.radians(alpha_mesh))*simpson(y=FPC*np.sqrt(1/(2*mass*energy_mesh)),x=energy_mesh,axis=1)
+        term2 = np.sqrt(2*energy_mesh/mass)*simpson(y=FPC* np.cos(np.radians(alpha_mesh)),x=np.radians(pitch_deg),axis=0)
+
+        return 2*np.pi*(term1 + term2)
+
+
+
+
+
+
 
     def total_integral(self,pitch_deg, energy_eV, values, mass=stl.m_e,
                        pitch_edges=None, energy_edges=None):
