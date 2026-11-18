@@ -148,6 +148,8 @@ def field_particle_correlation_generator():
             'E_para_FPC' : [E_para_FPC,data_dict['E_mu_obs'][1].copy()],
             'pitch_angle':data_dict['pitch_angle'].copy(),
             'energy': data_dict['energy'].copy(),
+            'distribution':[f,{'DEPEND_0': 'time','DEPEND_1': 'pitch_angle','DEPEND_2': 'energy', 'VAR_TYPE': 'data','UNITS': 'm!A-6!Ns!A-3!N', 'LABLAXIS': 'simulated distribution functon'}],
+            'f0':[f_0,{'DEPEND_0': 'pitch_angle','DEPEND_1': 'energy', 'VAR_TYPE': 'data','UNITS': 'm!A-6!Ns!A-3!N', 'LABLAXIS': 'f!B0!N'}],
             'delta_f0':[distribution,{'DEPEND_0': 'time','DEPEND_1': 'pitch_angle','DEPEND_2': 'energy', 'VAR_TYPE': 'data','UNITS': 'm!A-6!Ns!A-3!N', 'LABLAXIS': '&delta;f!B0!N'}],
             'DAW_vel_obs':[DAW_vel_obs,{'UNITS':'m/s','VAR_TYPE':'data','LABLAXIS':'DAW Velocity Observed'}]
         }

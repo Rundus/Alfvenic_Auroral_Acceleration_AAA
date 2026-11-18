@@ -7,6 +7,7 @@ class EnvironmentExpressionsToggles:
     environment_density_dict ={
             'chaston2006':False,
             'shroeder2021':True, # Note this is EXACTLY the Kletzing & Torbert Model + Kletzing Hu 2001
+            'Kletzing&Torbert': False,  # Note this is EXACTLY the Kletzing & Torbert Model
             'chaston2003_nightside':False,
             'chaston2003_sunlit_boundary': False,
             'tanaka2005':False
@@ -20,8 +21,8 @@ class SpatialGridToggles:
     ##################################
     # DEFINE SIMULATION EXTENT in terms of geophysical parameters
     L_Shell = 8.5
-    s_para_min = 100 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
-    s_para_max = 2.6 * stl.Re  # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+    s_para_min = 500 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+    s_para_max = 3.4 * stl.Re  # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
 
     ######################
     # --- MU-Dimension ---
@@ -51,7 +52,7 @@ class WavePotentialsToggles:
     # === WAVE TOGGLES ===
     # ====================
     # Initial Electric Wave Field Strength - At the initial position
-    Phi_0 = -1*2*350  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
+    Phi_0 = -1*2*125  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
     # from the conversion between a CHARACTERISTIC and ACTUAL potential. On RHS boundary: Φ = Z (W⁺ − W⁻)/2
     # which we specify W⁺ =0, W⁻ = W⁻ = −Φ₀/(v_A \sqrt{1+\lambda k_{\perp}}^{2}), so Φ = Z · (0 + Φ₀/Z)/2 = Φ₀/2
     # Note: The -1* out front is to flip from parallel electric field to modified dipole coordinate electric field
@@ -108,15 +109,16 @@ class LiouvilleToggles:
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [700, 1000,2000, 3000,4000, 5000,6000, 7000,8000,9000,10000]  # [km] This is the altitude where the Louisville mapping is measured
+    # mapping_alts = [700, 1000,2000, 3000,4000, 5000,6000, 7000,8000,9000,10000]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [700,3000, 5000, 7000]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
     # --- ESA ENERGY/PITCH COORDINATES ---
-    N_energy_space_points = 120
+    N_energy_space_points = 70
     E_max_obs = 4  # the POWER of 10^E_max for the maximum energy
     E_min_obs = 1  # the POWER of 10^E_min for the minimum energy
-    pitch_range_obs = np.linspace(5, 175, 34+1)
+    pitch_range_obs = np.linspace(5, 175, 17+1)
     # pitch_range_obs = np.linspace(0, 180, 18 + 1)
     energy_range_obs = np.logspace(E_min_obs, E_max_obs, N_energy_space_points)
 
@@ -134,7 +136,7 @@ class LiouvilleToggles:
     time_rez_waves = 1/256 # [seconds] deltaT sample rate for the waves
 
     # --- Injected Wave ---
-    injected_wave_time_delay = 2 # [seconds] Time delay added to the wave data to cause it to inject later. Defaults to 0 if set to <=0
+    injected_wave_time_delay = 0 # [seconds] Time delay added to the wave data to cause it to inject later. Defaults to 0 if set to <=0
 
 class DetectorFluxToggles:
 

@@ -76,10 +76,10 @@ class FPCClasses:
         '''
 
         # Set the correlation window
-        # low_idx = np.abs(time_obs - 2.25).argmin()
-        # high_idx = np.abs(time_obs - 3.5).argmin()
-        low_idx = np.abs(time_obs - 0).argmin()
-        high_idx = np.abs(time_obs - time_obs[-1]).argmin()
+        low_idx = np.abs(time_obs - 2.25).argmin()
+        high_idx = np.abs(time_obs - 3.5).argmin()
+        # low_idx = np.abs(time_obs - 0).argmin()
+        # high_idx = np.abs(time_obs - time_obs[-1]).argmin()
 
         # Calculate the total FPC (detector coordinates). NOTE: assumes the deltaT between points is constant, DeltaT = constant, thus we only divided by 1/num_points
         n = high_idx - low_idx

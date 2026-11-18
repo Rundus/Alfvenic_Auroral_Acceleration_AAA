@@ -81,7 +81,6 @@ class LiouvilleMapping:
 
         self.Emu_interp = RegularGridInterpolator((self.time_grid, self.mu_grid), self.Emu, bounds_error=False, fill_value=0.0)
 
-
         # Construct the inverted-V distribution info
         if LiouvilleToggles.use_invertedV_bool:
 
@@ -129,7 +128,6 @@ class LiouvilleMapping:
         N_engy = len(LiouvilleToggles.energy_range_obs)
         N_time = len(self.observation_times)
         block = np.zeros((N_ptch, N_engy))
-        # particle_mus = np.zeros((N_ptch, N_engy, N_time))
 
         for ptchIdx, engyIdx in product(range(N_ptch), range(N_engy)):
             engyVal = LiouvilleToggles.energy_range_obs[engyIdx]
@@ -153,7 +151,8 @@ class LiouvilleMapping:
 
             # --- MODIFY/EXPORT DISTRIBUTIONS ---
             E_src = 0.5 * stl.m_e * (mapped_v_perp**2 + mapped_v_mu**2)  # [J] kinetic energy at the end point
-            block[ptchIdx][engyIdx] = self.f_plasma_sheet(E_src, uB) + self.f_cold(mapped_mu, mapped_chi, E_src)
+            # block[ptchIdx][engyIdx] = self.f_plasma_sheet(E_src, uB) + self.f_cold(mapped_mu, mapped_chi, E_src)
+            block[ptchIdx][engyIdx] = self.f_plasma_sheet(E_src, uB)
 
         return block
 

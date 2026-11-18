@@ -2,9 +2,9 @@
 
 # --- Choose the run configuration ---
 dict_run_settings = {
-    'custom_0':True,
+    'custom_0':False,
     'custom_1':False,
-    'kletzing&Hu2001': False,
+    'kletzing&Hu2001': True,
     'chaston2003_nightside':False,
     'chaston2003_sunlit_boundary':False,
     'tanaka2005':False
@@ -18,9 +18,9 @@ dict_subroutines = {
     'regen_plasma_environment': 0,
     'regen_wave_potentials': 0,
     'animate_wave_potentials': 0,
-    'regen_liouville_mapping': 0,
-    'regen_detector_flux': 0,
-    'regen_field_particle_correlation': 0,
+    'regen_liouville_mapping': 1,
+    'regen_detector_flux': 1,
+    'regen_field_particle_correlation': 1,
 }
 
 # --- Run the Simulation ---
