@@ -60,8 +60,11 @@ def field_particle_correlation_generator():
         E_para_obs = -1 * data_dict['E_mu_obs'][0].copy()  # put a -1 sign since we're using parallel coordinates
         mask = np.where(np.abs(E_para_obs) < 1E-9)
         E_para_obs[mask] = 0
+        mid = 0.5 * (time[1:] + time[:-1])  # get bins by calculating the deltaT/2 from the particle timestamps
+        edges = np.concatenate(([2 * time[0] - mid[0]], mid, [2 * time[-1] - mid[-1]]))
+        E_para_FPC, _, _ = binned_statistic(time_waves, E_para_obs.copy(), bins=edges)
 
-        res = FPCClasses.compute_fpc(f=f, pitch_angle=pitch_angle, energy=energy, Epar=E_para_obs, t=time)  # or FPCClasses().compute_fpc(...)
+        res = FPCClasses.compute_fpc(f=f, pitch_angle=pitch_angle, energy=energy, Epar=E_para_FPC, t=time)  # or FPCClasses().compute_fpc(...)
 
         # get the data
         r = res["full"]
@@ -71,7 +74,7 @@ def field_particle_correlation_generator():
         # vg["vpar_e"], vg["vperp_e"]  # bin corners, for pcolormesh(vg["vpar_e"], vg["vperp_e"], r["C_native_tint"])
 
         FPC_integrate_time = r['C_native_tint']
-        FPC_integrate_verp = r['C']
+        FPC_integrate_vperp = r['C_tavg'] # <C>(v_par) = mean over the whole record of C(v_par, t), W m^-3 per (m/s)
         FPC_integrate_vel = r['C_int_v']
         vparas = res['deposition']['vpar']
 
@@ -156,7 +159,7 @@ def field_particle_correlation_generator():
         data_dict_output = {
             'time': data_dict['time'].copy(),
             'FPC_integrate_time': [np.array(FPC_integrate_time), {'VAR_TYPE': 'data','DEPEND_0': 'pitch_angle','DEPEND_1': 'energy'}],
-            'FPC_integrate_vpara' : [np.array(FPC_integrate_verp),{}],
+            'FPC_integrate_vperp' : [np.array(FPC_integrate_vperp),{}],
             'FPC_integrate_velspace': [np.array(FPC_integrate_vel), {}],
             # 'FPC_total': [np.array([FPC_total]), {'VAR_TYPE': 'data'}],
             # 'FPC_instant': [np.array(FPC_instant), {'DEPEND_0': 'time','DEPEND_1': 'pitch_angle','DEPEND_2': 'energy', 'VAR_TYPE': 'data','LABLAXIS':'FPC instant'}],
@@ -164,7 +167,7 @@ def field_particle_correlation_generator():
             # 'FPC_alternate': [np.array(FPC_alternate), {'DEPEND_0': 'pitch_angle', 'DEPEND_1': 'energy', 'VAR_TYPE': 'data', 'LABLAXIS': 'FPC alternate'}],
             # 'FPC_vpara': [np.array(FPC_vpara), {'DEPEND_0': 'vparas','VAR_TYPE': 'data','LABLAXIS':'FPC Vpara'}],
             # 'FPC_vpara_instant':[np.array(FPC_vpara_instant).T,{'DEPEND_1':'time','DEPEND_0':'vparas','VAR_TYPE': 'data','LABLAXIS':'FPC Vpara instant'}],
-            # 'vparas':[np.array(vparas),{'UNITS':'m/s'}],
+            'vparas':[np.array(vparas),{'UNITS':'m/s'}],
             # 'E_para_FPC' : [E_para_FPC,data_dict['E_mu_obs'][1].copy()],
             'pitch_angle':data_dict['pitch_angle'].copy(),
             'energy': data_dict['energy'].copy(),
@@ -174,7 +177,7 @@ def field_particle_correlation_generator():
             'DAW_vel_obs':[DAW_vel_obs,{'UNITS':'m/s','VAR_TYPE':'data','LABLAXIS':'DAW Velocity Observed'}]
         }
 
-        data_dict_output['E_para_FPC'][1]['DEPEND_0'] = 'time'
+        # data_dict_output['E_para_FPC'][1]['DEPEND_0'] = 'time'
         # save the results
         mapping_alt = int(re.search(r'_(\d+)km', dist_files[i]).group(1))
         outputPath = rf'{FileIOClass.path_sim_output}/field_particle_correlation/FPC_{mapping_alt}km.cdf'
