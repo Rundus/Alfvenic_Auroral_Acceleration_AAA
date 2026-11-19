@@ -49,6 +49,10 @@ def environment_expressions_generator():
     if wModel == 'chaston2006':
         n_Hp_density = (stl.cm_to_m**3)*(0.1 + 10*sp.sqrt(stl.Re/(400*z)) + 100*(z)*sp.exp(-z/280)) # for z in km
         n_Op_density = (stl.cm_to_m**3)*(400*stl.Re*z*sp.exp(-z/175)) # for z in km
+    elif wModel == 'uniform_medium':
+        n_e = (stl.cm_to_m ** 3) * (EnvironmentExpressionsToggles.density_val)
+        n_Op_density = n_e * 0.5 * (1 - sp.tanh((z - 2370) / 1800))
+        n_Hp_density = n_e - n_Op_density
     elif wModel =='Kletzing&Torbert':
         n0= 6E4
         r0 = 1.05*stl.Re
@@ -135,7 +139,10 @@ def environment_expressions_generator():
     lmb_e = sp.sqrt((stl.lightSpeed ** 2) * stl.m_e * stl.ep0 / (n * (stl.q0**2)))
 
     # DIPOLE MAGNETIC FIELD
-    B_dipole = (3.12E-5) * ((1/(1 + z/stl.Re))**3) * THETA
+    if wModel == 'uniform_medium':
+        B_dipole = EnvironmentExpressionsToggles.B0_val
+    else:
+        B_dipole = (3.12E-5) * ((1/(1 + z/stl.Re))**3) * THETA
 
     # ALFVEN VELOCITY (MHD)
     V_A = (B/sp.sqrt(stl.u0*(rho))) / sp.sqrt(1 + ((B/sp.sqrt(stl.u0*(rho)))/stl.lightSpeed)**(2))

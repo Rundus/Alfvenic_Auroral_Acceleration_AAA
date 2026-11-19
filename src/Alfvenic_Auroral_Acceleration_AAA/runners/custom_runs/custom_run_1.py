@@ -3,13 +3,8 @@ import numpy as np
 import os
 
 class EnvironmentExpressionsToggles:
-
     environment_density_dict ={
-            'chaston2006':False,
-            'shroeder2021':False, # Note this is EXACTLY the Kletzing & Torbert Model
             'chaston2003_nightside':True,
-            'chaston2003_cusp': False,
-            'tanaka2005': False
         }
 
 class SpatialGridToggles:
@@ -20,7 +15,7 @@ class SpatialGridToggles:
     # DEFINE SIMULATION EXTENT in terms of geophysical parameters
     L_Shell = 8.5
     s_para_min = 100 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
-    # s_para_max = 3.4*stl.Re # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+    # s_para_max = 4.7185*stl.Re # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
     s_para_max = 3 * stl.Re  # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
 
     ######################
@@ -31,8 +26,8 @@ class SpatialGridToggles:
 class PlasmaEnvironmentToggles:
 
     # Plasma Sheet (Hot)
-    Te_PS = 30  # [eV] Temperature of the isotropic Plasma Sheet Distribution
-    n0_PS = 1  # [cm^-3] Density of the plasma sheet population at the dipole geomagnetic equator
+    Te_PS = 200  # [eV] Temperature of the isotropic Plasma Sheet Distribution
+    n0_PS = 0.5  # [cm^-3] Density of the plasma sheet population at the dipole geomagnetic equator
     Emin_PS = 0 # [eV]
     Emax_PS = 1E5  # [eV]
 
@@ -51,7 +46,7 @@ class WavePotentialsToggles:
     # === WAVE TOGGLES ===
     # ====================
     # Initial Electric Wave Field Strength - At the initial position
-    Phi_0 = -1*3600  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
+    Phi_0 = -1*2*125  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
     # from the conversion between a CHARACTERISTIC and ACTUAL potential. On RHS boundary: Φ = Z (W⁺ − W⁻)/2
     # which we specify W⁺ =0, W⁻ = W⁻ = −Φ₀/(v_A \sqrt{1+\lambda k_{\perp}}^{2}), so Φ = Z · (0 + Φ₀/Z)/2 = Φ₀/2
     # Note: The -1* out front is to flip from parallel electric field to modified dipole coordinate electric field
@@ -63,24 +58,24 @@ class WavePotentialsToggles:
     f_0 = 4 # [Hz] Frequency of injected wave
 
     driver_dict = {
-        'gaussian_pulse':[True, [Lambda_perp0, 1]],
-        'gaussian_wavepacket':[False, [Phi_0, f_0]],
-        'tapered_half_sine_pulse':[False, [Phi_0, f_0]],
-        'tapered_sine_pulse':[False, [Phi_0, f_0]]
+        'gaussian_pulse': [False, [Lambda_perp0, 1]],
+        'gaussian_wavepacket': [False, [Phi_0, f_0]],
+        'tapered_half_sine_pulse': [True, [Phi_0, f_0]],
+        'tapered_sine_pulse': [False, [Phi_0, f_0]]
     }
 
     # ===========================
     # === BOUNDARY CONDITIONS ===
     # ===========================
     SIGMA_P = 1 # [S] Pedersen Conductance in Ionosphere
-    absorbing_ionosphere_bool = False
+    absorbing_ionosphere_bool = True
 
     # =============================
     # === RK45 Time Integration ===
     # =============================
-    t_start, t_end = 0.0,14 #[seconds] Time from z_max the wave is allowed to propogate
-    n_out = 400  # number of time-points to store for output
-    cfl = 0.5
+    t_start, t_end = 0.0, 8 #[seconds] Time from z_max the wave is allowed to propogate
+    n_out = 700  # number of time-points to store for output
+    cfl = 0.4
 
 class LiouvilleToggles:
 
@@ -93,8 +88,8 @@ class LiouvilleToggles:
     # --- RK45 solver toggles ---
     #############################
     RK45_method = 'RK45' # 'LSODA'
-    RK45_rtol = 1E-4  # controls the relative accuracy.
-    RK45_atol = 1E-5  # controls the absolute accuracy
+    RK45_rtol = 1E-5  # controls the relative accuracy.
+    RK45_atol = 1E-6  # controls the absolute accuracy
 
     ################
     # --- FORCES ---
@@ -108,16 +103,16 @@ class LiouvilleToggles:
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [500, 5000]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [700,3000, 5000,7000,9000]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
     # --- ESA ENERGY/PITCH COORDINATES ---
-    N_energy_space_points = 50
+    N_energy_space_points = 75
     # E_max_obs = 3.6  # the POWER of 10^E_max for the maximum energy
-    E_max_obs = 4.3  # the POWER of 10^E_max for the maximum energy
+    E_max_obs = 4  # the POWER of 10^E_max for the maximum energy
     E_min_obs = 1  # the POWER of 10^E_min for the minimum energy
-    pitch_range_obs = np.linspace(5, 175, 4+1)
+    pitch_range_obs = np.linspace(5, 175, 17+1)
     # pitch_range_obs = np.linspace(0, 180, 18 + 1)
     energy_range_obs = np.logspace(E_min_obs, E_max_obs, N_energy_space_points)
 
@@ -139,7 +134,7 @@ class LiouvilleToggles:
     ###########################
 
     # --- Observation Wave-Sampling ---
-    time_rez_waves = 0.1 # [seconds] deltaT sample rate for the waves
+    time_rez_waves = 0.001 # [seconds] deltaT sample rate for the waves
 
     # --- Injected Wave ---
     injected_wave_time_delay = 0 # [seconds] Time delay added to the wave data to cause it to inject later. Defaults to 0 if set to <=0

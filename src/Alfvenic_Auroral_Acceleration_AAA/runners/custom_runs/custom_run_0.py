@@ -52,7 +52,7 @@ class WavePotentialsToggles:
     # === WAVE TOGGLES ===
     # ====================
     # Initial Electric Wave Field Strength - At the initial position
-    Phi_0 = -1*2*125  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
+    Phi_0 = -1*2*100  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
     # from the conversion between a CHARACTERISTIC and ACTUAL potential. On RHS boundary: Φ = Z (W⁺ − W⁻)/2
     # which we specify W⁺ =0, W⁻ = W⁻ = −Φ₀/(v_A \sqrt{1+\lambda k_{\perp}}^{2}), so Φ = Z · (0 + Φ₀/Z)/2 = Φ₀/2
     # Note: The -1* out front is to flip from parallel electric field to modified dipole coordinate electric field
@@ -61,7 +61,7 @@ class WavePotentialsToggles:
     Lambda_perp0 = 3 # [km] Perpendicular scale of wave at Z_min (ionosphere). Mapping using flux tube scaling.
 
     # Wave Frequeuency
-    f_0 = 4 # [Hz] Frequency of injected wave
+    f_0 = 20 # [Hz] Frequency of injected wave
 
     driver_dict = {
         'gaussian_pulse': [False, [Lambda_perp0, 1]],
@@ -110,12 +110,12 @@ class LiouvilleToggles:
 
     # --- PHYSICAL TOGGLES ---
     # mapping_alts = [700, 1000,2000, 3000,4000, 5000,6000, 7000,8000,9000,10000]  # [km] This is the altitude where the Louisville mapping is measured
-    mapping_alts = [700,3000, 5000, 7000]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [700, 3000, 5000, 7000, 8000, 10000, 12000]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
     # --- ESA ENERGY/PITCH COORDINATES ---
-    N_energy_space_points = 70
+    N_energy_space_points = 50
     E_max_obs = 4  # the POWER of 10^E_max for the maximum energy
     E_min_obs = 1  # the POWER of 10^E_min for the minimum energy
     pitch_range_obs = np.linspace(5, 175, 17+1)
@@ -123,9 +123,9 @@ class LiouvilleToggles:
     energy_range_obs = np.logspace(E_min_obs, E_max_obs, N_energy_space_points)
 
     # --- ESA particle sampling ---
-    time_rez = 0.05 # [in seconds] the time resolution of the simulation
+    time_rez = 0.0075 # [in seconds] the time resolution of the simulation
     time_obs_start = 0  # in seconds
-    time_obs_end = 5 # in seconds
+    time_obs_end = 4 # in seconds
     N_obs_points = int(time_obs_end/time_rez)+1 # number of particle observation points
 
     ###########################

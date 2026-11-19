@@ -252,11 +252,6 @@ class FPCClasses:
         return 2*np.pi*(term1 + term2)
 
 
-
-
-
-
-
     def total_integral(self,pitch_deg, energy_eV, values, mass=stl.m_e,
                        pitch_edges=None, energy_edges=None):
         """Exact integral of the binned data over all 3-D velocity space,

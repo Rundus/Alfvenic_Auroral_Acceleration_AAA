@@ -53,7 +53,7 @@ class WavePotentialsToggles:
     # Note: The -1* out front is to flip from parallel electric field to modified dipole coordinate electric field
 
     # Perpendicular Scale at The Ionosphere
-    Lambda_perp0 = 1 # [km] Perpendicular scale of wave at Z_min (ionosphere). Mapping using flux tube scaling.
+    Lambda_perp0 = 3 # [km] Perpendicular scale of wave at Z_min (ionosphere). Mapping using flux tube scaling.
 
     # Wave Frequeuency
     f_0 = 5 # [Hz] Frequency of injected wave
