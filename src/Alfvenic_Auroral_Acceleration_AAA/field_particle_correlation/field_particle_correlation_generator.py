@@ -17,7 +17,6 @@ def field_particle_correlation_generator():
     from src.Alfvenic_Auroral_Acceleration_AAA.runners.FileIO import FileIOClass
     from src.Alfvenic_Auroral_Acceleration_AAA.runners.executable_classes import ExecutableClasses
     run_module = ExecutableClasses().load_configuration_module()
-    PlasmaEnvironmentToggles = run_module.PlasmaEnvironmentToggles
     from src.Alfvenic_Auroral_Acceleration_AAA.liouville_mapping.liouville_mapping_classes import LiouvilleMapping
     from src.Alfvenic_Auroral_Acceleration_AAA.field_particle_correlation.field_particle_correlation_classes_claude import FPCClasses
 
@@ -64,120 +63,54 @@ def field_particle_correlation_generator():
         edges = np.concatenate(([2 * time[0] - mid[0]], mid, [2 * time[-1] - mid[-1]]))
         E_para_FPC, _, _ = binned_statistic(time_waves, E_para_obs.copy(), bins=edges)
 
-        res = FPCClasses.compute_fpc(f=f, pitch_angle=pitch_angle, energy=energy, Epar=E_para_FPC, t=time)  # or FPCClasses().compute_fpc(...)
+        ##############################################
+        # --- CALCULATE FPC (DETECTOR COORDINATES) ---
+        ##############################################
 
-        # get the data
+        # performs the FPC calculation on f (not f0)
+        res = FPCClasses.compute_fpc(f=f, pitch_angle=pitch_angle, energy=energy, Epar=E_para_FPC, t=time)  # or FPCClasses().compute_fpc(...)
         r = res["full"]
         grid = res["grid"]
-        vg = FPCClasses.native_velocity_grid(grid["alpha"], grid["E"], grid["alpha_edges"], grid["E_edges"])
-        # vparas, vperps = vg["vpar_c"], vg["vperp_c"]  # centre of each (pitch, energy) bin
-        # vg["vpar_e"], vg["vperp_e"]  # bin corners, for pcolormesh(vg["vpar_e"], vg["vperp_e"], r["C_native_tint"])
 
-        FPC_integrate_time = r['C_native_tint']
-        FPC_integrate_vperp = r['C_tavg'] # <C>(v_par) = mean over the whole record of C(v_par, t), W m^-3 per (m/s)
-        FPC_integrate_vel = r['C_int_v']
-        vparas = res['deposition']['vpar']
-
-
-        # # --- calculate the delta_f0 term ---
-        # # the FPC is more clear if you subtract the ambient plasma distribution
-        # # get the cold density from the altitude
-        # X,Y = np.meshgrid(pitch_angle,energy)
-        # f_0_PS = dist_obj.f_maxwellian(E_eV=Y.T, n0=PlasmaEnvironmentToggles.n0_PS*(stl.cm_to_m**3), Te=PlasmaEnvironmentToggles.Te_PS)
-        #
-        # n_density_cold_idx = np.abs(data_dict_plasma['alt'][0] - alt_val*stl.m_to_km).argmin()
-        # f_0_cold = dist_obj.f_maxwellian(E_eV=Y.T, n0=data_dict_plasma['n_density_cold'][0][n_density_cold_idx], Te=PlasmaEnvironmentToggles.Te_cold)
-        # f_0 = f_0_PS + f_0_cold
-        # f_0 = f_0[None, :, :]
-        # deltaf0 = f.copy() - f_0 # calculate delta_f0
-        #
-        # # ---- bin-average the wave data onto the particle data ---
-        # E_para_obs = -1 * data_dict['E_mu_obs'][0].copy()  # put a -1 sign since we're using parallel coordinates
-        # mask = np.where(np.abs(E_para_obs) < 1E-9)
-        # E_para_obs[mask] = 0
-        # mid = 0.5 * (time[1:] + time[:-1])  # get bins by calculating the deltaT/2 from the particle timestamps
-        # edges = np.concatenate(([2 * time[0] - mid[0]], mid, [2 * time[-1] - mid[-1]]))
-        # E_para_FPC, _, _ = binned_statistic(time_waves, E_para_obs.copy(), bins=edges)
-        #
-        # ##############################################
-        # # --- CALCULATE FPC (DETECTOR COORDINATES) ---
-        # ##############################################
-        #
-        # distribution = deltaf0.copy()
-        #
-        # # --- Calculate the instant FPC in detector coordinates, C_Epara(r, v, t) ---
-        # FPC_instant = FPCClasses().instant_FPC_detector_coords(energies=energy,
-        #                                                        pitch_angle=pitch_angle,
-        #                                                        distribution=distribution,
-        #                                                        Epara=E_para_FPC)
-        #
-        # FPC_alternate_instant = FPCClasses().instant_alternate_FPC_detector_coords(energies=energy,
-        #                                                                    pitch_angle=pitch_angle,
-        #                                                                    distribution=distribution,
-        #                                                                    Epara=E_para_FPC)
-        #
-        # # --- Calculate the time-integrated FPC, C_Epara(r, v) ---
-        # FPC = FPCClasses().FPC_detector_coords(FPC_instant=FPC_instant,
-        #                                        time_obs=time)
-        #
-        # FPC_alternate = FPCClasses().FPC_detector_coords(FPC_instant=FPC_alternate_instant,
-        #                                                  time_obs=time)
-        #
-        # # --- Calculate the FPC collapsed over Vperp ---
-        #
-        # vparas, FPC_vpara = FPCClasses().reduce_to_vpar(pitch_deg=pitch_angle,
-        #                                                 energy_eV=energy,
-        #                                                 values=FPC)
-        #
-        # # --- Calculate the FPC collapsed over Vperp integral but NOT time ---
-        # vparas = []
-        # FPC_vpara_instant = []
-        # for idx in range(len(time)):
-        #     vpar, vals = FPCClasses().reduce_to_vpar(pitch_deg=pitch_angle,
-        #                                              energy_eV=energy,
-        #                                              values=FPC_instant[idx])
-        #     vparas = vpar
-        #     FPC_vpara_instant.append(vals)
-        #
-        # vparas = np.array(vparas)
-        # FPC_vpara_instant = np.array(FPC_vpara_instant)
-        #
-        # # --- Calculate the FPC over collapsed Vperp and Vpar coordinates ---
-        # FPC_total = FPCClasses().total_integral(pitch_deg=pitch_angle,
-        #                                         energy_eV=energy,
-        #                                         values=FPC_instant)
-
-
+        FPC_instant = r['C_native']  # C(pitch, Energy, t) - Raw FPC, unintegrated
+        FPC_integrate_time = r['C_native_tint'] # C(vpara,vperp) - FPC integrated over time
+        FPC_integrate_vperp = r['C'] # C(vpara, t) - FPC integrated over vperp
+        FPC_integrate_vperp_vpara = r['C_int_v'] # C(t) - FPC integrated over vperp and vpara
+        FPC_integrate_vperp_time = r['C_tint'] # C(vpara) - FPC integrated over vperp and time
+        FPC_total = r['W_total'] # C - FPC integrated over vperp, vpara and time
+        vparas = res['deposition']['vpar'] # vpara velocity bins
 
         # --- get the DAW velocity for comparison ---
+
+        # get the instantaneous DAW velocity
         DAW_idx = np.abs(data_dict_waves['alt'][0] - alt_val*stl.m_to_km).argmin()
         DAW_vel_obs = np.array([data_dict_waves['DAW_velocity'][0][DAW_idx]])
+
+        # Average the DAW over ~ 1000 km above the observation altitude for comparison
+        DAW_idx_above = np.abs(data_dict_waves['alt'][0] - (alt_val+7000)*stl.m_to_km).argmin()
+        DAW_vel_avg = np.array([np.nanmean(data_dict_waves['DAW_velocity'][0][DAW_idx:DAW_idx_above+1])])
 
         ################
         # --- OUTPUT ---
         ################
         data_dict_output = {
-            'time': data_dict['time'].copy(),
+            'FPC_instant': [np.array(FPC_instant), {'DEPEND_0': 'time', 'DEPEND_1': 'pitch_angle', 'DEPEND_2': 'energy', 'VAR_TYPE': 'data', 'LABLAXIS': 'FPC instant'}],
             'FPC_integrate_time': [np.array(FPC_integrate_time), {'VAR_TYPE': 'data','DEPEND_0': 'pitch_angle','DEPEND_1': 'energy'}],
-            'FPC_integrate_vperp' : [np.array(FPC_integrate_vperp),{}],
-            'FPC_integrate_velspace': [np.array(FPC_integrate_vel), {}],
-            # 'FPC_total': [np.array([FPC_total]), {'VAR_TYPE': 'data'}],
-            # 'FPC_instant': [np.array(FPC_instant), {'DEPEND_0': 'time','DEPEND_1': 'pitch_angle','DEPEND_2': 'energy', 'VAR_TYPE': 'data','LABLAXIS':'FPC instant'}],
-            # 'FPC_alternate_instant': [np.array(FPC_alternate_instant), {'DEPEND_0': 'time', 'DEPEND_1': 'pitch_angle', 'DEPEND_2': 'energy', 'VAR_TYPE': 'data','LABLAXIS':'FPC alternate instant'}],
-            # 'FPC_alternate': [np.array(FPC_alternate), {'DEPEND_0': 'pitch_angle', 'DEPEND_1': 'energy', 'VAR_TYPE': 'data', 'LABLAXIS': 'FPC alternate'}],
-            # 'FPC_vpara': [np.array(FPC_vpara), {'DEPEND_0': 'vparas','VAR_TYPE': 'data','LABLAXIS':'FPC Vpara'}],
-            # 'FPC_vpara_instant':[np.array(FPC_vpara_instant).T,{'DEPEND_1':'time','DEPEND_0':'vparas','VAR_TYPE': 'data','LABLAXIS':'FPC Vpara instant'}],
+            'FPC_integrate_vperp' : [np.array(FPC_integrate_vperp),{'DEPEND_0':'vparas','DEPEND_1':'time','VAR_TYPE':'data','UNITS':'W m!A-3!N/(m/s)'}],
+            'FPC_integrate_vperp_vpara': [np.array(FPC_integrate_vperp_vpara), {'DEPEND_0':'time','VAR_TYPE':'data','UNITS':'W m!A-3!N'}],
+            'FPC_integrate_vperp_time': [np.array(FPC_integrate_vperp_time), {'DEPEND_0':'vparas','VAR_TYPE':'data','UNITS':'J m!A-3!N/(m/s)'}],
+            'FPC_total': [np.array([FPC_total]), {'VAR_TYPE': 'data','UNITS':'J/m!A-3!N'}],
+            'time': data_dict['time'].copy(),
             'vparas':[np.array(vparas),{'UNITS':'m/s'}],
-            # 'E_para_FPC' : [E_para_FPC,data_dict['E_mu_obs'][1].copy()],
+            'E_para_FPC' : [E_para_FPC, {'DEPEND_0':'time','UNITS':'V/m','LABLAXIS':'Epara (FPC)','VAR_TYPE':'data'}],
             'pitch_angle':data_dict['pitch_angle'].copy(),
             'energy': data_dict['energy'].copy(),
             'distribution':[f,{'DEPEND_0': 'time','DEPEND_1': 'pitch_angle','DEPEND_2': 'energy', 'VAR_TYPE': 'data','UNITS': 'm!A-6!Ns!A-3!N', 'LABLAXIS': 'simulated distribution functon'}],
-            # 'f0':[f_0,{'DEPEND_0': 'pitch_angle','DEPEND_1': 'energy', 'VAR_TYPE': 'data','UNITS': 'm!A-6!Ns!A-3!N', 'LABLAXIS': 'f!B0!N'}],
-            # 'delta_f0':[distribution,{'DEPEND_0': 'time','DEPEND_1': 'pitch_angle','DEPEND_2': 'energy', 'VAR_TYPE': 'data','UNITS': 'm!A-6!Ns!A-3!N', 'LABLAXIS': '&delta;f!B0!N'}],
-            'DAW_vel_obs':[DAW_vel_obs,{'UNITS':'m/s','VAR_TYPE':'data','LABLAXIS':'DAW Velocity Observed'}]
+            'DAW_vel':data_dict_waves['DAW_velocity'].copy(),
+            'DAW_vel_obs':[DAW_vel_obs,{'UNITS':'m/s','VAR_TYPE':'data','LABLAXIS':'DAW Velocity Observed'}],
+            'DAW_vel_avg': [DAW_vel_avg, {'UNITS': 'm/s', 'VAR_TYPE': 'data', 'LABLAXIS': 'DAW Velocity Averaged'}],
         }
 
-        # data_dict_output['E_para_FPC'][1]['DEPEND_0'] = 'time'
         # save the results
         mapping_alt = int(re.search(r'_(\d+)km', dist_files[i]).group(1))
         outputPath = rf'{FileIOClass.path_sim_output}/field_particle_correlation/FPC_{mapping_alt}km.cdf'

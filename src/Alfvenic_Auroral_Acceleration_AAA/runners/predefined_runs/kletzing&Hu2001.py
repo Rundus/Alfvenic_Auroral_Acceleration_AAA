@@ -47,7 +47,7 @@ class WavePotentialsToggles:
     # === WAVE TOGGLES ===
     # ====================
     # Initial Electric Wave Field Strength - At the initial position
-    Phi_0 = -1*2*125  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
+    Phi_0 = -1*2*135  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
     # from the conversion between a CHARACTERISTIC and ACTUAL potential. On RHS boundary: Φ = Z (W⁺ − W⁻)/2
     # which we specify W⁺ =0, W⁻ = W⁻ = −Φ₀/(v_A \sqrt{1+\lambda k_{\perp}}^{2}), so Φ = Z · (0 + Φ₀/Z)/2 = Φ₀/2
     # Note: The -1* out front is to flip from parallel electric field to modified dipole coordinate electric field
@@ -104,12 +104,13 @@ class LiouvilleToggles:
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    mapping_alts = [700, 3000, 5000]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [500, 700] + [1000 + i*250 for i in range(62+1)]  # [km] This is the altitude where the Louisville mapping is measured
+    # mapping_alts = [700, 3000, 5000]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
     # --- ESA ENERGY/PITCH COORDINATES ---
-    N_energy_space_points = 70
+    N_energy_space_points = 50
     E_max_obs = 4  # the POWER of 10^E_max for the maximum energy
     E_min_obs = 1  # the POWER of 10^E_min for the minimum energy
     pitch_range_obs = np.linspace(5, 175, 17+1)

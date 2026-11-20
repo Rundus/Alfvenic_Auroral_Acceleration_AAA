@@ -36,6 +36,8 @@ Reduced distribution (s m^-4) and reduced FPC (W m^-3 per m/s):
 Energy transfer rate (W m^-3), checked against the moments at every time step:
     integral C dv_par = sum C dV = q n u_par E_par = j_par E_par
 Time reductions over the whole record: <C> = mean over t; integral C dt by trapezoid.
+Total over velocity space and time (J m^-3), the net energy E_par gave the electrons:
+    W = integral integral C dv_par dt
 
 Method summary
 --------------
@@ -381,7 +383,7 @@ class FPCClasses:
                      vpar_edges); build it once when many calls share one grid
         native_gradient  "linear" (differences of f) or "log" (of ln f; full mode only)
 
-        Returns a dict:
+        Returns a dict with T = number of time samples, M = pitch bins, L = energy channels and S = v∥ slabs:
           grid      alpha, E (J), alpha_edges, E_edges, dV, vmin (lowest resolved |v_par|)
           moments   n, upar, Tpar, Tperp of the full f, each (T,)
           Epar      E_par on t
@@ -400,6 +402,11 @@ class FPCClasses:
               check_native      energy_check(C_native_int, jE)
               native_dropped_bins  share of bins set to 0 (ln f with f <= 0)
               density_conservation (T,)  sum F dv_par / sum g dV (1 to round-off)
+              W_total           integral of C over v_par, v_perp and t (= integral C_int_v dt),
+                                J m^-3: net energy E_par gave the electrons over the record
+              W_total_native    the same from the native route (integral C_native_int dt);
+                                good to a few % per time step, so prefer W_total
+
         """
         f = np.asarray(f, float)
         t = np.asarray(t, float)
@@ -441,6 +448,8 @@ class FPCClasses:
                      native_dropped_bins=float((~valid).mean()))
             r["check_reduced"] = cls.energy_check(r["C_int_v"], jE)
             r["check_native"] = cls.energy_check(r["C_native_int"], jE)
+            r["W_total"] = float(cls.time_integral(r["C_int_v"], t))
+            r["W_total_native"] = float(cls.time_integral(r["C_native_int"], t))
             with np.errstate(divide="ignore", invalid="ignore"):
                 r["density_conservation"] = ((F * dvp).sum(axis=1)
                                              / np.einsum("tml,ml->t", np.nan_to_num(g), dV))

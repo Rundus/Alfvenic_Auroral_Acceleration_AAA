@@ -22,7 +22,7 @@ class SpatialGridToggles:
     # DEFINE SIMULATION EXTENT in terms of geophysical parameters
     L_Shell = 8.5
     s_para_min = 500 # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
-    s_para_max = 3.4 * stl.Re  # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
+    s_para_max = 2.7 * stl.Re  # [km] distance along a geomagnetic field starting from Earth's surface, NOT altitude
 
     ######################
     # --- MU-Dimension ---
@@ -52,7 +52,7 @@ class WavePotentialsToggles:
     # === WAVE TOGGLES ===
     # ====================
     # Initial Electric Wave Field Strength - At the initial position
-    Phi_0 = -1*2*125  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
+    Phi_0 = -1*2*175  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
     # from the conversion between a CHARACTERISTIC and ACTUAL potential. On RHS boundary: Φ = Z (W⁺ − W⁻)/2
     # which we specify W⁺ =0, W⁻ = W⁻ = −Φ₀/(v_A \sqrt{1+\lambda k_{\perp}}^{2}), so Φ = Z · (0 + Φ₀/Z)/2 = Φ₀/2
     # Note: The -1* out front is to flip from parallel electric field to modified dipole coordinate electric field
@@ -110,7 +110,7 @@ class LiouvilleToggles:
 
     # --- PHYSICAL TOGGLES ---
     # mapping_alts = [700, 1000,2000, 3000,4000, 5000,6000, 7000,8000,9000,10000]  # [km] This is the altitude where the Louisville mapping is measured
-    mapping_alts = [700, 1000, 3000, 5000, 7000, 8000, 10000, 12000]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [500, 700, 1000,1500,2000,2500, 3000,3500,4000,4500,5000,5500,6000,6500, 7000, 7500, 8000, 8500,9000,9500, 10000, 10500,11000,11500, 12000,12500,13000,13500,14000,14500,15000,15500,16000,16500]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
