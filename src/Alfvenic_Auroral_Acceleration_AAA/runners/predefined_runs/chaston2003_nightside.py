@@ -46,22 +46,22 @@ class WavePotentialsToggles:
     # === WAVE TOGGLES ===
     # ====================
     # Initial Electric Wave Field Strength - At the initial position
-    Phi_0 = -1*2*1800  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
+    Phi_0 = -1*2*175  # Amplitude of the potential pulse in the perpendicular direction [in Volts]. Note: The 2* comes
     # from the conversion between a CHARACTERISTIC and ACTUAL potential. On RHS boundary: Φ = Z (W⁺ − W⁻)/2
     # which we specify W⁺ =0, W⁻ = W⁻ = −Φ₀/(v_A \sqrt{1+\lambda k_{\perp}}^{2}), so Φ = Z · (0 + Φ₀/Z)/2 = Φ₀/2
     # Note: The -1* out front is to flip from parallel electric field to modified dipole coordinate electric field
 
     # Perpendicular Scale at The Ionosphere
-    Lambda_perp0 = 5 # [km] Perpendicular scale of wave at Z_min (ionosphere). Mapping using flux tube scaling.
+    Lambda_perp0 = 3 # [km] Perpendicular scale of wave at Z_min (ionosphere). Mapping using flux tube scaling.
 
     # Wave Frequeuency
-    f_0 = 2 # [Hz] Frequency of injected wave
+    f_0 = 5 # [Hz] Frequency of injected wave
 
     driver_dict = {
-        'gaussian_pulse':0,
-        'gaussian_wavepacket':0,
-        'tapered_half_sine_pulse':1,
-        'tapered_sine_pulse':0
+        'gaussian_pulse': [False, [Lambda_perp0, 1]],
+        'gaussian_wavepacket': [False, [Phi_0, f_0]],
+        'tapered_half_sine_pulse': [True, [Phi_0, f_0]],
+        'tapered_sine_pulse': [False, [Phi_0, f_0]]
     }
 
     # ===========================

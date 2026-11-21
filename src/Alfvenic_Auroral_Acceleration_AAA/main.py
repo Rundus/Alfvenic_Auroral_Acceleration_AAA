@@ -2,11 +2,11 @@
 
 # --- Choose the run configuration ---
 dict_run_settings = {
-    'custom_0':True,
+    'custom_0':False,
     'custom_1':False,
     'uniform_medium':False,
     'kletzing&Hu2001': False,
-    'chaston2003_nightside':False,
+    'chaston2003_nightside':True,
     'chaston2003_sunlit_boundary':False,
     'tanaka2005':False
 }

@@ -13,6 +13,8 @@ class EnvironmentExpressionsToggles:
             'tanaka2005':False
         }
 
+    alpha = 0.25 # scalar that's multiplies the density profile to increase/decrease it
+
 
 class SpatialGridToggles:
 
@@ -109,8 +111,7 @@ class LiouvilleToggles:
     ##############################
 
     # --- PHYSICAL TOGGLES ---
-    # mapping_alts = [700, 1000,2000, 3000,4000, 5000,6000, 7000,8000,9000,10000]  # [km] This is the altitude where the Louisville mapping is measured
-    mapping_alts = [500, 700, 1000,1500,2000,2500, 3000,3500,4000,4500,5000,5500,6000,6500, 7000, 7500, 8000, 8500,9000,9500, 10000, 10500,11000,11500, 12000,12500,13000,13500,14000,14500,15000,15500,16000,16500]  # [km] This is the altitude where the Louisville mapping is measured
+    mapping_alts = [500, 700] + [1000 + i*250 for i in range(62+1)]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 

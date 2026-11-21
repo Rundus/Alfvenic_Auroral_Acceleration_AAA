@@ -61,7 +61,7 @@ def environment_expressions_generator():
         n_Op_density = n_e * 0.5 * (1 - sp.tanh((z - 2370) / 1800))
         n_Hp_density = n_e - n_Op_density
     elif wModel == 'shroeder2021':
-        alpha =1 # modifier parameter to adjust the wave speed
+        alpha = EnvironmentExpressionsToggles.alpha # modifier parameter to adjust the wave speed
         n_e = alpha*(stl.cm_to_m**3)*((6E4)*sp.exp(-(z-318)/383) + (1.34E7)*(z**(-1.55)))
         n_Op_density = n_e*0.5*(1 - sp.tanh((z-2370)/1800))
         n_Hp_density = n_e - n_Op_density
