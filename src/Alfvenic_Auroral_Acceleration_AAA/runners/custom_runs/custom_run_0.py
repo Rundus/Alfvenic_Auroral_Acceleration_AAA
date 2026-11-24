@@ -13,7 +13,7 @@ class EnvironmentExpressionsToggles:
             'tanaka2005':False
         }
 
-    alpha = 0.25 # scalar that's multiplies the density profile to increase/decrease it
+    alpha = 1 # scalar that's multiplies the density profile to increase/decrease it
 
 
 class SpatialGridToggles:
@@ -112,19 +112,20 @@ class LiouvilleToggles:
 
     # --- PHYSICAL TOGGLES ---
     mapping_alts = [500, 700] + [1000 + i*250 for i in range(62+1)]  # [km] This is the altitude where the Louisville mapping is measured
+    # mapping_alts = [700, 6000,14000]  # [km] This is the altitude where the Louisville mapping is measured
     upper_termination_altitude = SpatialGridToggles.s_para_max # [km] upper altitude limit where to stop the Rk45 solver
     lower_termination_altitude = SpatialGridToggles.s_para_min # [km] lower altitude limit where to stop the Rk45
 
     # --- ESA ENERGY/PITCH COORDINATES ---
-    N_energy_space_points = 50
-    E_max_obs = 4  # the POWER of 10^E_max for the maximum energy
+    N_energy_space_points = 125
+    E_max_obs = 3.7  # the POWER of 10^E_max for the maximum energy
     E_min_obs = 1  # the POWER of 10^E_min for the minimum energy
-    pitch_range_obs = np.linspace(5, 175, 17+1)
+    pitch_range_obs = np.linspace(5, 175, 34+1)
     # pitch_range_obs = np.linspace(0, 180, 18 + 1)
     energy_range_obs = np.logspace(E_min_obs, E_max_obs, N_energy_space_points)
 
     # --- ESA particle sampling ---
-    time_rez = 0.05 # [in seconds] the time resolution of the simulation
+    time_rez = 0.025 # [in seconds] the time resolution of the simulation
     time_obs_start = 0  # in seconds
     time_obs_end = 4 # in seconds
     N_obs_points = int(time_obs_end/time_rez)+1 # number of particle observation points
